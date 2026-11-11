@@ -1,34 +1,46 @@
 import {
-    ActionIcon,
-    Alert,
-    AppShell,
-    Badge,
-    Box,
     Button,
-    Card,
-    Container,
-    Divider,
-    Group,
-    Loader,
-    Paper,
     Select,
-    SimpleGrid,
-    Stack,
+    Skeleton,
     TagsInput,
-    Text,
     TextInput,
     Textarea,
-    Title
+    UnstyledButton
 } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { IconArrowLeft, IconChevronDown, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
+import {
+    IconArrowLeft,
+    IconBooks,
+    IconEdit,
+    IconPlus,
+    IconTrash,
+    IconWand
+} from "@tabler/icons-react"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
-import AnimatedCollapse from "~/components/AnimatedCollapse"
-import AppTopbar from "~/components/AppTopbar"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import {
+    CostPips,
+    DotPips,
+    groupHomebrewItems,
+    HomebrewKindIcon,
+    HomebrewKindIndex,
+    HomebrewKindSection
+} from "~/components/HomebrewCodex"
 import HomebrewItemEditor from "~/components/HomebrewItemEditor"
+import { belowInput } from "~/components/HomebrewEditorFrame"
 import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
+import {
+    DeleteIconButton,
+    EmptyState,
+    IconButton,
+    PageHeader,
+    PageShell,
+    Panel,
+    SectionHeader,
+    SkeletonLines,
+    useContextMenu
+} from "~/components/ui"
 import type {
     HomebrewCollection,
     HomebrewCollectionInput,
@@ -43,6 +55,7 @@ import {
     useUpdateHomebrewCollection
 } from "~/hooks/useHomebrew"
 import type { ApiError } from "~/utils/api"
+import "./HomebrewPage.css"
 
 type Props = { collectionId: string }
 
@@ -265,243 +278,226 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
         }
     }
 
+    const isSaving = createMutation.isPending || updateMutation.isPending
+    const savedInput = useMemo(
+        () => (collectionQuery.data ? toInput(collectionQuery.data) : emptyCollection()),
+        [collectionQuery.data]
+    )
+    const isDirty = useMemo(
+        () => JSON.stringify(draft) !== JSON.stringify(savedInput),
+        [draft, savedInput]
+    )
+
+    const backLink = (
+        <Button
+            component={Link}
+            to="/homebrew"
+            variant="subtle"
+            color="gray"
+            className="hb-back"
+            leftSection={<IconArrowLeft size={16} />}
+        >
+            All collections
+        </Button>
+    )
+
     if (authLoading || (!isNew && collectionQuery.isLoading)) {
-        return <Loader color="grape" />
+        return (
+            <PageShell size="xl">
+                {backLink}
+                <div aria-busy="true" aria-label="Loading collection">
+                    <Skeleton height={12} width={140} radius="sm" mb={14} />
+                    <Skeleton height={34} width="42%" radius="sm" mb={40} />
+                    <Panel p="lg" mb={40}>
+                        <div className="hb-details-form">
+                            <SkeletonLines lines={4} height={36} gap={20} />
+                            <SkeletonLines lines={4} height={36} gap={20} />
+                        </div>
+                    </Panel>
+                    <div className="hb-rows">
+                        {Array.from({ length: 6 }, (_, index) => (
+                            <Skeleton key={index} height={92} radius="md" />
+                        ))}
+                    </div>
+                </div>
+            </PageShell>
+        )
     }
 
     if (!isAuthenticated) {
         return (
-            <Container size="sm" py={100}>
-                <Card withBorder p="xl">
-                    <Stack align="center">
-                        <Title order={2}>Sign in to edit Homebrew</Title>
-                        <Button color="grape" onClick={signIn}>
-                            Sign in
-                        </Button>
-                    </Stack>
-                </Card>
-            </Container>
+            <PageShell size="sm">
+                <Panel tone="ornate" grain p={0}>
+                    <EmptyState
+                        icon={<IconBooks size={26} stroke={1.5} />}
+                        title="Sign in to edit Homebrew"
+                        actions={<Button onClick={signIn}>Sign in</Button>}
+                    />
+                </Panel>
+            </PageShell>
         )
     }
 
     if (!isNew && (collectionQuery.isError || !collectionQuery.data)) {
         return (
-            <Container size="sm" py={100}>
-                <Paper withBorder p="xl">
-                    <Stack align="center">
-                        <Title order={2}>Collection not found</Title>
-                        <Text c="dimmed">
-                            It may have been deleted or you may not have access to it.
-                        </Text>
-                        <Button component={Link} to="/homebrew" variant="light" color="grape">
-                            Back to Homebrew
-                        </Button>
-                    </Stack>
-                </Paper>
-            </Container>
+            <PageShell size="sm">
+                <Panel tone="inset" p={0}>
+                    <EmptyState
+                        icon={<IconBooks size={26} stroke={1.5} />}
+                        title="Collection not found"
+                        description="It may have been deleted or you may not have access to it."
+                        actions={
+                            <Button component={Link} to="/homebrew" variant="default">
+                                Back to Homebrew
+                            </Button>
+                        }
+                    />
+                </Panel>
+            </PageShell>
         )
     }
 
+    const saveLabel = isNew ? "Create collection" : "Save changes"
+
     return (
-        <AppShell
-            padding={0}
-            header={{ height: 52 }}
-            styles={{
-                root: { minHeight: "100vh" },
-                header: {
-                    background: "rgba(8, 7, 8, 0.86)",
-                    backdropFilter: "blur(10px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-                    zIndex: 200
+        <PageShell size="xl">
+            {backLink}
+            <PageHeader
+                eyebrow={isNew ? "New collection" : "Homebrew collection"}
+                title={isNew ? "New Homebrew Collection" : draft.name || "Untitled collection"}
+                description={
+                    isNew
+                        ? "Set up your collection, then add the rules that belong in it."
+                        : "Shape the collection and its homebrew rules in one place."
                 }
-            }}
-        >
-            <AppShell.Header>
-                <AppTopbar />
-            </AppShell.Header>
-            <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
-                <Box py="calc(2rem + 52px)" pb="2rem" className="homebrew-page__editor-shell">
-                    <Container size="xl">
-                        <Box
-                            className="homebrew-page__editor-panel"
-                            style={{
-                                backgroundColor: "rgba(255, 255, 255, 0.055)",
-                                backdropFilter: "blur(7px)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: 8,
-                                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.18)",
-                                padding: "1.5rem"
-                            }}
+                actions={
+                    <Button
+                        variant={isNew || isDirty ? "filled" : "default"}
+                        onClick={saveCollection}
+                        loading={isSaving}
+                    >
+                        {saveLabel}
+                    </Button>
+                }
+            />
+
+            <SectionHeader title="Collection" />
+            <Panel p="lg" mb="xl">
+                <div className="hb-details-form">
+                    <div className="hb-details-form__column">
+                        <TextInput
+                            label="Collection name"
+                            required
+                            value={draft.name}
+                            // A brand-new collection starts with its name.
+                            // eslint-disable-next-line jsx-a11y/no-autofocus
+                            autoFocus={isNew}
+                            onChange={(event) =>
+                                setDraft({ ...draft, name: event.currentTarget.value })
+                            }
+                        />
+                        <TextInput
+                            label="Short description"
+                            description="Used on collection cards and in the Community Library."
+                            inputWrapperOrder={belowInput}
+                            maxLength={240}
+                            value={draft.shortDescription}
+                            onChange={(event) =>
+                                setDraft({ ...draft, shortDescription: event.currentTarget.value })
+                            }
+                        />
+                        <TagsInput
+                            label="Tags"
+                            description="Up to eight discovery tags."
+                            inputWrapperOrder={belowInput}
+                            maxTags={8}
+                            value={draft.tags}
+                            onChange={(tags) => setDraft({ ...draft, tags })}
+                            classNames={homebrewDropdownClassNames}
+                        />
+                    </div>
+                    <div className="hb-details-form__column">
+                        <Textarea
+                            label="Description"
+                            minRows={5}
+                            value={draft.description}
+                            onChange={(event) =>
+                                setDraft({ ...draft, description: event.currentTarget.value })
+                            }
+                        />
+                        <Textarea
+                            label="Content warning"
+                            minRows={2}
+                            value={draft.contentWarning}
+                            onChange={(event) =>
+                                setDraft({ ...draft, contentWarning: event.currentTarget.value })
+                            }
+                        />
+                    </div>
+                </div>
+            </Panel>
+
+            <SectionHeader
+                className="hb-rules-header"
+                title="Rules"
+                description="Add each rule to its own entry. Merits and Flaws appear under the Homebrew category in character creation."
+                actions={
+                    <div className="hb-rules-toolbar">
+                        <Select
+                            aria-label="Item type"
+                            value={itemKind}
+                            allowDeselect={false}
+                            data={homebrewItemKinds.map((kind) => ({
+                                value: kind,
+                                label: homebrewKindLabel(kind)
+                            }))}
+                            onChange={(value) => value && setItemKind(value as HomebrewItemKind)}
+                            classNames={homebrewDropdownClassNames}
+                        />
+                        <Button
+                            leftSection={<IconPlus size={16} />}
+                            onClick={() => openNewItemEditor(itemKind)}
                         >
-                            <Stack gap="lg">
-                                <Group
-                                    justify="space-between"
-                                    align="flex-start"
-                                    className="homebrew-page__header"
-                                >
-                                    <div>
-                                        <Button
-                                            component={Link}
-                                            to="/homebrew"
-                                            variant="subtle"
-                                            color="gray"
-                                            px={0}
-                                            leftSection={<IconArrowLeft size={16} />}
-                                        >
-                                            All collections
-                                        </Button>
-                                        <Title mt="xs">
-                                            {isNew ? "New Homebrew Collection" : draft.name}
-                                        </Title>
-                                        <Text c="dimmed" mt={4}>
-                                            {isNew
-                                                ? "Set up your collection, then add the rules that belong in it."
-                                                : "Shape the collection and its homebrew rules in one place."}
-                                        </Text>
-                                    </div>
-                                    <Button
-                                        className="homebrew-page__header-save"
-                                        color="grape"
-                                        variant={isNew ? "filled" : "outline"}
-                                        onClick={saveCollection}
-                                        loading={
-                                            createMutation.isPending || updateMutation.isPending
-                                        }
-                                    >
-                                        {isNew ? "Create collection" : "Save changes"}
-                                    </Button>
-                                </Group>
+                            Add rule
+                        </Button>
+                    </div>
+                }
+            />
 
-                                <Divider />
+            <EditableRules
+                allItems={draft.items}
+                itemValidationErrors={itemValidationErrors}
+                collapsedItemKinds={collapsedItemKinds}
+                motionlessItemKinds={motionlessItemKinds}
+                toggleItemKind={toggleItemKind}
+                openNewItemEditor={openNewItemEditor}
+                setItemEditor={setItemEditor}
+                setItemToDelete={setItemToDelete}
+            />
 
-                                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-                                    <TextInput
-                                        label="Collection name"
-                                        description={<span aria-hidden="true">&nbsp;</span>}
-                                        required
-                                        value={draft.name}
-                                        onChange={(event) =>
-                                            setDraft({ ...draft, name: event.currentTarget.value })
-                                        }
-                                    />
-                                    <TextInput
-                                        label="Short description"
-                                        description="Used on collection cards and in the Community Library."
-                                        maxLength={240}
-                                        value={draft.shortDescription}
-                                        onChange={(event) =>
-                                            setDraft({
-                                                ...draft,
-                                                shortDescription: event.currentTarget.value
-                                            })
-                                        }
-                                    />
-                                    <Textarea
-                                        label="Description"
-                                        description={<span aria-hidden="true">&nbsp;</span>}
-                                        minRows={4}
-                                        value={draft.description}
-                                        onChange={(event) =>
-                                            setDraft({
-                                                ...draft,
-                                                description: event.currentTarget.value
-                                            })
-                                        }
-                                    />
-                                    <Stack gap="md">
-                                        <TagsInput
-                                            label="Tags"
-                                            description="Up to eight discovery tags."
-                                            maxTags={8}
-                                            value={draft.tags}
-                                            onChange={(tags) => setDraft({ ...draft, tags })}
-                                            classNames={homebrewDropdownClassNames}
-                                        />
-                                        <Textarea
-                                            label="Content warning"
-                                            minRows={2}
-                                            value={draft.contentWarning}
-                                            onChange={(event) =>
-                                                setDraft({
-                                                    ...draft,
-                                                    contentWarning: event.currentTarget.value
-                                                })
-                                            }
-                                        />
-                                    </Stack>
-                                </SimpleGrid>
-
-                                <Divider />
-
-                                <Group
-                                    justify="space-between"
-                                    align="flex-end"
-                                    className="homebrew-page__rules-header"
-                                >
-                                    <div>
-                                        <Title order={2}>Rules</Title>
-                                        <Text size="sm" c="dimmed">
-                                            Add each rule to its own entry. Merits and Flaws appear
-                                            under the Homebrew category in character creation.
-                                        </Text>
-                                    </div>
-                                    <Group
-                                        align="flex-end"
-                                        className="homebrew-page__rule-controls"
-                                    >
-                                        <Select
-                                            label="Item type"
-                                            value={itemKind}
-                                            data={homebrewItemKinds.map((kind) => ({
-                                                value: kind,
-                                                label: homebrewKindLabel(kind)
-                                            }))}
-                                            onChange={(value) =>
-                                                setItemKind(value as HomebrewItemKind)
-                                            }
-                                            classNames={homebrewDropdownClassNames}
-                                        />
-                                        <Button
-                                            color="grape"
-                                            variant="outline"
-                                            leftSection={<IconPlus size={16} />}
-                                            onClick={() => openNewItemEditor(itemKind)}
-                                        >
-                                            Add rule
-                                        </Button>
-                                    </Group>
-                                </Group>
-
-                                <EditableRules
-                                    allItems={draft.items}
-                                    itemValidationErrors={itemValidationErrors}
-                                    collapsedItemKinds={collapsedItemKinds}
-                                    motionlessItemKinds={motionlessItemKinds}
-                                    toggleItemKind={toggleItemKind}
-                                    openNewItemEditor={openNewItemEditor}
-                                    setItemEditor={setItemEditor}
-                                    setItemToDelete={setItemToDelete}
-                                />
-
-                                {error ? <Alert color="red">{error}</Alert> : null}
-                                <Group justify="flex-end">
-                                    <Button
-                                        color="grape"
-                                        variant={isNew ? "filled" : "outline"}
-                                        onClick={saveCollection}
-                                        loading={
-                                            createMutation.isPending || updateMutation.isPending
-                                        }
-                                    >
-                                        {isNew ? "Create collection" : "Save changes"}
-                                    </Button>
-                                </Group>
-                            </Stack>
-                        </Box>
-                    </Container>
-                </Box>
-            </AppShell.Main>
+            <div
+                className="hb-savebar"
+                data-dirty={isDirty || undefined}
+                data-error={error ? true : undefined}
+                role={error ? "alert" : undefined}
+            >
+                <span className="hb-savebar__status">
+                    <span className="hb-savebar__dot" aria-hidden="true" />
+                    {error ||
+                        (isDirty
+                            ? "Unsaved changes"
+                            : isNew
+                              ? "Name the collection to create it"
+                              : "All changes saved")}
+                </span>
+                <Button
+                    variant={isNew || isDirty ? "filled" : "default"}
+                    onClick={saveCollection}
+                    loading={isSaving}
+                >
+                    {saveLabel}
+                </Button>
+            </div>
 
             {itemEditor ? (
                 <HomebrewItemEditor
@@ -575,14 +571,56 @@ const HomebrewDetailsPage = ({ collectionId }: Props) => {
                     setItemToDelete(null)
                 }}
                 title="Delete rule?"
-                body={`Delete ${itemToDelete?.item.name || "this rule"} from this collection?`}
+                body={`Delete ${itemToDelete?.item.name || "this rule"} from this collection? The change is kept once you save the collection.`}
                 confirmLabel="Delete rule"
             />
-        </AppShell>
+        </PageShell>
     )
 }
 
 export default HomebrewDetailsPage
+
+const titleCase = (value: string) => value.replace(/\b\w/g, (character) => character.toUpperCase())
+
+/** The short line under a rule's name: discipline + level, dot costs, etc. */
+const ItemMeta = ({ item }: { item: HomebrewItem }) => {
+    switch (item.kind) {
+        case "power":
+        case "ritual":
+        case "ceremony":
+        case "formula":
+            return (
+                <>
+                    <span>{item.discipline ? titleCase(item.discipline) : "No discipline"}</span>
+                    <DotPips value={item.level} label={`Level ${item.level}`} />
+                </>
+            )
+        case "merit":
+        case "flaw":
+            return <CostPips costs={item.costs} tone={item.kind === "flaw" ? "blood" : "gold"} />
+        case "clan":
+            return (
+                <span>
+                    {item.nativeDisciplines.length
+                        ? item.nativeDisciplines.map(titleCase).join(" · ")
+                        : "No native Disciplines"}
+                </span>
+            )
+        case "loresheet":
+            return <span>{item.source || "Homebrew"} · 5 levels</span>
+        case "predatorType":
+            return (
+                <span>
+                    Humanity {item.humanityChange >= 0 ? "+" : "−"}
+                    {Math.abs(item.humanityChange)} · Blood Potency{" "}
+                    {item.bloodPotencyChange >= 0 ? "+" : "−"}
+                    {Math.abs(item.bloodPotencyChange)}
+                </span>
+            )
+        default:
+            return <span>{homebrewKindLabel(item.kind)}</span>
+    }
+}
 
 const EditableRules = memo(
     ({
@@ -605,177 +643,170 @@ const EditableRules = memo(
         setItemToDelete: (selection: { item: HomebrewItem; index: number }) => void
     }) => {
         const itemsByKind = useMemo(
-            () =>
-                homebrewItemKinds
-                    .map((kind) => ({ kind, items: allItems.filter((item) => item.kind === kind) }))
-                    .filter((group) => group.items.length),
+            () => groupHomebrewItems(allItems, homebrewItemKinds),
             [allItems]
         )
-        return (
-            <>
-                {itemsByKind.length === 0 ? (
-                    <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
-                        <Stack align="center" gap="xs">
-                            <Text fw={600}>This collection has no rules yet.</Text>
-                            <Text c="dimmed" size="sm" ta="center">
-                                Choose an item type above to start filling out this homebrew sheet.
-                            </Text>
-                        </Stack>
-                    </Paper>
-                ) : (
-                    <Stack gap="lg">
-                        {itemsByKind.map(({ kind, items }) => {
-                            const isCollapsed = collapsedItemKinds.has(kind)
+        const contextMenu = useContextMenu()
 
-                            return (
-                                <Stack key={kind} gap="sm">
-                                    <Group gap="xs">
-                                        <Badge color="grape" variant="light">
-                                            {homebrewKindLabel(kind)}
-                                        </Badge>
-                                        <Text size="sm" c="dimmed">
-                                            {items.length}{" "}
-                                            {items.length === 1 ? "entry" : "entries"}
-                                        </Text>
-                                        <ActionIcon
-                                            variant="subtle"
-                                            color="gray"
-                                            size="sm"
-                                            aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
-                                            aria-expanded={!isCollapsed}
-                                            onClick={(event) =>
-                                                toggleItemKind(kind, event.detail !== 0)
-                                            }
-                                        >
-                                            <IconChevronDown
-                                                size={16}
-                                                className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
-                                                style={{
-                                                    transform: isCollapsed
-                                                        ? "rotate(-90deg)"
-                                                        : undefined
-                                                }}
-                                            />
-                                        </ActionIcon>
-                                    </Group>
-                                    <AnimatedCollapse
-                                        opened={!isCollapsed}
-                                        motionEnabled={!motionlessItemKinds.has(kind)}
+        if (itemsByKind.length === 0) {
+            return (
+                <Panel tone="inset" p={0}>
+                    <EmptyState
+                        icon={<IconWand size={26} stroke={1.5} />}
+                        title="This collection has no rules yet."
+                        description="Choose what to write first."
+                        actions={
+                            <div className="hb-starter">
+                                {homebrewItemKinds.map((kind) => (
+                                    <UnstyledButton
+                                        key={kind}
+                                        className="hb-starter__tile"
+                                        onClick={() => openNewItemEditor(kind)}
                                     >
-                                        <>
-                                            <SimpleGrid
-                                                cols={{
-                                                    base: 1,
-                                                    md: kind === "merit" || kind === "flaw" ? 3 : 2
-                                                }}
-                                                spacing="sm"
+                                        <HomebrewKindIcon kind={kind} size={16} />
+                                        {homebrewKindLabel(kind)}
+                                    </UnstyledButton>
+                                ))}
+                            </div>
+                        }
+                    />
+                </Panel>
+            )
+        }
+
+        return (
+            <div className="hb-codex">
+                <HomebrewKindIndex groups={itemsByKind} idPrefix="hb-rules" />
+                <div>
+                    {itemsByKind.map(({ kind, items }) => {
+                        const isCollapsed = collapsedItemKinds.has(kind)
+                        const label = homebrewKindLabel(kind)
+
+                        return (
+                            <HomebrewKindSection
+                                key={kind}
+                                kind={kind}
+                                count={items.length}
+                                idPrefix="hb-rules"
+                                collapsed={isCollapsed}
+                                motionEnabled={!motionlessItemKinds.has(kind)}
+                                onToggle={(motionEnabled) => toggleItemKind(kind, motionEnabled)}
+                                actions={
+                                    <IconButton
+                                        label={`Add ${label}`}
+                                        icon={<IconPlus size={16} />}
+                                        variant="default"
+                                        onClick={() => openNewItemEditor(kind)}
+                                    />
+                                }
+                            >
+                                <div className="hb-rows">
+                                    {items.map((item) => {
+                                        const index = allItems.indexOf(item)
+                                        const errors = itemValidationErrors[index]
+                                        const name = item.name || "rule"
+                                        const edit = () => setItemEditor({ item, index })
+                                        const askDelete = () => setItemToDelete({ item, index })
+
+                                        return (
+                                            <Panel
+                                                key={item.id ?? `${item.kind}-${index}`}
+                                                interactive
+                                                className="hb-row"
+                                                data-invalid={errors?.length ? true : undefined}
+                                                onClick={edit}
+                                                onContextMenu={(
+                                                    event: Parameters<typeof contextMenu.open>[0]
+                                                ) =>
+                                                    contextMenu.open(event, [
+                                                        {
+                                                            key: "edit",
+                                                            label: "Edit",
+                                                            icon: <IconEdit size={14} />,
+                                                            onClick: edit
+                                                        },
+                                                        {
+                                                            key: "add",
+                                                            label: `Add another ${label}`,
+                                                            icon: <IconPlus size={14} />,
+                                                            onClick: () => openNewItemEditor(kind)
+                                                        },
+                                                        { type: "divider", key: "divider" },
+                                                        {
+                                                            key: "delete",
+                                                            label: "Delete…",
+                                                            color: "red",
+                                                            icon: <IconTrash size={14} />,
+                                                            onClick: askDelete
+                                                        }
+                                                    ])
+                                                }
                                             >
-                                                {items.map((item) => {
-                                                    const index = allItems.indexOf(item)
-                                                    return (
-                                                        <Paper
-                                                            key={item.id ?? `${item.kind}-${index}`}
-                                                            withBorder
-                                                            p="md"
-                                                            bg="rgba(0,0,0,.2)"
-                                                        >
-                                                            <Stack gap="xs">
-                                                                <Group
-                                                                    justify="space-between"
-                                                                    align="flex-start"
-                                                                    wrap="nowrap"
-                                                                >
-                                                                    <div>
-                                                                        <Text fw={600}>
-                                                                            {item.name ||
-                                                                                "Untitled rule"}
-                                                                        </Text>
-                                                                        {item.kind === "power" ? (
-                                                                            <Badge
-                                                                                mt={4}
-                                                                                size="sm"
-                                                                                variant="light"
-                                                                                color="grape"
-                                                                            >
-                                                                                {item.discipline ||
-                                                                                    "No discipline"}
-                                                                            </Badge>
-                                                                        ) : null}
-                                                                        <Text
-                                                                            size="sm"
-                                                                            c="dimmed"
-                                                                            lineClamp={2}
-                                                                        >
-                                                                            {item.summary ||
-                                                                                item.description ||
-                                                                                "No summary yet."}
-                                                                        </Text>
-                                                                    </div>
-                                                                    <Group gap={4} wrap="nowrap">
-                                                                        <ActionIcon
-                                                                            variant="subtle"
-                                                                            color="grape"
-                                                                            aria-label={`Edit ${item.name || "rule"}`}
-                                                                            onClick={() =>
-                                                                                setItemEditor({
-                                                                                    item,
-                                                                                    index
-                                                                                })
-                                                                            }
-                                                                        >
-                                                                            <IconEdit size={16} />
-                                                                        </ActionIcon>
-                                                                        <ActionIcon
-                                                                            variant="subtle"
-                                                                            color="red"
-                                                                            aria-label={`Delete ${item.name || "rule"}`}
-                                                                            onClick={() =>
-                                                                                setItemToDelete({
-                                                                                    item,
-                                                                                    index
-                                                                                })
-                                                                            }
-                                                                        >
-                                                                            <IconTrash size={16} />
-                                                                        </ActionIcon>
-                                                                    </Group>
-                                                                </Group>
-                                                                {itemValidationErrors[index]?.map(
-                                                                    (message, messageIndex) => (
-                                                                        <Alert
-                                                                            key={`${message}-${messageIndex}`}
-                                                                            color="red"
-                                                                            variant="light"
-                                                                        >
-                                                                            {message}
-                                                                        </Alert>
-                                                                    )
-                                                                )}
-                                                            </Stack>
-                                                        </Paper>
-                                                    )
-                                                })}
-                                            </SimpleGrid>
-                                            <Group justify="center" mt="xs">
-                                                <ActionIcon
-                                                    variant="light"
-                                                    color="grape"
-                                                    size="lg"
-                                                    radius="xl"
-                                                    aria-label={`Add ${homebrewKindLabel(kind)}`}
-                                                    onClick={() => openNewItemEditor(kind)}
+                                                <div className="hb-row__main">
+                                                    <div className="hb-row__meta">
+                                                        <ItemMeta item={item} />
+                                                    </div>
+                                                    <h4
+                                                        className="hb-row__name"
+                                                        data-untitled={!item.name || undefined}
+                                                    >
+                                                        {item.name || "Untitled rule"}
+                                                    </h4>
+                                                    <p className="hb-row__summary">
+                                                        {item.summary ||
+                                                            item.description ||
+                                                            "No summary yet."}
+                                                    </p>
+                                                </div>
+                                                <div
+                                                    className="hb-row__actions"
+                                                    onClick={(event) => event.stopPropagation()}
                                                 >
-                                                    <IconPlus size={18} />
-                                                </ActionIcon>
-                                            </Group>
-                                        </>
-                                    </AnimatedCollapse>
-                                </Stack>
-                            )
-                        })}
-                    </Stack>
-                )}
-            </>
+                                                    <IconButton
+                                                        label={`Edit ${name}`}
+                                                        icon={<IconEdit size={16} />}
+                                                        onClick={edit}
+                                                    />
+                                                    <DeleteIconButton
+                                                        label={`Delete ${name}`}
+                                                        onClick={askDelete}
+                                                    />
+                                                </div>
+                                                {errors?.length ? (
+                                                    <div
+                                                        className="hb-row__errors"
+                                                        onClick={(event) => event.stopPropagation()}
+                                                    >
+                                                        {errors.map((message, messageIndex) => (
+                                                            <div
+                                                                key={`${message}-${messageIndex}`}
+                                                                className="hb-row__error"
+                                                            >
+                                                                <span>{message}</span>
+                                                                {messageIndex === 0 ? (
+                                                                    <Button
+                                                                        size="compact-xs"
+                                                                        variant="light"
+                                                                        color="red"
+                                                                        onClick={edit}
+                                                                    >
+                                                                        Fix
+                                                                    </Button>
+                                                                ) : null}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : null}
+                                            </Panel>
+                                        )
+                                    })}
+                                </div>
+                            </HomebrewKindSection>
+                        )
+                    })}
+                </div>
+                {contextMenu.menu}
+            </div>
         )
     }
 )

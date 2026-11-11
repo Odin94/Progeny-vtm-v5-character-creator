@@ -1,41 +1,39 @@
-import { Center, Grid, Stack, Text, Title } from "@mantine/core"
 import { Character } from "../../data/Character"
+import classes from "./Dossier.module.css"
 
 export type BasicsProps = {
     character: Character
 }
 
+/** Description + sire/ambition/desire. The name itself sits in the dossier's identity card. */
 const BasicsDisplay = ({ character }: BasicsProps) => {
+    const fields = [
+        { label: "Sire", value: character.sire },
+        { label: "Ambition", value: character.ambition },
+        { label: "Desire", value: character.desire }
+    ].filter((field) => field.value.trim())
+
+    if (!character.description.trim() && fields.length === 0) return null
+
     return (
-        <Stack>
-            <Center>
-                <Title order={2}>{character.name}</Title>
-            </Center>
-            <Text c="dimmed">{character.description}</Text>
-
-            <Grid>
-                <Grid.Col span={4}>
-                    <Text>
-                        <b>Sire:</b>
-                    </Text>
-                    <Text>{character.sire}</Text>
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                    <Text>
-                        <b>Ambition:</b>
-                    </Text>
-                    <Text>{character.ambition}</Text>
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                    <Text>
-                        <b>Desire:</b>
-                    </Text>
-                    <Text>{character.desire}</Text>
-                </Grid.Col>
-            </Grid>
-        </Stack>
+        <section className={classes.section}>
+            <h3 className={classes.sectionTitle}>Basics</h3>
+            {character.description.trim() ? (
+                <p className={classes.description} style={{ margin: 0 }}>
+                    {character.description}
+                </p>
+            ) : null}
+            {fields.length > 0 ? (
+                <div className={classes.fields}>
+                    {fields.map((field) => (
+                        <div key={field.label} className={classes.field}>
+                            <span className={classes.fieldLabel}>{field.label}</span>
+                            <span className={classes.fieldValue}>{field.value}</span>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
+        </section>
     )
 }
 

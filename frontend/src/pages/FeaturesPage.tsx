@@ -1,23 +1,16 @@
-import {
-    Anchor,
-    AppShell,
-    Box,
-    Burger,
-    Button,
-    Container,
-    Group,
-    List,
-    Paper,
-    Stack,
-    Text,
-    Title
-} from "@mantine/core"
+import { Anchor, Button, List, Popover, Text, UnstyledButton } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconArrowRight, IconArrowUpRight, IconPhoto } from "@tabler/icons-react"
+import {
+    IconArrowLeft,
+    IconArrowRight,
+    IconArrowUpRight,
+    IconChevronDown,
+    IconPhoto
+} from "@tabler/icons-react"
 import { Link } from "@tanstack/react-router"
-import type { ReactNode } from "react"
-import AppTopbar from "~/components/AppTopbar"
+import { useEffect, useState, type ReactNode } from "react"
 import SupportConversationButton from "~/components/SupportConversationButton"
+import { PageHeader, PageShell, Panel } from "~/components/ui"
 import nicknameImage from "~/assets/feature-docs-images/account/1nickname.jpeg"
 import charactersImage from "~/assets/feature-docs-images/account/2characters.jpeg"
 import creatorImage from "~/assets/feature-docs-images/character-creation/creator.jpeg"
@@ -606,17 +599,25 @@ const featurePages: FeaturePage[] = [
     }
 ]
 
+const chapterNumber = (index: number) => String(index + 1).padStart(2, "0")
+
 function ImagePlaceholder({ label = "Image coming soon" }: { label?: string }) {
     return (
-        <Paper className="features-page__placeholder" radius="md">
+        <div className="features__placeholder">
             <IconPhoto size={22} stroke={1.4} />
-            <Text>{label}</Text>
-        </Paper>
+            <span>{label}</span>
+        </div>
     )
 }
 
+/** A screenshot set like a plate in a rulebook: framed, with its description as caption. */
 function FeatureImage({ src, alt }: { src: string; alt: string }) {
-    return <img src={src} alt={alt} loading="lazy" className="features-page__image" />
+    return (
+        <figure className="features__plate">
+            <img src={src} alt={alt} loading="lazy" decoding="async" />
+            <figcaption aria-hidden="true">{alt}</figcaption>
+        </figure>
+    )
 }
 
 function AccountLink({ children }: { children: ReactNode }) {
@@ -633,208 +634,266 @@ function AccountLink({ children }: { children: ReactNode }) {
     )
 }
 
+/** Tracks which section of the current chapter is being read, for the contents highlight. */
+function useActiveSection(sectionIds: string[]) {
+    const [activeId, setActiveId] = useState<string | undefined>(sectionIds[0])
+    const key = sectionIds.join("|")
+
+    useEffect(() => {
+        const ids = key.split("|")
+        setActiveId(ids[0])
+        if (typeof IntersectionObserver === "undefined") return
+
+        const visible = new Map<string, boolean>()
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) visible.set(entry.target.id, entry.isIntersecting)
+                const firstVisible = ids.find((id) => visible.get(id))
+                if (firstVisible) setActiveId(firstVisible)
+            },
+            { rootMargin: "-96px 0px -55% 0px" }
+        )
+        for (const id of ids) {
+            const element = document.getElementById(id)
+            if (element) observer.observe(element)
+        }
+        return () => observer.disconnect()
+    }, [key])
+
+    return activeId
+}
+
 type FeaturesPageProps = {
     pageId: FeaturePageId
 }
 
 export default function FeaturesPage({ pageId }: FeaturesPageProps) {
     const { isAuthenticated, isSigningIn, signIn } = useAuth()
-    const [
-        mobileNavigationOpened,
-        { toggle: toggleMobileNavigation, close: closeMobileNavigation }
-    ] = useDisclosure(false)
+    const [mobileNavigationOpened, { toggle: toggleMobileNavigation, close: closeNavigation }] =
+        useDisclosure(false)
 
-    const closeNavigation = () => closeMobileNavigation()
     const currentPageIndex = featurePages.findIndex((page) => page.id === pageId)
     const currentPage = featurePages[currentPageIndex]
+    const previousPage = currentPageIndex > 0 ? featurePages[currentPageIndex - 1] : undefined
     const nextPage = featurePages[(currentPageIndex + 1) % featurePages.length]
+    const nextWrapsAround = currentPageIndex === featurePages.length - 1
     const showsAccountAction = pageId === "account-and-multiple-characters" || pageId === "coteries"
+    const activeSectionId = useActiveSection(currentPage.sections.map((section) => section.id))
+    const activeSection = currentPage.sections.find((section) => section.id === activeSectionId)
 
     const navigation = (
-        <Stack gap="xs" className="features-page__navigation">
-            <Text className="features-page__navigation-label">Feature guide</Text>
-            {featurePages.map((page) => (
-                <Box key={page.id}>
-                    <Anchor
-                        component={Link}
-                        to={page.path}
-                        onClick={() => {
-                            trackFeatureGuideNavigationSelected({ page: page.id })
-                            closeNavigation()
-                        }}
-                        className="features-page__page-link"
-                    >
-                        {page.title}
-                    </Anchor>
-                    <Stack gap={2} mt={5} className="features-page__section-links">
-                        {page.sections.map((section) => (
-                            <Anchor
-                                key={section.id}
-                                component={Link}
+        <nav className="features__contents" aria-label="Feature guide">
+            <p className="features__contents-label">Contents</p>
+            <ol className="features__chapters">
+                {featurePages.map((page, pageIndex) => {
+                    const isCurrent = page.id === pageId
+                    return (
+                        <li key={page.id} data-current={isCurrent || undefined}>
+                            <Link
                                 to={page.path}
-                                hash={section.id}
+                                aria-current={isCurrent ? "page" : undefined}
                                 onClick={() => {
-                                    trackFeatureGuideNavigationSelected({
-                                        page: page.id,
-                                        section: section.id
-                                    })
+                                    trackFeatureGuideNavigationSelected({ page: page.id })
                                     closeNavigation()
                                 }}
-                                className="features-page__section-link"
+                                className="features__chapter-link"
                             >
-                                {section.title}
-                            </Anchor>
-                        ))}
-                    </Stack>
-                </Box>
-            ))}
-        </Stack>
+                                <span className="features__chapter-number">
+                                    {chapterNumber(pageIndex)}
+                                </span>
+                                <span>{page.title}</span>
+                            </Link>
+                            <ol className="features__sections">
+                                {page.sections.map((section) => (
+                                    <li key={section.id}>
+                                        <Link
+                                            to={page.path}
+                                            hash={section.id}
+                                            data-active={
+                                                (isCurrent && section.id === activeSectionId) ||
+                                                undefined
+                                            }
+                                            onClick={() => {
+                                                trackFeatureGuideNavigationSelected({
+                                                    page: page.id,
+                                                    section: section.id
+                                                })
+                                                closeNavigation()
+                                            }}
+                                            className="features__section-link"
+                                        >
+                                            {section.title}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ol>
+                        </li>
+                    )
+                })}
+            </ol>
+        </nav>
     )
 
+    const contextAction =
+        pageId === "character-sheet" ? (
+            <Button
+                variant="default"
+                component={Link}
+                to="/sheet"
+                rightSection={<IconArrowUpRight size={16} />}
+            >
+                Open character sheet
+            </Button>
+        ) : showsAccountAction && isAuthenticated ? (
+            <Button
+                variant="default"
+                component={Link}
+                to="/me"
+                rightSection={<IconArrowUpRight size={16} />}
+            >
+                Your account
+            </Button>
+        ) : showsAccountAction ? (
+            <Button
+                variant="default"
+                onClick={signIn}
+                loading={isSigningIn}
+                rightSection={<IconArrowUpRight size={16} />}
+            >
+                {isSigningIn ? "Signing up…" : "Sign up"}
+            </Button>
+        ) : (
+            <Button
+                variant="default"
+                component={Link}
+                to="/create"
+                rightSection={<IconArrowUpRight size={16} />}
+            >
+                Create a character
+            </Button>
+        )
+
     return (
-        <Box className="features-page">
-            <AppShell header={{ height: 52 }} padding={0}>
-                <AppShell.Header className="features-page__header">
-                    <AppTopbar />
-                </AppShell.Header>
+        <PageShell size="lg">
+            <div className="features">
+                <PageHeader
+                    eyebrow={`Progeny feature guide · Chapter ${chapterNumber(currentPageIndex)}`}
+                    title={currentPage.title}
+                    actions={contextAction}
+                />
 
-                <AppShell.Main>
-                    <Box className="features-page__masthead">
-                        <Container size="lg" className="features-page__masthead-inner">
-                            <Group justify="space-between" align="flex-end" gap="md">
-                                <Stack gap="xs">
-                                    <Text className="features-page__eyebrow">Progeny guide</Text>
-                                    <Title order={1} className="features-page__title">
-                                        Features
-                                    </Title>
-                                </Stack>
-                                {pageId === "character-sheet" ? (
-                                    <Anchor
-                                        component={Link}
-                                        to="/sheet"
-                                        className="features-page__creator-link"
-                                    >
-                                        Open character sheet <IconArrowUpRight size={16} />
-                                    </Anchor>
-                                ) : showsAccountAction && isAuthenticated ? (
-                                    <Anchor
-                                        component={Link}
-                                        to="/me"
-                                        className="features-page__creator-link"
-                                    >
-                                        Your account <IconArrowUpRight size={16} />
-                                    </Anchor>
-                                ) : showsAccountAction ? (
-                                    <Anchor
-                                        component="button"
-                                        type="button"
-                                        onClick={signIn}
-                                        className="features-page__creator-link"
-                                    >
-                                        {isSigningIn ? "Signing up…" : "Sign up"}{" "}
-                                        <IconArrowUpRight size={16} />
-                                    </Anchor>
+                <div className="features__mobile-navigation">
+                    <Popover
+                        opened={mobileNavigationOpened}
+                        onChange={(opened) => (opened ? undefined : closeNavigation())}
+                        position="bottom"
+                        width="target"
+                        offset={6}
+                        trapFocus={false}
+                    >
+                        <Popover.Target>
+                            <UnstyledButton
+                                className="features__mobile-toggle"
+                                onClick={toggleMobileNavigation}
+                                aria-label="Toggle feature guide navigation"
+                                aria-expanded={mobileNavigationOpened}
+                                data-opened={mobileNavigationOpened || undefined}
+                            >
+                                <span className="features__mobile-toggle-label">Contents</span>
+                                <span className="features__mobile-toggle-current">
+                                    {activeSection?.title ?? currentPage.title}
+                                </span>
+                                <IconChevronDown size={16} className="features__mobile-chevron" />
+                            </UnstyledButton>
+                        </Popover.Target>
+                        <Popover.Dropdown className="features__mobile-dropdown">
+                            {navigation}
+                        </Popover.Dropdown>
+                    </Popover>
+                </div>
+
+                <div className="features__layout">
+                    <aside className="features__sidebar">{navigation}</aside>
+
+                    <article className="features__article" id={currentPage.id}>
+                        {currentPage.intro ? (
+                            <div className="features__intro">{currentPage.intro}</div>
+                        ) : null}
+
+                        {currentPage.sections.map((section, sectionIndex) => (
+                            <section
+                                key={section.id}
+                                id={section.id}
+                                className="features__section"
+                                aria-labelledby={`${section.id}-title`}
+                            >
+                                <h2 id={`${section.id}-title`} className="features__section-title">
+                                    <span className="features__section-number">
+                                        {currentPageIndex + 1}.{sectionIndex + 1}
+                                    </span>
+                                    {section.title}
+                                </h2>
+                                {section.content ? (
+                                    <div className="features__prose">{section.content}</div>
                                 ) : (
-                                    <Anchor
-                                        component={Link}
-                                        to="/create"
-                                        className="features-page__creator-link"
-                                    >
-                                        Create a character <IconArrowUpRight size={16} />
-                                    </Anchor>
+                                    <ImagePlaceholder label="Content and screenshots coming soon" />
                                 )}
-                            </Group>
-                        </Container>
-                    </Box>
-
-                    <Container size="lg" className="features-page__layout">
-                        <aside className="features-page__sidebar">{navigation}</aside>
-
-                        <Box className="features-page__mobile-navigation">
-                            <Group justify="space-between">
-                                <Text fw={600}>Browse this guide</Text>
-                                <Burger
-                                    opened={mobileNavigationOpened}
-                                    onClick={toggleMobileNavigation}
-                                    aria-label="Toggle feature guide navigation"
-                                    color="var(--features-gold)"
-                                    size="sm"
-                                />
-                            </Group>
-                            {mobileNavigationOpened ? <Box mt="md">{navigation}</Box> : null}
-                        </Box>
-
-                        <main className="features-page__content">
-                            <section id={currentPage.id} className="features-page__page">
-                                <Text className="features-page__page-number">
-                                    {String(currentPageIndex + 1).padStart(2, "0")}
-                                </Text>
-                                <Title order={2} className="features-page__page-title">
-                                    {currentPage.title}
-                                </Title>
-                                {currentPage.intro ? (
-                                    <Stack
-                                        gap="md"
-                                        mt="md"
-                                        className="features-page__section-content"
-                                    >
-                                        {currentPage.intro}
-                                    </Stack>
-                                ) : null}
-                                <Stack gap="xl" mt="xl">
-                                    {currentPage.sections.map((section) => (
-                                        <section
-                                            key={section.id}
-                                            id={section.id}
-                                            className="features-page__section"
-                                        >
-                                            <Title
-                                                order={3}
-                                                className="features-page__section-title"
-                                            >
-                                                {section.title}
-                                            </Title>
-                                            {section.content ? (
-                                                <Stack
-                                                    gap="md"
-                                                    mt="md"
-                                                    className="features-page__section-content"
-                                                >
-                                                    {section.content}
-                                                </Stack>
-                                            ) : (
-                                                <Paper
-                                                    className="features-page__placeholder"
-                                                    radius="md"
-                                                >
-                                                    <IconPhoto size={22} stroke={1.4} />
-                                                    <Text>Content and screenshots coming soon</Text>
-                                                </Paper>
-                                            )}
-                                        </section>
-                                    ))}
-                                </Stack>
                             </section>
+                        ))}
 
-                            <Group justify="flex-end" mt="5rem">
-                                <Button
+                        <nav className="features__pager" aria-label="Chapters">
+                            {previousPage ? (
+                                <Panel
                                     component={Link}
-                                    to={nextPage.path}
+                                    to={previousPage.path}
+                                    interactive
+                                    p="lg"
+                                    className="features__pager-link"
+                                    data-direction="previous"
                                     onClick={() =>
                                         trackFeatureGuideNavigationSelected({
-                                            page: nextPage.id
+                                            page: previousPage.id
                                         })
                                     }
-                                    rightSection={<IconArrowRight size={16} />}
-                                    className="features-page__next-page"
                                 >
-                                    {nextPage.title}
-                                </Button>
-                            </Group>
-                        </main>
-                    </Container>
-                </AppShell.Main>
-            </AppShell>
-        </Box>
+                                    <IconArrowLeft size={18} className="features__pager-icon" />
+                                    <span className="features__pager-text">
+                                        <span className="features__pager-label">
+                                            Previous chapter
+                                        </span>
+                                        <span className="features__pager-title">
+                                            {previousPage.title}
+                                        </span>
+                                    </span>
+                                </Panel>
+                            ) : (
+                                <span aria-hidden="true" />
+                            )}
+                            <Panel
+                                component={Link}
+                                to={nextPage.path}
+                                interactive
+                                p="lg"
+                                className="features__pager-link"
+                                data-direction="next"
+                                onClick={() =>
+                                    trackFeatureGuideNavigationSelected({
+                                        page: nextPage.id
+                                    })
+                                }
+                            >
+                                <span className="features__pager-text">
+                                    <span className="features__pager-label">
+                                        {nextWrapsAround ? "Back to the start" : "Next chapter"}
+                                    </span>
+                                    <span className="features__pager-title">{nextPage.title}</span>
+                                </span>
+                                <IconArrowRight size={18} className="features__pager-icon" />
+                            </Panel>
+                        </nav>
+                    </article>
+                </div>
+            </div>
+        </PageShell>
     )
 }

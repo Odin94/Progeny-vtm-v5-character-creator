@@ -1,6 +1,170 @@
+/* ==========================================================================
+   Progeny design tokens + global base styles.
+   Documented in frontend/DESIGN.md. JS mirrors live in src/theme/tokens.ts.
+   ========================================================================== */
+
 #ph-conversations-widget-container:not([data-progeny-support-open="true"]) {
     display: none !important;
 }
+
+:root {
+    color-scheme: dark;
+
+    /* ---- Typography ------------------------------------------------------ */
+    --pg-font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --pg-font-body:
+        "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+        sans-serif;
+    --pg-font-lore: "Crimson Text", Georgia, "Times New Roman", serif;
+    --pg-font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --pg-tracking-display: 0.04em;
+    --pg-tracking-caps: 0.14em;
+
+    /* ---- Surfaces (low → high elevation) ---------------------------------- */
+    --pg-abyss: #050404;
+    --pg-bg: #110d10;
+    --pg-surface-1: #171216;
+    --pg-surface-2: #1e181c;
+    --pg-surface-3: #282026;
+    --pg-surface-4: #32282f;
+    --pg-surface-overlay: rgba(24, 19, 23, 0.97);
+    --pg-surface-glass: rgba(14, 10, 13, 0.74);
+    --pg-sunken: rgba(0, 0, 0, 0.32);
+    --pg-scrim: rgba(5, 3, 4, 0.74);
+
+    /* ---- Ink ----------------------------------------------------------- */
+    --pg-ink: #f2eae6;
+    --pg-ink-2: rgba(242, 234, 230, 0.78);
+    --pg-ink-3: rgba(242, 234, 230, 0.58);
+    --pg-ink-4: rgba(242, 234, 230, 0.38);
+    --pg-ink-inverse: #140f12;
+
+    /* ---- Accents --------------------------------------------------------- */
+    /* --pg-accent follows the active Mantine primary color, so it becomes the clan color
+       inside the character sheet's nested MantineProvider. */
+    --pg-accent: var(--mantine-primary-color-filled);
+    --pg-accent-bright: var(--mantine-primary-color-4);
+    --pg-accent-soft: color-mix(in srgb, var(--mantine-primary-color-filled) 16%, transparent);
+    --pg-blood: #b01e2f;
+    --pg-blood-bright: #dc3446;
+    --pg-blood-deep: #6e111c;
+    --pg-violet: #7e4ac9;
+    --pg-violet-bright: #9e74df;
+    --pg-gold: #d4af64;
+    --pg-gold-dim: rgba(212, 175, 100, 0.62);
+
+    /* ---- Semantic -------------------------------------------------------- */
+    --pg-success: #5fae86;
+    --pg-warning: #e0a23f;
+    --pg-danger: var(--pg-blood-bright);
+    --pg-info: #8aa4e0;
+
+    /* ---- Borders --------------------------------------------------------- */
+    --pg-border-faint: rgba(242, 220, 210, 0.06);
+    --pg-border: rgba(242, 220, 210, 0.1);
+    --pg-border-strong: rgba(242, 220, 210, 0.18);
+    --pg-border-gold: rgba(212, 175, 100, 0.24);
+    --pg-border-blood: rgba(220, 52, 70, 0.42);
+    --pg-border-accent: color-mix(in srgb, var(--mantine-primary-color-filled) 55%, transparent);
+
+    /* ---- Selection + focus ---------------------------------------------- */
+    --pg-selection-bg: color-mix(in srgb, var(--mantine-primary-color-filled) 45%, transparent);
+    --pg-focus-ring: color-mix(in srgb, var(--mantine-primary-color-4) 60%, transparent);
+
+    /* ---- Spacing (4px grid) --------------------------------------------- */
+    --pg-space-1: 4px;
+    --pg-space-2: 8px;
+    --pg-space-3: 12px;
+    --pg-space-4: 16px;
+    --pg-space-5: 20px;
+    --pg-space-6: 24px;
+    --pg-space-8: 32px;
+    --pg-space-10: 40px;
+    --pg-space-12: 48px;
+    --pg-space-16: 64px;
+
+    /* ---- Radii ------------------------------------------------------------ */
+    --pg-radius-xs: 2px;
+    --pg-radius-sm: 4px;
+    --pg-radius-md: 6px;
+    --pg-radius-lg: 10px;
+    --pg-radius-xl: 16px;
+    --pg-radius-round: 999px;
+
+    /* ---- Shadows / glows ------------------------------------------------ */
+    --pg-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --pg-shadow-2: 0 6px 16px -4px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.45);
+    --pg-shadow-3: 0 16px 36px -10px rgba(0, 0, 0, 0.75), 0 3px 8px rgba(0, 0, 0, 0.45);
+    --pg-shadow-4: 0 28px 70px -16px rgba(0, 0, 0, 0.85), 0 6px 16px rgba(0, 0, 0, 0.5);
+    --pg-shadow-inset-top: inset 0 1px 0 rgba(255, 238, 228, 0.05);
+    --pg-glow-accent: 0 0 26px -6px
+        color-mix(in srgb, var(--mantine-primary-color-filled) 60%, transparent);
+    --pg-glow-blood: 0 0 28px -6px rgba(220, 52, 70, 0.5);
+    --pg-glow-candle: 0 0 36px -10px rgba(212, 175, 100, 0.45);
+
+    /* ---- Motion ----------------------------------------------------------- */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --pg-dur-press: 120ms;
+    --pg-dur-fast: 150ms;
+    --pg-dur-base: 200ms;
+    --pg-dur-slow: 260ms;
+    --pg-dur-exit: 140ms;
+    --pg-scale-from-modal: 0.96;
+    --pg-scale-from-popover: 0.95;
+    --pg-scale-from-tooltip: 0.97;
+    --pg-press-scale: 0.97;
+    /* Legacy aliases (kept for existing CSS). */
+    --motion-ease-out: var(--ease-out);
+    --motion-ease-in-out: var(--ease-in-out);
+    --motion-ease-drawer: var(--ease-drawer);
+    --motion-duration-press: var(--pg-dur-press);
+    --motion-duration-ui: 180ms;
+
+    /* ---- Z-index ---------------------------------------------------------- */
+    --pg-z-raised: 1;
+    --pg-z-sticky: 10;
+    --pg-z-header: 100;
+    --pg-z-modal: 200;
+    --pg-z-popover: 300;
+    --pg-z-overlay: 400;
+    --pg-z-spotlight: 1000;
+    --pg-z-cookie: 2500;
+    --pg-z-toast: 3000;
+
+    /* ---- Layout ------------------------------------------------------------ */
+    --pg-topbar-h: 52px;
+    --pg-content-max: 1200px;
+    --pg-gutter: clamp(16px, 4vw, 32px);
+    --pg-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --pg-safe-top: env(safe-area-inset-top, 0px);
+
+    /* ---- Textures ---------------------------------------------------------- */
+    --pg-texture-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.94 0 0 0 0 0.9 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --pg-backdrop:
+        radial-gradient(120% 70% at 50% -10%, rgba(120, 18, 32, 0.22), transparent 60%),
+        radial-gradient(80% 60% at 100% 110%, rgba(78, 42, 130, 0.16), transparent 65%),
+        var(--pg-bg);
+
+    /* Legacy (quoted value was never valid; kept so nothing referencing it breaks). */
+    --text-color: var(--pg-ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        /* Keep fades, drop movement. */
+        --pg-scale-from-modal: 1;
+        --pg-scale-from-popover: 1;
+        --pg-scale-from-tooltip: 1;
+        --pg-press-scale: 1;
+    }
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
 
 html,
 body,
@@ -12,27 +176,206 @@ body,
 html {
     /* Keep centered containers aligned between scrolling and non-scrolling routes. */
     scrollbar-gutter: stable;
-}
-
-:root {
-    --text-color: "#c9c9c9";
-    --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-    --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-    --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-    --motion-duration-press: 140ms;
-    --motion-duration-ui: 180ms;
+    /* The backdrop lives on <html> (the canvas) so fixed, negative-z page backgrounds such
+       as the character sheet photo still show through a transparent <body>. */
+    background: var(--pg-backdrop);
+    background-color: var(--pg-bg);
+    background-attachment: fixed;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
-        "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    font-family: var(--pg-font-body);
+    color: var(--pg-ink);
+    background: transparent;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings:
+        "cv11" 1,
+        "ss01" 1;
 }
 
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+/* A whisper of film grain over the whole app — gives every surface a printed, book-page
+   feel. Static texture, composited once, never intercepts input. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    pointer-events: none;
+    background-image: var(--pg-texture-grain);
+    background-size: 220px 220px;
+    opacity: 0.045;
+}
+
+code,
+kbd,
+pre {
+    font-family: var(--pg-font-mono);
+}
+
+::selection {
+    background: var(--pg-selection-bg);
+    color: var(--pg-ink);
+}
+
+/* ---- Focus: light ring that sits flush against the component's border ---- */
+:where(a, button, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid var(--pg-focus-ring);
+    outline-offset: 0;
+}
+
+.mantine-focus-auto:focus-visible,
+.mantine-focus-always:focus {
+    outline: 2px solid var(--pg-focus-ring);
+    outline-offset: 0;
+}
+
+/* ---- Press feedback for every Mantine clickable (Button, ActionIcon, CloseButton…) */
+.mantine-active {
+    transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+    transition-duration: var(--pg-dur-press);
+    transition-timing-function: var(--ease-out);
+}
+
+.mantine-active:active:not(:disabled, [data-disabled], [data-loading]) {
+    transform: scale(var(--pg-press-scale));
+}
+
+/* ---- Pointer cursor on anything clickable ---- */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+a[href],
+summary,
+label[for],
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"]::file-selector-button {
+    cursor: pointer;
+}
+
+button:disabled,
+[data-disabled],
+[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+/* ---- Themed scrollbars ---- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(242, 220, 210, 0.16) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(242, 220, 210, 0.16);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--mantine-primary-color-filled) 70%, transparent);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Toasts clear the home indicator / mobile browser chrome. */
+.mantine-Notifications-root[data-position^="bottom"] {
+    bottom: calc(var(--mantine-spacing-md) + var(--pg-safe-bottom));
+}
+
+/* ==========================================================================
+   Utilities (opt-in, documented in DESIGN.md)
+   ========================================================================== */
+
+/* Display type: Cinzel, tracked. */
+.pg-display {
+    font-family: var(--pg-font-display);
+    letter-spacing: var(--pg-tracking-display);
+    font-weight: 600;
+}
+
+/* Small-caps eyebrow label above headings. */
+.pg-eyebrow {
+    font-family: var(--pg-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+}
+
+/* Serif "lore" voice for flavor text, quotes, descriptions. */
+.pg-lore {
+    font-family: var(--pg-font-lore);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    color: var(--pg-ink-2);
+}
+
+/* Grain texture layered on a surface (use sparingly: hero panels, ornate cards). */
+.pg-grain {
+    position: relative;
+    isolation: isolate;
+}
+
+.pg-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: var(--pg-texture-grain);
+    background-size: 220px 220px;
+    opacity: 0.06;
+}
+
+/* Hairline gold rule. */
+.pg-rule {
+    height: 1px;
+    border: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--pg-border-gold) 18%,
+        var(--pg-border-gold) 82%,
+        transparent
+    );
+}
+
+/* Respect the mobile browser chrome / home indicator for fixed bottom UI. */
+.pg-safe-bottom {
+    padding-bottom: calc(var(--pg-safe-bottom) + var(--pg-space-2));
+}
+
+.pg-visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* The dice tray stays visually clean at rest, then reveals a blood-red scroll thumb while

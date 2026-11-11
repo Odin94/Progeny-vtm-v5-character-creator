@@ -1,0 +1,54 @@
+.root {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.drop {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--pg-radius-sm);
+    color: var(--pg-ink-4);
+    cursor: pointer;
+    transition:
+        color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.drop[data-active] {
+    color: var(--pg-blood-bright);
+}
+
+.drop[data-active] svg {
+    fill: currentColor;
+    filter: drop-shadow(0 0 4px rgba(220, 52, 70, 0.55));
+}
+
+.drop:active {
+    transform: scale(0.88);
+}
+
+.drop[data-placeholder] {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .drop:hover {
+        color: var(--pg-blood-bright);
+        transform: scale(1.1);
+    }
+
+    .drop:hover:active {
+        transform: scale(0.94);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .drop:hover,
+    .drop:active {
+        transform: none;
+    }
+}

@@ -1,0 +1,306 @@
+/* Predator type cards, grouped by hunting style. --cat is the category color. */
+
+.category {
+    --cat: var(--pg-blood-bright);
+}
+
+.category[data-category="violent"] {
+    --cat: var(--pg-blood-bright);
+}
+
+.category[data-category="sociable"] {
+    --cat: var(--mantine-color-grape-4);
+}
+
+.category[data-category="stealth"] {
+    --cat: #c9bdb8;
+}
+
+.category[data-category="exclusive"] {
+    --cat: var(--mantine-color-violet-4);
+}
+
+.category[data-category="homebrew"] {
+    --cat: var(--mantine-color-grape-4);
+}
+
+.categoryHead {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.categoryRule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--cat) 40%, transparent)
+    );
+}
+
+.categoryRule[data-side="end"] {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--cat) 40%, transparent),
+        transparent
+    );
+}
+
+.categoryLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--pg-font-display);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cat);
+    white-space: nowrap;
+}
+
+.categoryLabel::before,
+.categoryLabel::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    transform: rotate(45deg);
+    background: currentColor;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    padding: 14px 16px 14px 18px;
+    overflow: hidden;
+    border-radius: var(--pg-radius-lg);
+    border: 1px solid color-mix(in srgb, var(--cat) 20%, var(--pg-border));
+    background:
+        linear-gradient(
+            100deg,
+            color-mix(in srgb, var(--cat) 12%, transparent) 0%,
+            transparent 55%
+        ),
+        rgba(20, 15, 19, 0.82);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--pg-shadow-inset-top);
+    color: var(--pg-ink);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-base) var(--ease-out);
+}
+
+/* Category spine on the leading edge. */
+.card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--cat);
+    opacity: 0.55;
+    transition: opacity var(--pg-dur-fast) var(--ease-out);
+}
+
+.card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+        120% 120% at 0% 0%,
+        color-mix(in srgb, var(--cat) 22%, transparent),
+        transparent 60%
+    );
+    opacity: 0;
+    transition: opacity var(--pg-dur-base) var(--ease-out);
+}
+
+.card:active:not([aria-disabled="true"]) {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .card:hover:not([aria-disabled="true"]) {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--cat) 55%, transparent);
+        box-shadow:
+            var(--pg-shadow-inset-top),
+            var(--pg-shadow-2),
+            0 0 26px -10px var(--cat);
+    }
+
+    .card:hover:not([aria-disabled="true"])::before,
+    .card:hover:not([aria-disabled="true"])::after {
+        opacity: 1;
+    }
+
+    .card:active:not([aria-disabled="true"]) {
+        transform: translateY(-2px) scale(var(--pg-press-scale));
+    }
+}
+
+.card[data-selected] {
+    border-color: var(--cat);
+    box-shadow:
+        var(--pg-shadow-inset-top),
+        0 0 0 1px var(--cat) inset,
+        0 0 30px -10px var(--cat);
+}
+
+.card[data-selected]::before,
+.card[data-selected]::after {
+    opacity: 1;
+}
+
+.card[data-locked] {
+    border-style: dashed;
+    background: rgba(16, 12, 15, 0.82);
+}
+
+.card[data-locked] .name,
+.card[data-locked] .summary,
+.card[data-locked] .chips {
+    opacity: 0.62;
+}
+
+.card[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.name {
+    flex: 1;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: var(--pg-font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-display);
+    line-height: 1.2;
+}
+
+.state {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px 2px 5px;
+    border-radius: var(--pg-radius-sm);
+    font-family: var(--pg-font-body);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+}
+
+.state[data-kind="chosen"] {
+    border: 1px solid color-mix(in srgb, var(--cat) 60%, transparent);
+    background: color-mix(in srgb, var(--cat) 22%, rgba(10, 8, 9, 0.8));
+    color: var(--pg-ink);
+}
+
+.state[data-kind="locked"] {
+    border: 1px solid var(--pg-border-blood);
+    background: rgba(176, 30, 47, 0.14);
+    color: #f08c97;
+}
+
+.summary {
+    font-family: var(--pg-font-lore);
+    font-size: 1.02rem;
+    line-height: 1.32;
+    color: var(--pg-ink-2);
+}
+
+.lockNote {
+    font-family: var(--pg-font-body);
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: #f08c97;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+}
+
+.chip {
+    padding: 2px 8px;
+    border-radius: var(--pg-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--cat) 34%, transparent);
+    background: color-mix(in srgb, var(--cat) 10%, transparent);
+    font-family: var(--pg-font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--pg-ink-2);
+}
+
+/* ---- Thin-blood notice ------------------------------------------------------------ */
+
+.thinBlood {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--pg-space-5);
+    max-width: 520px;
+    margin: auto;
+    text-align: center;
+}
+
+.thinBloodText {
+    font-family: var(--pg-font-lore);
+    font-size: clamp(1.3rem, 1.1rem + 1vw, 1.7rem);
+    line-height: 1.25;
+    color: var(--pg-ink-2);
+}
+
+.thinBloodText b {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    color: var(--pg-blood-bright);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card:hover,
+    .card:active {
+        transform: none !important;
+    }
+}

@@ -1,0 +1,328 @@
+/* Clan selection: a grid of sigil cards, each lit in its clan's color (--clan). */
+
+.grid {
+    container: clangrid / inline-size;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+.grid > * {
+    flex: 1 1 232px;
+    max-width: 100%;
+}
+
+@container clangrid (min-width: 500px) {
+    .grid > * {
+        max-width: calc(50% - 7px);
+    }
+}
+
+@container clangrid (min-width: 700px) {
+    .grid > * {
+        max-width: calc((100% - 28px) / 3);
+    }
+}
+
+.card {
+    --clan: var(--pg-blood-bright);
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 300px;
+    padding: 22px 18px 18px;
+    overflow: hidden;
+    border-radius: var(--pg-radius-lg);
+    border: 1px solid color-mix(in srgb, var(--clan) 22%, var(--pg-border));
+    background:
+        radial-gradient(
+            130% 70% at 50% 0%,
+            color-mix(in srgb, var(--clan) 26%, transparent) 0%,
+            transparent 62%
+        ),
+        linear-gradient(180deg, rgba(26, 20, 24, 0.86) 0%, rgba(14, 11, 13, 0.94) 100%);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--pg-shadow-inset-top), var(--pg-shadow-2);
+    color: var(--pg-ink);
+    text-align: center;
+    cursor: pointer;
+    transition:
+        border-color var(--pg-dur-base) var(--ease-out),
+        box-shadow var(--pg-dur-base) var(--ease-out),
+        transform var(--pg-dur-base) var(--ease-out);
+}
+
+/* Hairline of clan color along the top edge. */
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0 18% auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--clan), transparent);
+    opacity: 0.7;
+}
+
+/* Glow layer: only its opacity animates on hover/selection. */
+.card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+        90% 60% at 50% 18%,
+        color-mix(in srgb, var(--clan) 30%, transparent) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity var(--pg-dur-base) var(--ease-out);
+}
+
+.card:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .card:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--clan) 60%, transparent);
+        box-shadow:
+            var(--pg-shadow-inset-top),
+            var(--pg-shadow-3),
+            0 0 32px -10px color-mix(in srgb, var(--clan) 75%, transparent);
+    }
+
+    .card:hover::after {
+        opacity: 1;
+    }
+
+    .card:hover .sigil {
+        transform: scale(1.04);
+    }
+
+    .card:active {
+        transform: translateY(-3px) scale(var(--pg-press-scale));
+    }
+}
+
+.card[data-selected] {
+    border-color: var(--clan);
+    box-shadow:
+        var(--pg-shadow-inset-top),
+        0 0 0 1px var(--clan) inset,
+        0 0 36px -8px color-mix(in srgb, var(--clan) 80%, transparent);
+}
+
+.card[data-selected]::after {
+    opacity: 1;
+}
+
+.chosen {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px 3px 5px;
+    border-radius: var(--pg-radius-sm);
+    background: color-mix(in srgb, var(--clan) 24%, rgba(10, 8, 9, 0.8));
+    border: 1px solid color-mix(in srgb, var(--clan) 60%, transparent);
+    font-family: var(--pg-font-body);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink);
+}
+
+/* ---- Sigil medallion ----------------------------------------------------------- */
+
+.medallion {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 112px;
+    height: 112px;
+    flex-shrink: 0;
+}
+
+.medallion::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--clan) 34%, transparent);
+    background: radial-gradient(
+        circle at 50% 40%,
+        color-mix(in srgb, var(--clan) 22%, transparent),
+        rgba(5, 4, 4, 0.4) 70%
+    );
+    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.55);
+}
+
+/* The clan logos are black silhouettes; mask them and paint them bone-to-clan. */
+.sigil {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    background: linear-gradient(
+        180deg,
+        var(--pg-ink) 0%,
+        color-mix(in srgb, var(--clan) 55%, var(--pg-ink)) 100%
+    );
+    -webkit-mask: var(--sigil) center / contain no-repeat;
+    mask: var(--sigil) center / contain no-repeat;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+    transition: transform var(--pg-dur-base) var(--ease-out);
+}
+
+.sigilImage {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.sigilFallback {
+    position: relative;
+    color: var(--pg-ink-2);
+}
+
+/* ---- Text --------------------------------------------------------------------------- */
+
+.body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    width: 100%;
+    flex: 1;
+}
+
+.name {
+    font-family: var(--pg-font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-display);
+    line-height: 1.15;
+    color: var(--pg-ink);
+}
+
+.description {
+    font-family: var(--pg-font-lore);
+    font-size: 1.02rem;
+    line-height: 1.32;
+    color: var(--pg-ink-3);
+    text-wrap: balance;
+}
+
+.disciplines {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 10px;
+}
+
+.discipline {
+    padding: 3px 8px;
+    border-radius: var(--pg-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--clan) 38%, transparent);
+    background: color-mix(in srgb, var(--clan) 12%, transparent);
+    font-family: var(--pg-font-body);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--pg-ink-2);
+}
+
+/* ---- Phones: horizontal cards ------------------------------------------------------- */
+
+@media (max-width: 560px) {
+    .grid {
+        gap: 10px;
+    }
+
+    .card {
+        flex-direction: row;
+        align-items: center;
+        gap: 14px;
+        min-height: 0;
+        padding: 14px 14px 14px 10px;
+        text-align: left;
+    }
+
+    .card::before {
+        inset: 14% auto 14% 0;
+        width: 1px;
+        height: auto;
+        background: linear-gradient(180deg, transparent, var(--clan), transparent);
+    }
+
+    .medallion {
+        width: 76px;
+        height: 76px;
+    }
+
+    .medallion::before {
+        inset: 3px;
+    }
+
+    .sigil,
+    .sigilImage {
+        width: 50px;
+        height: 50px;
+    }
+
+    .body {
+        align-items: flex-start;
+        gap: 3px;
+    }
+
+    .name {
+        font-size: 1.12rem;
+    }
+
+    .description {
+        font-size: 0.95rem;
+        text-wrap: pretty;
+    }
+
+    .disciplines {
+        justify-content: flex-start;
+        padding-top: 6px;
+        gap: 4px;
+    }
+
+    .discipline {
+        font-size: 0.62rem;
+        padding: 2px 6px;
+    }
+
+    .chosen {
+        top: 8px;
+        right: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card:hover,
+    .card:active {
+        transform: none;
+    }
+
+    .card:hover .sigil {
+        transform: none;
+    }
+}

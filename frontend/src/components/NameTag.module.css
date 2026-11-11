@@ -1,0 +1,21 @@
+/* Highlighted player name tag (opt-in perk). Violet-to-rose seal with a faint gilt edge. */
+.tag {
+    text-transform: none;
+    letter-spacing: 0.01em;
+    font-weight: 600;
+    color: var(--pg-ink);
+    background: linear-gradient(
+        110deg,
+        var(--mantine-color-grape-8) 0%,
+        var(--mantine-color-grape-7) 45%,
+        var(--mantine-color-pink-8) 100%
+    );
+    border: 1px solid rgba(255, 220, 240, 0.22);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        0 0 14px -2px rgba(158, 116, 223, 0.45);
+}
+
+.icon {
+    color: var(--pg-gold);
+}

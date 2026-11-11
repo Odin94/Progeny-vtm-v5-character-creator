@@ -1,50 +1,57 @@
 import type { ButtonProps } from "@mantine/core"
-import { RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 
+/**
+ * Inline styles for the generator's primary confirm button. Prefer `GeneratorConfirmButton`
+ * from `./sharedGeneratorUi` for new code: it adds the hover glow, arrow and `disabledReason`
+ * tooltip. These styles render the same resting look for existing `<Button styles={…}>` call sites.
+ */
 export const generatorConfirmButtonStyles: ButtonProps["styles"] = (_theme, props) => ({
     root: {
         minWidth: 180,
-        background: `linear-gradient(135deg, ${rgba(RAW_GRAPE, 0.92)}, ${rgba(RAW_RED, 0.88)})`,
-        boxShadow: `0 16px 32px ${rgba(RAW_GRAPE, 0.3)}`,
         ...(props.disabled || props["data-disabled"]
             ? {
-                  background: "linear-gradient(135deg, #4a4053, #514045)",
-                  borderColor: "#625363",
-                  color: "#c2bbc6",
+                  background: "var(--pg-surface-3)",
+                  borderColor: "var(--pg-border)",
+                  color: "var(--pg-ink-4)",
                   boxShadow: "none",
                   cursor: "not-allowed"
               }
-            : {})
+            : {
+                  background: "linear-gradient(135deg, var(--pg-blood) 0%, var(--pg-violet) 140%)",
+                  borderColor: "rgba(255, 220, 220, 0.1)",
+                  color: "var(--pg-ink)",
+                  boxShadow:
+                      "inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 12px 28px -10px rgba(176, 30, 47, 0.7)"
+              })
     },
     label: {
-        fontFamily: "Cinzel, Georgia, serif",
-        letterSpacing: "0.08em",
+        fontFamily: "var(--pg-font-display)",
+        letterSpacing: "0.1em",
         textTransform: "uppercase" as const
     }
 })
 
 export const generatorOutlineActionButtonStyles = {
     root: {
-        borderColor: rgba(RAW_RED, 0.4),
-        background: rgba(RAW_RED, 0.08),
+        borderColor: "var(--pg-border-blood)",
+        background: "rgba(176, 30, 47, 0.08)",
         boxShadow: "none",
-        transition:
-            "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
         letterSpacing: "0.14em",
         textTransform: "uppercase" as const,
-        fontFamily: "Cinzel, Georgia, serif"
+        fontFamily: "var(--pg-font-display)"
     },
     section: {
-        color: rgba(RAW_RED, 1)
+        color: "var(--pg-blood-bright)"
     }
 }
 
 export const confirmationModalDangerConfirmButtonStyles = {
     root: {
-        background: `linear-gradient(180deg, ${rgba(RAW_RED, 0.92)} 0%, rgba(186, 38, 38, 0.95) 100%)`,
+        background: "linear-gradient(180deg, #c82638 0%, #931826 100%)",
         letterSpacing: "0.08em",
         textTransform: "uppercase" as const,
-        fontFamily: "Cinzel, Georgia, serif",
-        boxShadow: `0 10px 24px ${rgba(RAW_RED, 0.24)}`
+        fontFamily: "var(--pg-font-display)",
+        boxShadow:
+            "inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 24px -6px rgba(220, 52, 70, 0.45)"
     }
 }

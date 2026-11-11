@@ -45,7 +45,7 @@ const OrnamentalDividerFlourish = () => (
 const OrnamentalDivider = ({
     label,
     compact = false,
-    color = "#b9414c",
+    color = "var(--pg-blood-bright)",
     size = "default"
 }: OrnamentalDividerProps) => (
     <div

@@ -1,49 +1,51 @@
-import {
-    Box,
-    Grid,
-    Group,
-    Paper,
-    Stack,
-    Text,
-    Title,
-    Badge,
-    Center,
-    ActionIcon,
-    Button,
-    Tooltip,
-    Textarea
-} from "@mantine/core"
+import { Button, Textarea, Tooltip } from "@mantine/core"
 import { memo, useState, useMemo } from "react"
 import type { SheetOptions } from "../CharacterSheet"
-import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import MeritFlawSelectModal from "../components/MeritFlawSelectModal"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import { MeritFlaw } from "~/data/Character"
-import { IconEdit, IconPlus, IconX } from "@tabler/icons-react"
-import { getSheetMeritsAndFlaws } from "../utils/meritsAndFlaws"
+import { IconNote, IconPlus, IconTrash } from "@tabler/icons-react"
+import { getSheetMeritsAndFlaws, type SheetMeritFlaw } from "../utils/meritsAndFlaws"
 import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import { getMeritFlawCustomTextKey, updateCustomText } from "~/utils/customText"
-
-const meritFlawCardStyle = {
-    ...sheetSurfaceStyle,
-    minHeight: "156px",
-    position: "relative"
-} as const
+import {
+    DeleteIconButton,
+    IconButton,
+    useContextMenu,
+    type ContextMenuEntry
+} from "~/components/ui"
+import classes from "../sheet.module.css"
 
 type MeritsAndFlawsProps = {
     options: SheetOptions
 }
+
+type Kind = "merit" | "flaw"
+
+const LevelDots = ({ level, kind }: { level: number; kind: Kind }) =>
+    level > 0 ? (
+        <span className={classes.levelDots} data-kind={kind} aria-label={`Level ${level}`}>
+            {Array.from({ length: level }, (_, index) => (
+                <span key={index} className={classes.levelDot} />
+            ))}
+        </span>
+    ) : (
+        <span className={classes.levelZero} aria-label="Level 0">
+            0
+        </span>
+    )
 
 const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     const { character, primaryColor, mode, setCharacter } = options
     const [meritModalOpened, setMeritModalOpened] = useState(false)
     const [flawModalOpened, setFlawModalOpened] = useState(false)
     const [itemToDelete, setItemToDelete] = useState<{
-        type: "merit" | "flaw"
+        type: Kind
         item: MeritFlaw
     } | null>(null)
     const [editingCustomText, setEditingCustomText] = useState<string | null>(null)
+    const contextMenu = useContextMenu()
     const isEditable = mode === "xp" || mode === "free"
     const isFreeMode = mode === "free"
 
@@ -54,14 +56,6 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
 
     if (allMerits.length === 0 && allFlaws.length === 0 && !isEditable) {
         return null
-    }
-
-    const handleDeleteMerit = (merit: MeritFlaw) => {
-        setItemToDelete({ type: "merit", item: merit })
-    }
-
-    const handleDeleteFlaw = (flaw: MeritFlaw) => {
-        setItemToDelete({ type: "flaw", item: flaw })
     }
 
     const confirmDelete = () => {
@@ -82,492 +76,209 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
         setItemToDelete(null)
     }
 
+    const renderItem = (kind: Kind, entry: SheetMeritFlaw, index: number) => {
+        const {
+            meritFlaw: item,
+            isFromPredatorType,
+            isUpgradedFromPredatorType,
+            isFromLoresheet,
+            isUpgradedFromLoresheet
+        } = entry
+        const isFromBonus = isFromPredatorType || isFromLoresheet
+        const displayName = getMeritFlawDisplayName(item)
+        const customTextKey = getMeritFlawCustomTextKey(item)
+        const customText = character.customText.meritFlaws[customTextKey] ?? ""
+        const customTextEditorKey = `${kind}:${customTextKey}`
+        const isEditingCustomText = editingCustomText === customTextEditorKey
+        const badgeText = isFromLoresheet
+            ? isUpgradedFromLoresheet
+                ? "Upgraded from loresheet"
+                : "From loresheet"
+            : isUpgradedFromPredatorType
+              ? "Upgraded from predator type"
+              : "From predator type"
+        const askDelete = () => setItemToDelete({ type: kind, item })
+        const toggleNote = () =>
+            setEditingCustomText((current) =>
+                current === customTextEditorKey ? null : customTextEditorKey
+            )
+        const menuItems: ContextMenuEntry[] = !isFreeMode
+            ? []
+            : isFromBonus
+              ? [
+                    {
+                        key: "note",
+                        label: "Edit note",
+                        icon: <IconNote size={14} />,
+                        onClick: () => setEditingCustomText(customTextEditorKey)
+                    }
+                ]
+              : [
+                    {
+                        key: "delete",
+                        label: `Delete ${kind}…`,
+                        color: "red",
+                        icon: <IconTrash size={14} />,
+                        onClick: askDelete
+                    }
+                ]
+
+        const card = (
+            <div
+                key={`${item.name}-${item.level}-${index}`}
+                className={`${classes.card} ${classes.meritCard}`}
+                data-kind={kind}
+                data-actionable={menuItems.length > 0 || undefined}
+                onContextMenu={
+                    menuItems.length > 0 ? (event) => contextMenu.open(event, menuItems) : undefined
+                }
+            >
+                <div className={classes.cardHead}>
+                    <p className={classes.cardTitle}>{displayName}</p>
+                    {item.homebrewSource ? <HomebrewBadge source={item.homebrewSource} /> : null}
+                    <LevelDots level={item.level} kind={kind} />
+                    {isFreeMode ? (
+                        <div className={classes.cardActions}>
+                            {isFromBonus ? (
+                                <span
+                                    className={classes.disabledWrap}
+                                    onMouseDown={(event) => event.preventDefault()}
+                                >
+                                    <IconButton
+                                        size="sm"
+                                        label={`Edit ${displayName} custom note`}
+                                        icon={<IconNote size={15} />}
+                                        onClick={toggleNote}
+                                    />
+                                </span>
+                            ) : (
+                                <DeleteIconButton
+                                    size="sm"
+                                    label={`Delete ${displayName}`}
+                                    onClick={askDelete}
+                                />
+                            )}
+                        </div>
+                    ) : null}
+                </div>
+                {isFreeMode && !isFromBonus ? (
+                    <Textarea
+                        aria-label={`${displayName} description`}
+                        value={item.summary}
+                        onChange={(event) => {
+                            const summary = event.currentTarget.value
+                            setCharacter((current) => ({
+                                ...current,
+                                [kind === "merit" ? "merits" : "flaws"]: (kind === "merit"
+                                    ? current.merits
+                                    : current.flaws
+                                ).map((candidate) =>
+                                    candidate === item ? { ...candidate, summary } : candidate
+                                )
+                            }))
+                        }}
+                        placeholder="Description..."
+                        autosize
+                        minRows={2}
+                        size="sm"
+                    />
+                ) : item.summary ? (
+                    <p className={classes.cardBody}>
+                        {item.summary.charAt(0).toUpperCase() + item.summary.slice(1)}
+                    </p>
+                ) : null}
+                {isEditingCustomText ? (
+                    <Textarea
+                        aria-label={`${displayName} custom note`}
+                        value={customText}
+                        onChange={(event) => {
+                            const value = event.currentTarget.value
+                            setCharacter((current) => ({
+                                ...current,
+                                customText: updateCustomText(
+                                    current,
+                                    "meritFlaws",
+                                    customTextKey,
+                                    value
+                                )
+                            }))
+                        }}
+                        placeholder="Add a custom note..."
+                        minRows={2}
+                        size="sm"
+                        autoFocus
+                        onBlur={() => setEditingCustomText(null)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                event.preventDefault()
+                                setEditingCustomText(null)
+                            }
+                        }}
+                    />
+                ) : customText ? (
+                    <p className={classes.cardNote}>{customText}</p>
+                ) : null}
+                {isFromBonus ? <span className={classes.tag}>{badgeText}</span> : null}
+            </div>
+        )
+
+        if (isFromBonus) {
+            return (
+                <Tooltip
+                    key={index}
+                    label={isFromLoresheet ? "Added by loresheet" : "Added by predator type"}
+                    withArrow
+                >
+                    <div>{card}</div>
+                </Tooltip>
+            )
+        }
+
+        return card
+    }
+
+    const renderColumn = (kind: Kind, entries: SheetMeritFlaw[]) => (
+        <div>
+            <h3
+                className={classes.subsectionTitle}
+                data-tone={kind === "flaw" ? "blood" : undefined}
+            >
+                {kind === "merit" ? "Merits" : "Flaws"}
+                <span className={classes.subsectionCount}>{entries.length}</span>
+            </h3>
+            <div className={classes.meritList}>
+                {entries.map((entry, index) => renderItem(kind, entry, index))}
+                {isEditable ? (
+                    <div
+                        className={classes.addTile}
+                        data-compact
+                        data-tone={kind === "flaw" ? "blood" : undefined}
+                    >
+                        <Button
+                            size="sm"
+                            variant="light"
+                            color={kind === "merit" ? primaryColor : "red"}
+                            leftSection={<IconPlus size={16} />}
+                            onClick={() =>
+                                kind === "merit"
+                                    ? setMeritModalOpened(true)
+                                    : setFlawModalOpened(true)
+                            }
+                        >
+                            {kind === "merit" ? "Add merit" : "Add flaw"}
+                        </Button>
+                    </div>
+                ) : null}
+            </div>
+        </div>
+    )
+
     return (
         <>
-            <Box>
-                <Grid>
-                    {allMerits.length > 0 || isEditable ? (
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Title order={4} mb="sm">
-                                Merits
-                            </Title>
-                            <Stack gap="xs">
-                                {allMerits.map(
-                                    (
-                                        {
-                                            meritFlaw: merit,
-                                            isFromPredatorType,
-                                            isUpgradedFromPredatorType,
-                                            isFromLoresheet,
-                                            isUpgradedFromLoresheet
-                                        },
-                                        index
-                                    ) => {
-                                        const isFromBonus = isFromPredatorType || isFromLoresheet
-                                        const customTextKey = getMeritFlawCustomTextKey(merit)
-                                        const customText =
-                                            character.customText.meritFlaws[customTextKey] ?? ""
-                                        const customTextEditorKey = `merit:${customTextKey}`
-                                        const isEditingCustomText =
-                                            editingCustomText === customTextEditorKey
-                                        const badgeText = isFromLoresheet
-                                            ? isUpgradedFromLoresheet
-                                                ? "Upgraded from loresheet"
-                                                : "From loresheet"
-                                            : isUpgradedFromPredatorType
-                                              ? "Upgraded from predator type"
-                                              : "From predator type"
-                                        const meritPaper = (
-                                            <Paper
-                                                key={`${merit.name}-${merit.level}-${index}`}
-                                                p="sm"
-                                                style={meritFlawCardStyle}
-                                            >
-                                                {isFreeMode && !isFromBonus ? (
-                                                    <ActionIcon
-                                                        size="sm"
-                                                        variant="subtle"
-                                                        color="red"
-                                                        onClick={() => handleDeleteMerit(merit)}
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "8px"
-                                                        }}
-                                                    >
-                                                        <IconX size={16} />
-                                                    </ActionIcon>
-                                                ) : null}
-                                                {isFreeMode && isFromBonus ? (
-                                                    <ActionIcon
-                                                        size="sm"
-                                                        variant="subtle"
-                                                        color={primaryColor}
-                                                        aria-label={`Edit ${getMeritFlawDisplayName(merit)} custom note`}
-                                                        onClick={() =>
-                                                            setEditingCustomText((current) =>
-                                                                current === customTextEditorKey
-                                                                    ? null
-                                                                    : customTextEditorKey
-                                                            )
-                                                        }
-                                                        onMouseDown={(event) =>
-                                                            event.preventDefault()
-                                                        }
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "8px"
-                                                        }}
-                                                    >
-                                                        <IconEdit size={16} />
-                                                    </ActionIcon>
-                                                ) : null}
-                                                <Group
-                                                    justify={
-                                                        isFreeMode ? "flex-start" : "space-between"
-                                                    }
-                                                >
-                                                    <Group gap="xs">
-                                                        <Text
-                                                            fw={700}
-                                                            style={{
-                                                                paddingRight: isFreeMode
-                                                                    ? "60px"
-                                                                    : "0"
-                                                            }}
-                                                        >
-                                                            {getMeritFlawDisplayName(merit)}
-                                                        </Text>
-                                                        {merit.homebrewSource ? (
-                                                            <HomebrewBadge
-                                                                source={merit.homebrewSource}
-                                                            />
-                                                        ) : null}
-                                                    </Group>
-                                                    {!isFreeMode ? (
-                                                        <Badge color={primaryColor} circle>
-                                                            {merit.level}
-                                                        </Badge>
-                                                    ) : null}
-                                                </Group>
-                                                {isFreeMode ? (
-                                                    <Badge
-                                                        color={primaryColor}
-                                                        circle
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "40px"
-                                                        }}
-                                                    >
-                                                        {merit.level}
-                                                    </Badge>
-                                                ) : null}
-                                                {isFreeMode && !isFromBonus ? (
-                                                    <Textarea
-                                                        aria-label={`${getMeritFlawDisplayName(merit)} description`}
-                                                        value={merit.summary}
-                                                        onChange={(event) => {
-                                                            const summary =
-                                                                event.currentTarget.value
-                                                            setCharacter((current) => ({
-                                                                ...current,
-                                                                merits: current.merits.map((item) =>
-                                                                    item === merit
-                                                                        ? { ...item, summary }
-                                                                        : item
-                                                                )
-                                                            }))
-                                                        }}
-                                                        placeholder="Description..."
-                                                        autosize
-                                                        minRows={2}
-                                                        mt="xs"
-                                                    />
-                                                ) : merit.summary ? (
-                                                    <Text size="sm" c="dimmed" mt="xs">
-                                                        {merit.summary.charAt(0).toUpperCase() +
-                                                            merit.summary.slice(1)}
-                                                    </Text>
-                                                ) : null}
-                                                {isEditingCustomText ? (
-                                                    <Textarea
-                                                        aria-label={`${getMeritFlawDisplayName(merit)} custom note`}
-                                                        value={customText}
-                                                        onChange={(event) => {
-                                                            const value = event.currentTarget.value
-                                                            setCharacter((current) => ({
-                                                                ...current,
-                                                                customText: updateCustomText(
-                                                                    current,
-                                                                    "meritFlaws",
-                                                                    customTextKey,
-                                                                    value
-                                                                )
-                                                            }))
-                                                        }}
-                                                        placeholder="Add a custom note..."
-                                                        minRows={2}
-                                                        mt="xs"
-                                                        autoFocus
-                                                        onBlur={() => setEditingCustomText(null)}
-                                                        onKeyDown={(event) => {
-                                                            if (event.key === "Enter") {
-                                                                event.preventDefault()
-                                                                setEditingCustomText(null)
-                                                            }
-                                                        }}
-                                                    />
-                                                ) : customText ? (
-                                                    <Text size="sm" c="dimmed" mt="xs">
-                                                        {customText}
-                                                    </Text>
-                                                ) : null}
-                                                {isFromBonus ? (
-                                                    <Badge
-                                                        size="xs"
-                                                        variant="light"
-                                                        color={primaryColor}
-                                                        mt="xs"
-                                                    >
-                                                        {badgeText}
-                                                    </Badge>
-                                                ) : null}
-                                            </Paper>
-                                        )
-
-                                        if (isFromBonus) {
-                                            return (
-                                                <Tooltip
-                                                    key={index}
-                                                    label={
-                                                        isFromLoresheet
-                                                            ? "Added by loresheet"
-                                                            : "Added by predator type"
-                                                    }
-                                                    withArrow
-                                                >
-                                                    <Box>{meritPaper}</Box>
-                                                </Tooltip>
-                                            )
-                                        }
-
-                                        return meritPaper
-                                    }
-                                )}
-                                {isEditable ? (
-                                    <Paper
-                                        p="md"
-                                        withBorder
-                                        style={{
-                                            height: "100%",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            ...sheetAddSurfaceStyle
-                                        }}
-                                    >
-                                        <Center style={{ height: "100%" }}>
-                                            <Button
-                                                size="sm"
-                                                variant="light"
-                                                color={primaryColor}
-                                                radius="md"
-                                                leftSection={<IconPlus size={16} />}
-                                                onClick={() => setMeritModalOpened(true)}
-                                            >
-                                                Add merit
-                                            </Button>
-                                        </Center>
-                                    </Paper>
-                                ) : null}
-                            </Stack>
-                        </Grid.Col>
-                    ) : null}
-                    {allFlaws.length > 0 || isEditable ? (
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Title order={4} mb="sm">
-                                Flaws
-                            </Title>
-                            <Stack gap="xs">
-                                {allFlaws.map(
-                                    (
-                                        {
-                                            meritFlaw: flaw,
-                                            isFromPredatorType,
-                                            isUpgradedFromPredatorType,
-                                            isFromLoresheet,
-                                            isUpgradedFromLoresheet
-                                        },
-                                        index
-                                    ) => {
-                                        const isFromBonus = isFromPredatorType || isFromLoresheet
-                                        const customTextKey = getMeritFlawCustomTextKey(flaw)
-                                        const customText =
-                                            character.customText.meritFlaws[customTextKey] ?? ""
-                                        const customTextEditorKey = `flaw:${customTextKey}`
-                                        const isEditingCustomText =
-                                            editingCustomText === customTextEditorKey
-                                        const badgeText = isFromLoresheet
-                                            ? isUpgradedFromLoresheet
-                                                ? "Upgraded from loresheet"
-                                                : "From loresheet"
-                                            : isUpgradedFromPredatorType
-                                              ? "Upgraded from predator type"
-                                              : "From predator type"
-                                        const flawPaper = (
-                                            <Paper
-                                                key={`${flaw.name}-${flaw.level}-${index}`}
-                                                p="sm"
-                                                style={meritFlawCardStyle}
-                                            >
-                                                {isFreeMode && !isFromBonus ? (
-                                                    <ActionIcon
-                                                        size="sm"
-                                                        variant="subtle"
-                                                        color="red"
-                                                        onClick={() => handleDeleteFlaw(flaw)}
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "8px"
-                                                        }}
-                                                    >
-                                                        <IconX size={16} />
-                                                    </ActionIcon>
-                                                ) : null}
-                                                {isFreeMode && isFromBonus ? (
-                                                    <ActionIcon
-                                                        size="sm"
-                                                        variant="subtle"
-                                                        color="red"
-                                                        aria-label={`Edit ${getMeritFlawDisplayName(flaw)} custom note`}
-                                                        onClick={() =>
-                                                            setEditingCustomText((current) =>
-                                                                current === customTextEditorKey
-                                                                    ? null
-                                                                    : customTextEditorKey
-                                                            )
-                                                        }
-                                                        onMouseDown={(event) =>
-                                                            event.preventDefault()
-                                                        }
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "8px"
-                                                        }}
-                                                    >
-                                                        <IconEdit size={16} />
-                                                    </ActionIcon>
-                                                ) : null}
-                                                <Group
-                                                    justify={
-                                                        isFreeMode ? "flex-start" : "space-between"
-                                                    }
-                                                >
-                                                    <Group gap="xs">
-                                                        <Text
-                                                            fw={700}
-                                                            style={{
-                                                                paddingRight: isFreeMode
-                                                                    ? "60px"
-                                                                    : "0"
-                                                            }}
-                                                        >
-                                                            {getMeritFlawDisplayName(flaw)}
-                                                        </Text>
-                                                        {flaw.homebrewSource ? (
-                                                            <HomebrewBadge
-                                                                source={flaw.homebrewSource}
-                                                            />
-                                                        ) : null}
-                                                    </Group>
-                                                    {!isFreeMode ? (
-                                                        <Badge color="red" circle>
-                                                            {flaw.level}
-                                                        </Badge>
-                                                    ) : null}
-                                                </Group>
-                                                {isFreeMode ? (
-                                                    <Badge
-                                                        color="red"
-                                                        circle
-                                                        style={{
-                                                            position: "absolute",
-                                                            top: "8px",
-                                                            right: "40px"
-                                                        }}
-                                                    >
-                                                        {flaw.level}
-                                                    </Badge>
-                                                ) : null}
-                                                {isFreeMode && !isFromBonus ? (
-                                                    <Textarea
-                                                        aria-label={`${getMeritFlawDisplayName(flaw)} description`}
-                                                        value={flaw.summary}
-                                                        onChange={(event) => {
-                                                            const summary =
-                                                                event.currentTarget.value
-                                                            setCharacter((current) => ({
-                                                                ...current,
-                                                                flaws: current.flaws.map((item) =>
-                                                                    item === flaw
-                                                                        ? { ...item, summary }
-                                                                        : item
-                                                                )
-                                                            }))
-                                                        }}
-                                                        placeholder="Description..."
-                                                        autosize
-                                                        minRows={2}
-                                                        mt="xs"
-                                                    />
-                                                ) : flaw.summary ? (
-                                                    <Text size="sm" c="dimmed" mt="xs">
-                                                        {flaw.summary.charAt(0).toUpperCase() +
-                                                            flaw.summary.slice(1)}
-                                                    </Text>
-                                                ) : null}
-                                                {isEditingCustomText ? (
-                                                    <Textarea
-                                                        aria-label={`${getMeritFlawDisplayName(flaw)} custom note`}
-                                                        value={customText}
-                                                        onChange={(event) => {
-                                                            const value = event.currentTarget.value
-                                                            setCharacter((current) => ({
-                                                                ...current,
-                                                                customText: updateCustomText(
-                                                                    current,
-                                                                    "meritFlaws",
-                                                                    customTextKey,
-                                                                    value
-                                                                )
-                                                            }))
-                                                        }}
-                                                        placeholder="Add a custom note..."
-                                                        minRows={2}
-                                                        mt="xs"
-                                                        autoFocus
-                                                        onBlur={() => setEditingCustomText(null)}
-                                                        onKeyDown={(event) => {
-                                                            if (event.key === "Enter") {
-                                                                event.preventDefault()
-                                                                setEditingCustomText(null)
-                                                            }
-                                                        }}
-                                                    />
-                                                ) : customText ? (
-                                                    <Text size="sm" c="dimmed" mt="xs">
-                                                        {customText}
-                                                    </Text>
-                                                ) : null}
-                                                {isFromBonus ? (
-                                                    <Badge
-                                                        size="xs"
-                                                        variant="light"
-                                                        color={
-                                                            isFromLoresheet ? primaryColor : "red"
-                                                        }
-                                                        mt="xs"
-                                                    >
-                                                        {badgeText}
-                                                    </Badge>
-                                                ) : null}
-                                            </Paper>
-                                        )
-
-                                        if (isFromBonus) {
-                                            return (
-                                                <Tooltip
-                                                    key={index}
-                                                    label={
-                                                        isFromLoresheet
-                                                            ? "Added by loresheet"
-                                                            : "Added by predator type"
-                                                    }
-                                                    withArrow
-                                                >
-                                                    <Box>{flawPaper}</Box>
-                                                </Tooltip>
-                                            )
-                                        }
-
-                                        return flawPaper
-                                    }
-                                )}
-                                {isEditable ? (
-                                    <Paper
-                                        p="md"
-                                        withBorder
-                                        style={{
-                                            height: "100%",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            ...sheetAddSurfaceStyle
-                                        }}
-                                    >
-                                        <Center style={{ height: "100%" }}>
-                                            <Button
-                                                size="sm"
-                                                variant="light"
-                                                color="red"
-                                                radius="md"
-                                                leftSection={<IconPlus size={16} />}
-                                                onClick={() => setFlawModalOpened(true)}
-                                            >
-                                                Add flaw
-                                            </Button>
-                                        </Center>
-                                    </Paper>
-                                ) : null}
-                            </Stack>
-                        </Grid.Col>
-                    ) : null}
-                </Grid>
-            </Box>
+            <div className={classes.meritColumns}>
+                {allMerits.length > 0 || isEditable ? renderColumn("merit", allMerits) : null}
+                {allFlaws.length > 0 || isEditable ? renderColumn("flaw", allFlaws) : null}
+            </div>
             {meritModalOpened ? (
                 <MeritFlawSelectModal
                     opened
@@ -598,6 +309,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                     confirmLabel="Delete"
                 />
             ) : null}
+            {contextMenu.menu}
         </>
     )
 }

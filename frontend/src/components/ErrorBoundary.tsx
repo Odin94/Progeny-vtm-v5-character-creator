@@ -1,8 +1,9 @@
-import { Alert, Center } from "@mantine/core"
-import { IconAlertCircle } from "@tabler/icons-react"
+import { Box } from "@mantine/core"
+import { IconAlertTriangle } from "@tabler/icons-react"
 import { Component, ErrorInfo, ReactNode } from "react"
 import posthog from "posthog-js"
 import ErrorDetails from "./ErrorDetails"
+import { Panel } from "./ui/Panel"
 
 type Props = {
     children?: ReactNode
@@ -65,17 +66,35 @@ class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <Center>
-                    <Alert
-                        mt={"50px"}
-                        icon={<IconAlertCircle size="1rem" />}
-                        color="red"
-                        variant="outline"
-                        bg={"rgba(0, 0, 0, 0.6)"}
-                    >
-                        {this.state.error ? <ErrorDetails error={this.state.error} /> : null}
-                    </Alert>
-                </Center>
+                <Box
+                    role="alert"
+                    maw={760}
+                    mx="auto"
+                    px="var(--pg-gutter)"
+                    py={{ base: 32, sm: 64 }}
+                >
+                    <Panel tone="ornate" p={{ base: "lg", sm: "xl" }} grain>
+                        <Box
+                            mx="auto"
+                            mb="md"
+                            w={52}
+                            h={52}
+                            style={{
+                                display: "grid",
+                                placeItems: "center",
+                                borderRadius: "50%",
+                                color: "var(--pg-blood-bright)",
+                                border: "1px solid var(--pg-border-blood)",
+                                boxShadow: "var(--pg-glow-blood)"
+                            }}
+                        >
+                            <IconAlertTriangle size={24} stroke={1.6} />
+                        </Box>
+                        {this.state.error ? (
+                            <ErrorDetails error={this.state.error} linkColor="gold.4" />
+                        ) : null}
+                    </Panel>
+                </Box>
             )
         }
 

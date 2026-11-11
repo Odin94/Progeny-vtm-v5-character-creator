@@ -3,28 +3,19 @@ import {
     reportCharacterOperationFailure
 } from "~/utils/characterOperationAnalytics"
 import AppTopbar from "~/components/AppTopbar"
-import {
-    Anchor,
-    Box,
-    Button,
-    Card,
-    Container,
-    Grid,
-    Group,
-    List,
-    Modal,
-    Stack,
-    Text,
-    Title
-} from "@mantine/core"
+import { Anchor, Button, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
+import { IconArrowDown, IconArrowRight, IconNotebook, IconUserCircle } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { motion, useReducedMotion } from "framer-motion"
-import { useState } from "react"
+import { motion, useReducedMotion, type Variants } from "framer-motion"
+import { useState, type ReactNode } from "react"
 import StartNewCharacterModal from "~/components/StartNewCharacterModal"
 import SupportConversationButton from "~/components/SupportConversationButton"
+import { BrandMark } from "~/components/ui/BrandMark"
+import { Ornament } from "~/components/ui/Ornament"
+import { Panel } from "~/components/ui/Panel"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { getEmptyCharacter, isCharacterEmpty, type Character } from "~/data/Character"
 import { defaultGeneratorStepId, type GeneratorStepId } from "~/generator/steps"
@@ -32,59 +23,116 @@ import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters } from "~/hooks/useCharacters"
 import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
+import embracePlate from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
+import sheetPlate from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg"
+import coteriePlate from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
 import fangs from "~/resources/icons/noun-fangs-5617700.svg"
 import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
+import { motion as motionTokens } from "~/theme/tokens"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import { transitionCharacter } from "~/modules/characterTransition"
 import "./LandingPage.css"
 
-type FeatureCardProps = {
+const GUIDE_CHAPTERS = [
+    { to: "/features/character-creation", title: "Character creation" },
+    { to: "/features/character-sheet", title: "Character sheet" },
+    { to: "/features/account-and-multiple-characters", title: "Account & multiple characters" },
+    { to: "/features/coteries", title: "Coteries & playing together" },
+    { to: "/features/credits-and-contact", title: "Credits & contact" }
+] as const
+
+const HERO_CONTACT_LINKS = [CONTACT_LINKS.reddit, CONTACT_LINKS.bluesky, CONTACT_LINKS.kofi]
+
+const FOOTER_LINKS = [
+    CONTACT_LINKS.reddit,
+    CONTACT_LINKS.bluesky,
+    CONTACT_LINKS.github,
+    CONTACT_LINKS.kofi,
+    CONTACT_LINKS.website
+]
+
+const ROMAN = ["I", "II", "III"] as const
+
+type ChapterProps = {
+    index: number
+    id: string
+    plate: string
+    plateFocus?: string
     title: string
+    lead: string
     bullets: string[]
-    primaryLabel: string
-    onPrimaryClick: () => void
-    primaryLoading?: boolean
+    body?: ReactNode
+    action: ReactNode
 }
 
-function FeatureCard({
+/** One "rulebook spread": a full-bleed photographic plate facing a page of text. */
+function Chapter({
+    index,
+    id,
+    plate,
+    plateFocus,
     title,
+    lead,
     bullets,
-    primaryLabel,
-    onPrimaryClick,
-    primaryLoading
-}: FeatureCardProps) {
+    body,
+    action
+}: ChapterProps) {
+    const numeral = ROMAN[index]
+    const headingId = `${id}-title`
+
     return (
-        <Card radius="lg" p="xl" className="landing-page__feature-card">
-            <Stack gap="xl" className="landing-page__feature-card-inner">
-                <Box className="landing-page__feature-heading">
-                    <Title order={3} size="h2" className="landing-page__card-title">
+        <li className="landing__chapter" id={id} data-flip={index % 2 === 1 || undefined}>
+            <article className="landing__spread" aria-labelledby={headingId}>
+                <figure className="landing__plate" aria-hidden="true">
+                    <img
+                        src={plate}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        style={plateFocus ? { objectPosition: plateFocus } : undefined}
+                    />
+                    <span className="landing__plate-numeral">{numeral}</span>
+                </figure>
+                <div className="landing__page">
+                    <p className="landing__chapter-label">Chapter {numeral}</p>
+                    <h3 id={headingId} className="landing__chapter-title">
                         {title}
-                    </Title>
-                </Box>
-                <Box className="landing-page__feature-bullets">
-                    <List spacing="sm" className="landing-page__feature-list">
+                    </h3>
+                    <Ornament align="start" className="landing__chapter-ornament" />
+                    <p className="landing__chapter-lead">{lead}</p>
+                    <ul className="landing__chapter-list">
                         {bullets.map((bullet) => (
-                            <List.Item key={bullet}>
-                                <Text size="lg" className="landing-page__body">
-                                    {bullet}
-                                </Text>
-                            </List.Item>
+                            <li key={bullet}>{bullet}</li>
                         ))}
-                    </List>
-                </Box>
-                <Group gap="lg" className="landing-page__feature-actions">
-                    <Button
-                        color="red"
-                        variant="transparent"
-                        className="landing-page__card-button"
-                        onClick={onPrimaryClick}
-                        loading={primaryLoading}
-                    >
-                        {primaryLabel}
-                    </Button>
-                </Group>
-            </Stack>
-        </Card>
+                    </ul>
+                    {body ? <div className="landing__chapter-body">{body}</div> : null}
+                    <div className="landing__chapter-action">{action}</div>
+                </div>
+            </article>
+        </li>
+    )
+}
+
+/** Concentric lozenges behind the wordmark — the Progeny sigil drawn large and faint. */
+function HeroSigil() {
+    return (
+        <svg
+            className="landing__sigil"
+            viewBox="0 0 400 400"
+            fill="none"
+            aria-hidden="true"
+            focusable="false"
+        >
+            <path d="M200 6 394 200 200 394 6 200Z" stroke="currentColor" strokeOpacity="0.5" />
+            <path d="M200 40 360 200 200 360 40 200Z" stroke="currentColor" strokeOpacity="0.28" />
+            <path
+                d="M200 92 308 200 200 308 92 200Z"
+                stroke="currentColor"
+                strokeOpacity="0.18"
+                strokeDasharray="2 6"
+            />
+            <path d="M200 0V400" stroke="currentColor" strokeOpacity="0.14" />
+        </svg>
     )
 }
 
@@ -237,406 +285,377 @@ export default function LandingPage() {
         }
     }
 
+    const accountLabel = isAuthenticated ? "Your account" : isSigningIn ? "Signing in…" : "Sign in"
+
+    const heroContainer: Variants = {
+        hidden: {},
+        shown: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.07 } }
+    }
+    const heroItem: Variants = {
+        hidden: {
+            opacity: 0,
+            transform: shouldReduceMotion ? "translateY(0px)" : "translateY(14px)"
+        },
+        shown: {
+            opacity: 1,
+            transform: "translateY(0px)",
+            transition: { duration: shouldReduceMotion ? 0.2 : 0.42, ease: motionTokens.curve.out }
+        }
+    }
+    const heroTitle: Variants = {
+        hidden: { opacity: 0, transform: shouldReduceMotion ? "scale(1)" : "scale(0.96)" },
+        shown: {
+            opacity: 1,
+            transform: "scale(1)",
+            transition: { duration: shouldReduceMotion ? 0.2 : 0.6, ease: motionTokens.curve.out }
+        }
+    }
+
     return (
-        <Box className="landing-page">
-            <Box className="landing-page__nav">
+        <div className="landing">
+            <header className="landing__topbar">
                 <AppTopbar />
-            </Box>
+            </header>
 
-            <Box className="landing-page__section landing-page__hero">
-                <Box
-                    className="landing-page__hero-bg"
-                    style={{ backgroundImage: `url(${alley})` }}
-                />
-                <Container size="md" className="landing-page__hero-content">
+            <main>
+                <section className="landing__hero" aria-labelledby="landing-title">
+                    <div className="landing__hero-art" aria-hidden="true">
+                        <img src={alley} alt="" decoding="async" />
+                    </div>
+
                     <motion.div
-                        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 28 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            duration: shouldReduceMotion ? 0.12 : 0.55,
-                            ease: [0.23, 1, 0.32, 1]
-                        }}
+                        className="landing__hero-inner"
+                        variants={heroContainer}
+                        initial="hidden"
+                        animate="shown"
                     >
-                        <Stack gap="lg" align="center">
-                            <Text size="xs" className="landing-page__eyebrow">
-                                Vampire: The Masquerade V5
-                            </Text>
-                            <Title order={1} size="3.8rem" className="landing-page__title">
-                                Progeny
-                            </Title>
-                            <div className="landing-page__divider" />
-                            <Text size="2rem" maw={760} className="landing-page__lede">
-                                Guided and simplified character creation
-                            </Text>
-                            <Text size="sm" maw={680} className="landing-page__kicker">
-                                Create your character here and use it anywhere - Export to PDF,
-                                Virtual Tabletops or use the Progeny Online Character Sheet
-                            </Text>
-                            <Group gap="md" justify="center" className="landing-page__cta-group">
-                                <Button
-                                    size="lg"
-                                    radius="md"
-                                    px="xl"
-                                    className="landing-page__primary-button"
-                                    leftSection={
-                                        <img
-                                            alt=""
-                                            aria-hidden="true"
-                                            className="landing-page__fangs-icon"
-                                            src={fangs}
-                                        />
-                                    }
-                                    onClick={openGenerator}
+                        <HeroSigil />
+                        <motion.p className="landing__eyebrow" variants={heroItem}>
+                            Vampire: The Masquerade V5
+                        </motion.p>
+                        <motion.h1
+                            id="landing-title"
+                            className="landing__title"
+                            variants={heroTitle}
+                        >
+                            Progeny
+                        </motion.h1>
+                        <motion.div variants={heroItem}>
+                            <Ornament className="landing__hero-ornament" />
+                        </motion.div>
+                        <motion.p className="landing__lede" variants={heroItem}>
+                            Guided and simplified character creation
+                        </motion.p>
+                        <motion.p className="landing__kicker" variants={heroItem}>
+                            Create your character here and use it anywhere: export to PDF and
+                            virtual tabletops, or play from the Progeny online character sheet.
+                        </motion.p>
+
+                        <motion.div className="landing__ctas" variants={heroItem}>
+                            <Button
+                                size="lg"
+                                color="red"
+                                className="landing__cta-primary"
+                                leftSection={
+                                    <img
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="landing__fangs"
+                                        src={fangs}
+                                    />
+                                }
+                                onClick={openGenerator}
+                            >
+                                Embrace a new character
+                            </Button>
+                            <Button
+                                size="lg"
+                                variant="default"
+                                component={Link}
+                                to="/sheet"
+                                leftSection={<IconNotebook size={18} stroke={1.6} />}
+                                className="landing__cta-secondary"
+                            >
+                                Open the sheet
+                            </Button>
+                            <Button
+                                size="lg"
+                                variant="subtle"
+                                color="gray"
+                                leftSection={<IconUserCircle size={18} stroke={1.6} />}
+                                loading={!isAuthenticated && isSigningIn}
+                                onClick={openAccountArea}
+                                className="landing__cta-secondary"
+                            >
+                                {accountLabel}
+                            </Button>
+                        </motion.div>
+
+                        <motion.p className="landing__meta" variants={heroItem}>
+                            Feedback, requests or questions? Reach out to Odin on{" "}
+                            {HERO_CONTACT_LINKS.map((link, index) => (
+                                <span key={link.href}>
+                                    <a href={link.href} target="_blank" rel="noreferrer">
+                                        {link.label}
+                                    </a>
+                                    {index === HERO_CONTACT_LINKS.length - 2
+                                        ? " or "
+                                        : index < HERO_CONTACT_LINKS.length - 1
+                                          ? ", "
+                                          : ""}
+                                </span>
+                            ))}
+                            <span className="landing__meta-break">
+                                {" "}
+                                Source code on{" "}
+                                <a
+                                    href={CONTACT_LINKS.github.href}
+                                    target="_blank"
+                                    rel="noreferrer"
                                 >
-                                    Embrace a new character
-                                </Button>
-                            </Group>
-                            <Stack gap={4} mt="lg" align="center">
-                                <Text size="sm" className="landing-page__hero-meta">
-                                    Feedback, requests or questions? Reach out to Odin on{" "}
-                                    <Anchor
-                                        href={CONTACT_LINKS.reddit.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="landing-page__hero-meta-link"
-                                    >
-                                        {CONTACT_LINKS.reddit.label}
-                                    </Anchor>
-                                    {", "}
-                                    <Anchor
-                                        href={CONTACT_LINKS.bluesky.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="landing-page__hero-meta-link"
-                                    >
-                                        {CONTACT_LINKS.bluesky.label}
-                                    </Anchor>
-                                    {" or "}
-                                    <Anchor
-                                        href={CONTACT_LINKS.kofi.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="landing-page__hero-meta-link"
-                                    >
-                                        {CONTACT_LINKS.kofi.label}
-                                    </Anchor>
-                                </Text>
-                                <Text size="sm" className="landing-page__hero-meta">
-                                    Find source code on{" "}
-                                    <Anchor
-                                        href={CONTACT_LINKS.github.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="landing-page__hero-meta-link"
-                                    >
-                                        {CONTACT_LINKS.github.label}
-                                    </Anchor>
-                                </Text>
-                            </Stack>
-                        </Stack>
+                                    {CONTACT_LINKS.github.label}
+                                </a>
+                            </span>
+                        </motion.p>
                     </motion.div>
-                </Container>
-            </Box>
 
-            <Box className="landing-page__section landing-page__grid-section">
-                <Container size="lg">
-                    <Stack gap="xl" mb="xl">
-                        <Text size="xs" className="landing-page__small-label">
-                            Stay a while and listen
-                        </Text>
-                        <Title order={2} size="2.5rem" className="landing-page__section-title">
-                            Everything Progeny has to offer
-                        </Title>
-                        <Text size="xl" maw={780} className="landing-page__body">
-                            The creator is the first step. Progeny also gives you a dedicated sheet
-                            for active play and account features for keeping your chronicles
-                            organized.
-                        </Text>
-                    </Stack>
+                    <a href="#chapters" className="landing__scroll-cue">
+                        <span>Read on</span>
+                        <IconArrowDown size={14} stroke={1.6} aria-hidden="true" />
+                    </a>
+                </section>
 
-                    <Grid gap="xl">
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <FeatureCard
+                <section
+                    id="chapters"
+                    className="landing__chapters"
+                    aria-labelledby="chapters-title"
+                >
+                    <div className="landing__container">
+                        <div className="landing__intro">
+                            <div className="landing__intro-heading">
+                                <p className="landing__section-label">Stay a while and listen</p>
+                                <h2 id="chapters-title" className="landing__section-title">
+                                    Everything Progeny has to offer
+                                </h2>
+                            </div>
+                            <p className="landing__intro-copy">
+                                The creator is the first step. Progeny also gives you a dedicated
+                                sheet for active play and account features for keeping your
+                                chronicles organized.
+                            </p>
+                        </div>
+
+                        <ol className="landing__chapter-index">
+                            <Chapter
+                                index={0}
+                                id="creation-explainer"
+                                plate={embracePlate}
+                                plateFocus="58% 40%"
                                 title="Guided character creation"
+                                lead="Dead simple character creation."
                                 bullets={[
-                                    "Dead simple character creation",
                                     "Save and edit your character in your browser",
                                     "Export to PDF, an importable save file or to Foundry"
                                 ]}
-                                primaryLabel="Start creating"
-                                onPrimaryClick={openGenerator}
+                                action={
+                                    <Button
+                                        color="red"
+                                        rightSection={<IconArrowRight size={16} />}
+                                        onClick={openGenerator}
+                                    >
+                                        Start creating
+                                    </Button>
+                                }
                             />
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <FeatureCard
+                            <Chapter
+                                index={1}
+                                id="sheet-explainer"
+                                plate={sheetPlate}
+                                plateFocus="50% 45%"
                                 title="Character sheet"
+                                lead="Move from creation into play."
                                 bullets={[
                                     "Highly automated online character sheet",
                                     "Use free-edit or XP-spending mode to grow your character",
                                     "Powerful dice roller, including one-click rouse check and remorse rolls"
                                 ]}
-                                primaryLabel="Open sheet"
-                                onPrimaryClick={() => navigate({ to: "/sheet" })}
+                                body={
+                                    <p>
+                                        The sheet is where a finished character becomes a table
+                                        companion: review stats, manage Disciplines and merits,
+                                        track play-state changes, and keep the character in front of
+                                        you during sessions.
+                                    </p>
+                                }
+                                action={
+                                    <Button
+                                        variant="default"
+                                        component={Link}
+                                        to="/sheet"
+                                        rightSection={<IconArrowRight size={16} />}
+                                    >
+                                        Open sheet
+                                    </Button>
+                                }
                             />
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <FeatureCard
+                            <Chapter
+                                index={2}
+                                id="account-explainer"
+                                plate={coteriePlate}
+                                plateFocus="50% 50%"
                                 title="Play online"
+                                lead="Keep your chronicles organized online."
                                 bullets={[
                                     "Create an account to manage your characters in the cloud",
                                     "Share your characters with your coterie",
                                     "Chat and auto-share dice rolls in play sessions"
                                 ]}
-                                primaryLabel={
-                                    isAuthenticated
-                                        ? "Account"
-                                        : isSigningIn
-                                          ? "Signing in…"
-                                          : "Sign in"
+                                body={
+                                    <p>
+                                        The account hub saves your characters, arranges them into
+                                        coteries and shares read-only versions with your friends.
+                                        Account features, like all of Progeny, are completely free.
+                                    </p>
                                 }
-                                primaryLoading={!isAuthenticated && isSigningIn}
-                                onPrimaryClick={openAccountArea}
+                                action={
+                                    <Button
+                                        variant="default"
+                                        rightSection={<IconArrowRight size={16} />}
+                                        loading={!isAuthenticated && isSigningIn}
+                                        onClick={openAccountArea}
+                                    >
+                                        {isAuthenticated ? "Account" : accountLabel}
+                                    </Button>
+                                }
                             />
-                        </Grid.Col>
-                    </Grid>
-                </Container>
-            </Box>
+                        </ol>
+                    </div>
+                </section>
 
-            <Box className="landing-page__section landing-page__explainers">
-                <Container size="md">
-                    <Card
-                        id="sheet-explainer"
-                        radius="lg"
-                        p="xl"
-                        mb="xl"
-                        className="landing-page__explainer"
-                    >
-                        <Stack gap="md" className="landing-page__explainer-inner">
-                            <Text size="xs" className="landing-page__small-label">
-                                Character sheet
-                            </Text>
-                            <Title order={2} size="2.15rem" className="landing-page__section-title">
-                                Move from creation into play
-                            </Title>
-                            <Text size="xl" className="landing-page__body">
-                                The sheet is where a finished character becomes a table companion.
-                                Open it to review stats, manage disciplines and merits, track
-                                play-state changes, and keep the character in front of you during
-                                sessions.
-                            </Text>
-                            <Text size="lg" className="landing-page__body">
-                                It is designed as the next step after creation: build the character,
-                                open the sheet, connect to your coterie and do dice rolls, XP
-                                spending or free editing.
-                            </Text>
-                            <Group gap="lg" mt="xs">
-                                <Anchor
-                                    component={Link}
-                                    to="/sheet"
-                                    underline="never"
-                                    className="landing-page__link"
-                                >
-                                    Open the sheet
-                                </Anchor>
-                            </Group>
-                        </Stack>
-                    </Card>
-
-                    <Card
-                        id="account-explainer"
-                        radius="lg"
-                        p="xl"
-                        className="landing-page__explainer"
-                        style={{
-                            backgroundImage: `linear-gradient(180deg, rgba(35, 27, 27, 0.9), rgba(12, 10, 10, 0.96)), url(${alley})`,
-                            backgroundSize: "cover"
-                        }}
-                    >
-                        <Stack gap="md" className="landing-page__explainer-inner">
-                            <Text size="xs" className="landing-page__small-label">
-                                Logged-in account
-                            </Text>
-                            <Title order={2} size="2.15rem" className="landing-page__section-title">
-                                Keep your chronicles organized online
-                            </Title>
-                            <Text size="xl" className="landing-page__body">
-                                Signing in opens the account hub, where you can save characters to
-                                your account, revisit them later, arrange them into coteries, and
-                                share read-only versions with your friends.
-                            </Text>
-                            <Text size="lg" className="landing-page__body">
-                                Account features, like all of Progeny, are completely free.
-                            </Text>
-                            <Group gap="lg" mt="xs">
-                                <Anchor
-                                    href="#"
-                                    underline="never"
-                                    className="landing-page__link"
-                                    aria-disabled={isSigningIn}
-                                    style={
-                                        isSigningIn
-                                            ? { opacity: 0.6, pointerEvents: "none" }
-                                            : undefined
-                                    }
-                                    onClick={(event) => {
-                                        event.preventDefault()
-                                        openAccountArea()
-                                    }}
-                                >
-                                    {isSigningIn ? "Signing in…" : "Sign In"}
-                                </Anchor>
-                            </Group>
-                        </Stack>
-                    </Card>
-
-                    <Card radius="lg" p="xl" mt="xl" className="landing-page__explainer">
-                        <Stack gap="md" className="landing-page__explainer-inner">
-                            <Text size="xs" className="landing-page__small-label">
-                                Feature guide
-                            </Text>
-                            <Title order={2} size="2.15rem" className="landing-page__section-title">
-                                Explore Progeny at your own pace
-                            </Title>
-                            <Text size="xl" className="landing-page__body">
-                                Browse the feature guide for a growing collection of walkthroughs,
-                                tips, and visual references for every part of Progeny.
-                            </Text>
-                            <Group gap="lg" mt="xs">
-                                <Anchor
+                <section className="landing__guide" aria-labelledby="guide-title">
+                    <div className="landing__container">
+                        <Panel
+                            tone="ornate"
+                            grain
+                            p={{ base: 24, sm: 40, lg: 56 }}
+                            className="landing__guide-panel"
+                        >
+                            <div className="landing__guide-copy">
+                                <p className="landing__section-label">Feature guide</p>
+                                <h2 id="guide-title" className="landing__section-title">
+                                    Explore Progeny at your own pace
+                                </h2>
+                                <p className="landing__intro-copy">
+                                    Walkthroughs, tips and visual references for every part of
+                                    Progeny.
+                                </p>
+                                <Button
+                                    variant="default"
                                     component={Link}
                                     to="/features"
-                                    underline="never"
-                                    className="landing-page__link"
+                                    rightSection={<IconArrowRight size={16} />}
                                     onClick={() => trackFeatureGuideOpened("landing-page")}
+                                    className="landing__guide-button"
                                 >
                                     Explore the feature guide
-                                </Anchor>
-                            </Group>
-                        </Stack>
-                    </Card>
-                </Container>
-            </Box>
+                                </Button>
+                            </div>
+                            <nav className="landing__toc" aria-label="Feature guide contents">
+                                <p className="landing__toc-label">Contents</p>
+                                <ol>
+                                    {GUIDE_CHAPTERS.map((chapter, index) => (
+                                        <li key={chapter.to}>
+                                            <Link
+                                                to={chapter.to}
+                                                className="landing__toc-link"
+                                                onClick={() =>
+                                                    trackFeatureGuideOpened("landing-page")
+                                                }
+                                            >
+                                                <span className="landing__toc-title">
+                                                    {chapter.title}
+                                                </span>
+                                                <span className="landing__toc-leader" />
+                                                <span className="landing__toc-number">
+                                                    {String(index + 1).padStart(2, "0")}
+                                                </span>
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </nav>
+                        </Panel>
+                    </div>
+                </section>
+            </main>
 
-            <Box component="footer" className="landing-page__footer">
-                <Container size="lg">
-                    <Group
-                        justify="space-between"
-                        align="flex-start"
-                        gap="xl"
-                        className="landing-page__footer-layout"
-                    >
-                        <Stack gap="xs">
-                            <Button
-                                variant="subtle"
-                                color="gray"
-                                className="landing-page__footer-button"
-                                onClick={openCredits}
-                            >
-                                Credits
-                            </Button>
-                        </Stack>
+            <footer className="landing__footer">
+                <div className="landing__container landing__footer-inner">
+                    <div className="landing__footer-brand">
+                        <span className="landing__footer-wordmark">
+                            <BrandMark size={20} />
+                            Progeny
+                        </span>
+                        <Button
+                            variant="subtle"
+                            color="gray"
+                            size="compact-sm"
+                            onClick={openCredits}
+                            className="landing__footer-credits"
+                        >
+                            Credits
+                        </Button>
+                    </div>
 
-                        <Group gap="lg" className="landing-page__footer-links">
-                            <SupportConversationButton
-                                source="landing-page"
-                                color="gray"
-                                variant="subtle"
-                                className="landing-page__footer-button"
-                            >
-                                Contact Odin
-                            </SupportConversationButton>
-                            <Text className="landing-page__link">Contact me:</Text>
-                            <Anchor
-                                href={CONTACT_LINKS.reddit.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                underline="never"
-                                className="landing-page__link"
-                            >
-                                {CONTACT_LINKS.reddit.label}
-                            </Anchor>
-                            <Anchor
-                                href={CONTACT_LINKS.bluesky.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                underline="never"
-                                className="landing-page__link"
-                            >
-                                {CONTACT_LINKS.bluesky.label}
-                            </Anchor>
-                            <Anchor
-                                href={CONTACT_LINKS.github.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                underline="never"
-                                className="landing-page__link"
-                            >
-                                {CONTACT_LINKS.github.label}
-                            </Anchor>
-                            <Anchor
-                                href={CONTACT_LINKS.kofi.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                underline="never"
-                                className="landing-page__link"
-                            >
-                                {CONTACT_LINKS.kofi.label}
-                            </Anchor>
-                            <Anchor
-                                href={CONTACT_LINKS.website.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                underline="never"
-                                className="landing-page__link"
-                            >
-                                {CONTACT_LINKS.website.label}
-                            </Anchor>
-                        </Group>
-                    </Group>
-                </Container>
-            </Box>
+                    <nav className="landing__footer-links" aria-label="Contact">
+                        <span className="landing__footer-label">Contact</span>
+                        <SupportConversationButton
+                            source="landing-page"
+                            color="gray"
+                            variant="subtle"
+                            size="compact-sm"
+                            className="landing__footer-support"
+                        >
+                            Contact Odin
+                        </SupportConversationButton>
+                        {FOOTER_LINKS.map((link) => (
+                            <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
+                                {link.label}
+                            </a>
+                        ))}
+                    </nav>
+                </div>
+            </footer>
 
-            <Modal
-                opened={creditsOpened}
-                onClose={closeCredits}
-                centered
-                title="Credits"
-                radius="xl"
-                padding="xl"
-                size="lg"
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                classNames={{
-                    content: "landing-page__modal",
-                    header: "landing-page__modal-header",
-                    title: "landing-page__modal-title",
-                    body: "landing-page__modal-body"
-                }}
-            >
-                <Stack gap="xl">
-                    <Text className="landing-page__body">
+            <Modal opened={creditsOpened} onClose={closeCredits} title="Credits" size="lg">
+                <Stack gap="md" className="landing__credits">
+                    <Text>
                         PDF template, FavIcon, discipline icons, and dice result icons by{" "}
                         <Anchor href="https://linktr.ee/nerdbert" target="_blank" rel="noreferrer">
-                            Nerdbert.
+                            Nerdbert
                         </Anchor>
+                        .
                     </Text>
-                    <Text className="landing-page__body">
-                        Progeny is an independent project and created under the{" "}
+                    <Text>
+                        Progeny is an independent project created under the{" "}
                         <Anchor
                             href="https://www.paradoxinteractive.com/games/world-of-darkness/community/dark-pack-agreement"
                             target="_blank"
                             rel="noreferrer"
                         >
-                            Dark Pack License.
+                            Dark Pack License
                         </Anchor>
+                        .
                     </Text>
-                    <Text className="landing-page__body">
+                    <Text>
                         Background images by Aleksandr Popov, Amber Kipp, Dominik Hofbauer, Marcus
                         Bellamy, Peter Scherbatykh, and Thomas Le on{" "}
                         <Anchor href="https://unsplash.com" target="_blank" rel="noreferrer">
-                            Unsplash.
+                            Unsplash
                         </Anchor>
+                        .
                     </Text>
-                    <Text className="landing-page__body">
+                    <Text>
                         <Anchor
                             href="https://thenounproject.com/browse/icons/term/fangs/"
                             target="_blank"
@@ -671,6 +690,6 @@ export default function LandingPage() {
                 onContinueCurrent={continueCurrentCharacter}
                 onSaveAndStartNew={saveCurrentCharacterAndStartNew}
             />
-        </Box>
+        </div>
     )
 }

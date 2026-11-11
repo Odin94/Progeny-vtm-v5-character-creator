@@ -1,0 +1,1807 @@
+/* ==========================================================================
+   Character sheet — "Night dossier".
+   A glass dossier over the chosen photograph, clan color (the active Mantine
+   primary) for accents, gold for ornament, blood for Hunger and danger.
+   Tokens: src/index.css (see frontend/DESIGN.md). Only transform/opacity animate.
+   ========================================================================== */
+
+/* ---- Frame ------------------------------------------------------------------ */
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--pg-abyss);
+    background-size: cover;
+    background-position: center;
+}
+
+.backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            120% 90% at 50% 0%,
+            color-mix(in srgb, var(--pg-abyss) 30%, transparent),
+            color-mix(in srgb, var(--pg-abyss) 82%, transparent) 78%
+        ),
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--pg-abyss) 20%, transparent),
+            color-mix(in srgb, var(--pg-abyss) 65%, transparent)
+        );
+}
+
+.page {
+    position: relative;
+    min-height: 100dvh;
+    box-sizing: border-box;
+    padding: calc(var(--pg-topbar-h) + clamp(12px, 3vw, 36px)) var(--pg-gutter)
+        calc(104px + var(--pg-safe-bottom));
+}
+
+.sheet {
+    position: relative;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: clamp(16px, 3.4vw, 44px);
+    border: 1px solid var(--pg-border-gold);
+    border-radius: var(--pg-radius-xl);
+    background: color-mix(in srgb, var(--pg-bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(18px) saturate(1.15);
+    box-shadow: var(--pg-shadow-4), var(--pg-shadow-inset-top);
+}
+
+/* Candle-low clan glow along the top edge of the dossier. */
+.sheet::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(
+            55% 300px at 50% 0%,
+            color-mix(in srgb, var(--mantine-primary-color-6) 20%, transparent),
+            transparent 75%
+        ),
+        radial-gradient(
+            40% 220px at 100% 100%,
+            color-mix(in srgb, var(--pg-blood-deep) 16%, transparent),
+            transparent 80%
+        );
+    pointer-events: none;
+}
+
+.sheet::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--mantine-primary-color-4) 30%,
+        var(--pg-gold) 50%,
+        var(--mantine-primary-color-4) 70%,
+        transparent
+    );
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.sheetContent {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+}
+
+@media (max-width: 36em) {
+    .page {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .sheet {
+        border-radius: var(--pg-radius-lg);
+    }
+
+    .sheet::after {
+        left: 6%;
+        right: 6%;
+    }
+}
+
+/* ---- Command strip (mode, notes, dice) ------------------------------------------ */
+
+.toolbar {
+    position: sticky;
+    top: calc(var(--pg-topbar-h) + 10px);
+    z-index: var(--pg-z-sticky);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    margin-bottom: var(--pg-space-5);
+    pointer-events: none;
+}
+
+.toolbarPill {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    padding: 5px;
+    border: 1px solid var(--pg-border-strong);
+    border-radius: var(--pg-radius-lg);
+    background: var(--pg-surface-overlay);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: var(--pg-shadow-3), var(--pg-shadow-inset-top);
+    pointer-events: auto;
+}
+
+.toolbarDivider {
+    width: 1px;
+    align-self: stretch;
+    margin: 4px 2px;
+    background: var(--pg-border);
+}
+
+.modeControl {
+    display: inline-flex;
+    min-width: 0;
+}
+
+.modeControl > :global(.mantine-SegmentedControl-root) {
+    flex: 1;
+}
+
+.modeControl :global(.mantine-SegmentedControl-label) {
+    padding-inline: 14px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+}
+
+.toolbarButton {
+    flex: 0 0 auto;
+}
+
+/* On wide screens the strip floats over the dossier's empty top-right corner
+   instead of taking a row of its own. */
+@media (min-width: 62em) {
+    .toolbar {
+        height: 0;
+        margin-bottom: 0;
+        overflow: visible;
+    }
+
+    .toolbarPill {
+        transform: translateY(-4px);
+    }
+}
+
+@media (max-width: 36em) {
+    .toolbar {
+        justify-content: stretch;
+        margin-bottom: var(--pg-space-4);
+    }
+
+    .toolbarPill {
+        flex: 1;
+        justify-content: space-between;
+    }
+
+    .modeControl {
+        flex: 1;
+    }
+}
+
+/* ---- Sections ---------------------------------------------------------------- */
+
+.section {
+    min-width: 0;
+}
+
+.section + .section {
+    margin-top: clamp(8px, 1.5vw, 16px);
+}
+
+.sectionHead {
+    position: relative;
+}
+
+.sectionActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--pg-space-2);
+    margin: calc(var(--pg-space-1) * -1) 0 var(--pg-space-4);
+}
+
+.subsectionTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    margin: 0 0 var(--pg-space-3);
+    font-family: var(--pg-font-display);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pg-ink);
+}
+
+.subsectionTitle::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+    background: var(--mantine-primary-color-5);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mantine-primary-color-5) 70%, transparent);
+}
+
+.subsectionTitle[data-tone="blood"]::before {
+    background: var(--pg-blood-bright);
+    box-shadow: var(--pg-glow-blood);
+}
+
+.subsectionCount {
+    margin-left: auto;
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--pg-ink-4);
+}
+
+/* Shared caps label (gold) */
+.label {
+    font-family: var(--pg-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+}
+
+/* ---- Dossier header ------------------------------------------------------------ */
+
+.dossier {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-5);
+    margin-bottom: clamp(20px, 3vw, 32px);
+}
+
+.identity {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(14px, 2.4vw, 28px);
+    /* Leave room for the floating command strip on wide screens. */
+    padding-right: 0;
+}
+
+@media (min-width: 62em) {
+    .identity {
+        padding-right: 330px;
+    }
+}
+
+.sigil {
+    position: relative;
+    display: grid;
+    width: clamp(68px, 9vw, 104px);
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--pg-border-gold);
+    background:
+        radial-gradient(
+            circle at 50% 40%,
+            color-mix(in srgb, var(--mantine-primary-color-6) 26%, transparent),
+            transparent 70%
+        ),
+        color-mix(in srgb, var(--pg-abyss) 55%, transparent);
+    box-shadow:
+        0 0 40px -10px color-mix(in srgb, var(--mantine-primary-color-6) 70%, transparent),
+        inset 0 0 0 4px color-mix(in srgb, var(--pg-abyss) 60%, transparent),
+        inset 0 0 0 5px color-mix(in srgb, var(--pg-gold) 22%, transparent);
+}
+
+/* Four lozenges on the ring, like a seal. */
+.sigil::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 0, var(--pg-gold) 0 2.5px, transparent 3px),
+        radial-gradient(circle at 50% 100%, var(--pg-gold) 0 2.5px, transparent 3px),
+        radial-gradient(circle at 0 50%, var(--pg-gold) 0 2.5px, transparent 3px),
+        radial-gradient(circle at 100% 50%, var(--pg-gold) 0 2.5px, transparent 3px);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.sigilMark {
+    width: 64%;
+    height: 64%;
+    background-color: var(--mantine-primary-color-4);
+    filter: drop-shadow(
+        0 0 10px color-mix(in srgb, var(--mantine-primary-color-6) 60%, transparent)
+    );
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.sigilEmpty {
+    font-family: var(--pg-font-display);
+    font-size: 1.75rem;
+    color: var(--pg-ink-4);
+}
+
+.identityText {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold);
+}
+
+.eyebrow > span + span::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin-right: 10px;
+    vertical-align: middle;
+    transform: rotate(45deg) translateY(-1px);
+    background: var(--mantine-primary-color-5);
+}
+
+.name {
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-size: clamp(1.75rem, 4.6vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: 0.03em;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 34px color-mix(in srgb, var(--mantine-primary-color-6) 45%, transparent);
+}
+
+.name[data-empty] {
+    color: var(--pg-ink-4);
+}
+
+.nameInput :global(.mantine-TextInput-input) {
+    height: auto;
+    min-height: 0;
+    padding: 2px 0 6px;
+    border: 0;
+    border-bottom: 1px solid var(--pg-border-strong);
+    border-radius: 0;
+    background: transparent;
+    font-family: var(--pg-font-display);
+    font-size: clamp(1.75rem, 4.6vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.03em;
+    color: var(--pg-ink);
+    box-shadow: none;
+}
+
+.nameInput :global(.mantine-TextInput-input):focus {
+    border-bottom-color: var(--mantine-primary-color-5);
+    box-shadow: 0 1px 0 0 var(--mantine-primary-color-5);
+}
+
+.lineage {
+    margin: 0;
+    font-family: var(--pg-font-lore);
+    font-size: 1.0625rem;
+    font-style: italic;
+    color: var(--pg-ink-3);
+}
+
+.lineage strong {
+    font-weight: 600;
+    font-style: normal;
+    color: var(--pg-ink-2);
+}
+
+.ledger {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 168px), 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: var(--pg-border);
+}
+
+.field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 12px 16px 14px;
+    background: color-mix(in srgb, var(--pg-surface-1) 92%, transparent);
+}
+
+.field[data-wide] {
+    grid-column: span 2;
+}
+
+@media (max-width: 36em) {
+    .ledger {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field {
+        padding: 10px 12px 12px;
+    }
+
+    .field[data-wide] {
+        grid-column: 1 / -1;
+    }
+}
+
+.fieldValue {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+}
+
+.fieldValue[data-empty] {
+    color: var(--pg-ink-4);
+}
+
+.fieldInline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.xp {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.xpSpent {
+    font-family: var(--pg-font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--mantine-primary-color-4);
+}
+
+.xpTotal {
+    font-size: 0.9375rem;
+    color: var(--pg-ink-2);
+}
+
+.xpSlash {
+    color: var(--pg-ink-4);
+}
+
+.xpMeta {
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+}
+
+.xpInput {
+    width: 72px;
+}
+
+.xpInput :global(.mantine-NumberInput-input) {
+    font-weight: 700;
+    text-align: center;
+    color: var(--mantine-primary-color-4);
+}
+
+.motives {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--pg-space-4);
+}
+
+@media (max-width: 48em) {
+    .motives {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.motive {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+    padding: 2px 0 2px 16px;
+    border-left: 2px solid color-mix(in srgb, var(--mantine-primary-color-5) 60%, transparent);
+}
+
+.motive[data-tone="gold"] {
+    border-left-color: var(--pg-border-gold);
+}
+
+.motiveText {
+    margin: 0;
+    font-family: var(--pg-font-lore);
+    font-size: 1.125rem;
+    line-height: 1.4;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+}
+
+.motiveText[data-empty] {
+    color: var(--pg-ink-4);
+}
+
+.description {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--pg-space-3);
+    padding: 12px 14px 12px 16px;
+    border: 1px solid var(--pg-border-faint);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-abyss) 30%, transparent);
+}
+
+.descriptionText {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.descriptionBody {
+    margin: 0;
+    font-family: var(--pg-font-lore);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    color: var(--pg-ink-2);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.descriptionBody[data-empty] {
+    color: var(--pg-ink-4);
+}
+
+/* ---- Trait columns (attributes + skills) ------------------------------------------ */
+
+.triad {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--pg-space-4);
+}
+
+@media (max-width: 62em) {
+    .triad {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .triad > :last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 40em) {
+    .triad {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.column {
+    position: relative;
+    min-width: 0;
+    padding: 14px 10px 10px;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-surface-1) 78%, transparent);
+    box-shadow: var(--pg-shadow-inset-top);
+}
+
+.columnTitle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 6px 8px;
+    font-family: var(--pg-font-display);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--pg-gold);
+}
+
+.columnTitle::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--pg-border-gold), transparent);
+}
+
+.traitRow {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(8px, 1fr) auto;
+    grid-template-areas: "name leader pips";
+    align-items: center;
+    column-gap: 8px;
+    min-height: 34px;
+    padding: 3px 6px 3px 8px;
+    border-radius: var(--pg-radius-md);
+    transition: background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.traitRow::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--mantine-primary-color-5);
+    opacity: 0;
+    transform: scaleY(0.4);
+    transition:
+        opacity var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-base) var(--ease-out);
+}
+
+.traitRow[data-selected] {
+    background: color-mix(in srgb, var(--mantine-primary-color-6) 16%, transparent);
+}
+
+.traitRow[data-selected]::before {
+    opacity: 1;
+    transform: scaleY(1);
+}
+
+.traitName {
+    grid-area: name;
+    min-width: 0;
+    margin: 0;
+    padding: 2px 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--pg-ink);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--pg-dur-fast) var(--ease-out);
+}
+
+.traitRow[data-zero] .traitName {
+    color: var(--pg-ink-3);
+}
+
+.traitRow[data-selected] .traitName {
+    color: var(--mantine-primary-color-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .traitName:hover {
+        color: var(--mantine-primary-color-3);
+    }
+
+    .traitRow:hover {
+        background: color-mix(in srgb, var(--pg-ink) 4%, transparent);
+    }
+
+    .traitRow[data-selected]:hover {
+        background: color-mix(in srgb, var(--mantine-primary-color-6) 20%, transparent);
+    }
+}
+
+/* The dotted leader that ties a name to its dots, like a printed sheet. */
+.leader {
+    grid-area: leader;
+    align-self: end;
+    height: 1px;
+    margin-bottom: 11px;
+    background-image: radial-gradient(circle, var(--pg-ink-4) 0.8px, transparent 1.2px);
+    background-size: 5px 2px;
+    background-repeat: repeat-x;
+    opacity: 0.7;
+}
+
+.traitPips {
+    grid-area: pips;
+}
+
+/* Skills add a specialty line under the name. */
+.skillRow {
+    grid-template-columns: auto auto minmax(8px, 1fr) auto;
+    grid-template-areas:
+        "name add leader pips"
+        "spec spec spec spec"
+        "warn warn warn warn";
+}
+
+.addSpecialty {
+    grid-area: add;
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    place-items: center;
+    border: 1px dashed var(--pg-border-strong);
+    border-radius: var(--pg-radius-sm);
+    background: transparent;
+    color: var(--pg-ink-3);
+    cursor: pointer;
+    transition:
+        transform var(--pg-dur-press) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.addSpecialty[data-blocked] {
+    opacity: 0.55;
+}
+
+.addSpecialty:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .addSpecialty:hover {
+        border-style: solid;
+        border-color: var(--mantine-primary-color-5);
+        background: color-mix(in srgb, var(--mantine-primary-color-6) 16%, transparent);
+        color: var(--mantine-primary-color-3);
+    }
+}
+
+@media (pointer: coarse) {
+    .addSpecialty {
+        width: 26px;
+        height: 26px;
+    }
+}
+
+.specialties {
+    grid-area: spec;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+    padding: 2px 0 4px;
+}
+
+.specialty {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 7px 2px;
+    border: 1px solid color-mix(in srgb, var(--mantine-primary-color-5) 34%, transparent);
+    border-radius: var(--pg-radius-sm);
+    background: color-mix(in srgb, var(--mantine-primary-color-6) 12%, transparent);
+    font-family: var(--pg-font-lore);
+    font-size: 0.875rem;
+    font-style: italic;
+    line-height: 1.35;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.specialty::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    flex: 0 0 auto;
+    transform: rotate(45deg);
+    background: var(--mantine-primary-color-4);
+}
+
+.specialty[data-source="predator"] {
+    border-style: dashed;
+    border-color: var(--pg-border-gold);
+    background: transparent;
+}
+
+.specialty[data-source="predator"]::before {
+    background: var(--pg-gold);
+}
+
+.specialty[data-editable] {
+    cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .specialty[data-editable]:hover {
+        border-color: var(--mantine-primary-color-4);
+        background: color-mix(in srgb, var(--mantine-primary-color-6) 20%, transparent);
+    }
+}
+
+.specialtyInput {
+    min-width: 140px;
+    flex: 1 1 160px;
+}
+
+.inlineWarning {
+    grid-area: warn;
+    margin: 0 0 4px;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--mantine-color-red-3);
+}
+
+/* ---- Condition (health, willpower, humanity, hunger) ------------------------------ */
+
+.vitals {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--pg-space-3);
+}
+
+@media (max-width: 75em) {
+    .vitals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 36em) {
+    .vitals {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.vital {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 16px;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-surface-1) 78%, transparent);
+    box-shadow: var(--pg-shadow-inset-top);
+}
+
+.vital[data-tone="blood"] {
+    border-color: var(--pg-border-blood);
+    background:
+        radial-gradient(
+            120% 90% at 100% 0%,
+            color-mix(in srgb, var(--pg-blood) 18%, transparent),
+            transparent 60%
+        ),
+        color-mix(in srgb, var(--pg-surface-1) 78%, transparent);
+}
+
+.vitalHead {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    min-height: 28px;
+}
+
+.vitalTitle {
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pg-ink);
+}
+
+.vitalValue {
+    margin-left: auto;
+    font-family: var(--pg-font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--mantine-primary-color-3);
+}
+
+.vitalValue small {
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--pg-ink-4);
+}
+
+.vital[data-tone="blood"] .vitalValue {
+    color: var(--mantine-color-red-4);
+}
+
+.vitalValue + .vitalAction {
+    margin-left: 0;
+}
+
+.vitalAction {
+    margin-left: auto;
+}
+
+.vitalTrack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vitalCaption {
+    --pip-size-override: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--pg-border);
+}
+
+.stainsRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.vitalStatus {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--mantine-color-red-4);
+}
+
+/* ---- Cards (powers, rituals, touchstones, merits) -------------------------------- */
+
+.card {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-surface-1) 80%, transparent);
+    box-shadow: var(--pg-shadow-inset-top);
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .card[data-actionable]:hover {
+        border-color: var(--pg-border-strong);
+    }
+}
+
+.cardHead {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+
+.cardTitle {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+}
+
+.cardTitle[data-display] {
+    font-family: var(--pg-font-display);
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+}
+
+.cardActions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 2px;
+    margin: -4px -6px -4px 0;
+}
+
+.cardBody {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--pg-ink-3);
+    overflow-wrap: anywhere;
+}
+
+.cardLore {
+    margin: 0;
+    font-family: var(--pg-font-lore);
+    font-size: 1rem;
+    line-height: 1.45;
+    color: var(--pg-ink-2);
+    overflow-wrap: anywhere;
+}
+
+.cardNote {
+    margin: 0;
+    padding-left: 10px;
+    border-left: 2px solid color-mix(in srgb, var(--mantine-primary-color-5) 55%, transparent);
+    font-family: var(--pg-font-lore);
+    font-size: 0.9375rem;
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--pg-ink-2);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.cardMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+}
+
+.cardMeta strong {
+    font-weight: 600;
+    color: var(--pg-ink-2);
+}
+
+.cardFoot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--pg-border-faint);
+}
+
+.dicePool {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pg-ink-2);
+}
+
+.dicePool[data-help] {
+    cursor: help;
+    text-decoration: underline dotted var(--pg-ink-4);
+    text-underline-offset: 3px;
+}
+
+.rouse {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.rouseDrop {
+    width: 9px;
+    height: 12px;
+    color: var(--pg-blood-bright);
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--pg-blood-bright) 50%, transparent));
+}
+
+.tag {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 7px;
+    border: 1px solid var(--pg-border-gold);
+    border-radius: var(--pg-radius-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--pg-gold);
+}
+
+.addTile {
+    display: grid;
+    min-height: 140px;
+    place-items: center;
+    padding: 16px;
+    border: 1px dashed var(--pg-border-strong);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-abyss) 22%, transparent);
+}
+
+.addTile[data-compact] {
+    min-height: 72px;
+}
+
+.addTile[data-tone="blood"] {
+    border-color: var(--pg-border-blood);
+}
+
+/* ---- Disciplines ---------------------------------------------------------------- */
+
+.disciplineGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+    align-items: start;
+    gap: var(--pg-space-4);
+}
+
+.discipline {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-surface-1) 72%, transparent);
+    box-shadow: var(--pg-shadow-inset-top);
+}
+
+.disciplineHead {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--pg-border-gold);
+}
+
+.disciplineLogo {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--pg-border-gold);
+    background: radial-gradient(
+        circle at 50% 40%,
+        color-mix(in srgb, var(--mantine-primary-color-6) 22%, transparent),
+        color-mix(in srgb, var(--pg-abyss) 50%, transparent) 75%
+    );
+}
+
+.disciplineLogo img {
+    width: 30px;
+    height: 30px;
+}
+
+.disciplineTitle {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.disciplineName {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--pg-ink);
+    cursor: pointer;
+    transition: color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .disciplineName:hover {
+        color: var(--mantine-primary-color-3);
+    }
+}
+
+.disciplineHeadEnd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+}
+
+@media (max-width: 30em) {
+    .disciplineHead {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .disciplineHeadEnd {
+        grid-column: 2 / -1;
+        justify-content: flex-start;
+        margin-top: -6px;
+    }
+}
+
+.powerList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.powerCard {
+    padding: 12px 14px 12px 12px;
+    gap: 6px;
+}
+
+.powerLevel {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--mantine-primary-color-5) 55%, transparent);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mantine-primary-color-6) 16%, transparent);
+    font-family: var(--pg-font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--mantine-primary-color-3);
+}
+
+.powerCard[data-in-modal] {
+    min-height: 140px;
+    cursor: pointer;
+}
+
+.powerCard[data-in-modal][data-disabled] {
+    cursor: default;
+    opacity: 0.6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .powerCard[data-in-modal]:not([data-disabled]):hover {
+        border-color: var(--pg-border-accent);
+        background: color-mix(in srgb, var(--mantine-primary-color-6) 12%, var(--pg-surface-1));
+    }
+}
+
+.ritualGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: var(--pg-space-3);
+}
+
+.subsection {
+    margin-top: var(--pg-space-8);
+}
+
+/* ---- The Blood ---------------------------------------------------------------- */
+
+.blood {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.6fr);
+    gap: clamp(16px, 3vw, 36px);
+    padding: clamp(16px, 2.6vw, 28px);
+    overflow: hidden;
+    border: 1px solid var(--pg-border-blood);
+    border-radius: var(--pg-radius-xl);
+    background:
+        radial-gradient(
+            70% 120% at 0% 0%,
+            color-mix(in srgb, var(--pg-blood) 22%, transparent),
+            transparent 60%
+        ),
+        radial-gradient(
+            60% 90% at 100% 100%,
+            color-mix(in srgb, var(--pg-blood-deep) 24%, transparent),
+            transparent 70%
+        ),
+        color-mix(in srgb, var(--pg-abyss) 55%, transparent);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 220, 220, 0.06),
+        var(--pg-glow-blood);
+}
+
+@media (max-width: 62em) {
+    .blood {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* A great faint drop behind the potency numeral. */
+.blood::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    left: -30px;
+    width: 260px;
+    height: 330px;
+    background: radial-gradient(
+        circle at 50% 62%,
+        color-mix(in srgb, var(--pg-blood-bright) 16%, transparent),
+        transparent 62%
+    );
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 23'%3E%3Cpath d='M9 1.2C9 1.2 1.6 9.6 1.6 14.6a7.4 7.4 0 0 0 14.8 0C16.4 9.6 9 1.2 9 1.2Z'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 23'%3E%3Cpath d='M9 1.2C9 1.2 1.6 9.6 1.6 14.6a7.4 7.4 0 0 0 14.8 0C16.4 9.6 9 1.2 9 1.2Z'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.potency {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.potencyHead {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.potencyNumeral {
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-size: clamp(3.25rem, 7vw, 4.5rem);
+    font-weight: 700;
+    line-height: 0.85;
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--pg-blood-bright);
+    text-shadow:
+        0 0 28px color-mix(in srgb, var(--pg-blood-bright) 55%, transparent),
+        0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.potencyTitle {
+    margin: 0 0 4px;
+    font-family: var(--pg-font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pg-ink);
+}
+
+.potencyLimit {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+}
+
+.bloodStats {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    align-self: start;
+    overflow: hidden;
+    border: 1px solid var(--pg-border-faint);
+    border-radius: var(--pg-radius-lg);
+    background: var(--pg-border-faint);
+}
+
+.bloodStat {
+    flex: 1 1 128px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    background: color-mix(in srgb, var(--pg-abyss) 55%, transparent);
+}
+
+.bloodStatValue {
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--pg-ink);
+}
+
+.bloodStatValue[data-muted] {
+    color: var(--pg-ink-4);
+}
+
+.bloodLore {
+    position: relative;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(14px, 2vw, 24px);
+    padding-top: clamp(14px, 2vw, 22px);
+    border-top: 1px solid var(--pg-border-faint);
+}
+
+@media (max-width: 62em) {
+    .bloodLore {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.loreBlock {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.loreText {
+    margin: 0;
+    font-family: var(--pg-font-lore);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+    color: var(--pg-ink-2);
+    overflow-wrap: anywhere;
+}
+
+.loreText[data-empty] {
+    color: var(--pg-ink-4);
+}
+
+/* ---- Touchstones --------------------------------------------------------------- */
+
+.touchstoneGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: var(--pg-space-3);
+}
+
+.touchstone {
+    min-height: 140px;
+    padding: 16px 18px;
+}
+
+.conviction {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: auto;
+    padding: 10px 12px;
+    border-left: 2px solid var(--pg-blood-bright);
+    border-radius: 0 var(--pg-radius-md) var(--pg-radius-md) 0;
+    background: color-mix(in srgb, var(--pg-blood) 8%, transparent);
+}
+
+.convictionText {
+    margin: 0;
+    font-family: var(--pg-font-lore);
+    font-size: 1.0625rem;
+    font-style: italic;
+    line-height: 1.35;
+    color: var(--pg-ink);
+}
+
+/* ---- Merits & flaws -------------------------------------------------------------- */
+
+.meritColumns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(16px, 2.4vw, 28px);
+}
+
+@media (max-width: 48em) {
+    .meritColumns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.meritList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.meritCard {
+    gap: 6px;
+    padding: 12px 14px;
+}
+
+.meritCard[data-kind="flaw"] {
+    border-color: color-mix(in srgb, var(--pg-blood-bright) 22%, transparent);
+}
+
+.levelDots {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 3px;
+    padding-top: 5px;
+}
+
+.levelDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle at 35% 30%,
+        var(--mantine-primary-color-3),
+        var(--mantine-primary-color-6) 55%,
+        var(--mantine-primary-color-9)
+    );
+    box-shadow: 0 0 6px -1px color-mix(in srgb, var(--mantine-primary-color-6) 80%, transparent);
+}
+
+.levelDots[data-kind="flaw"] .levelDot {
+    background: radial-gradient(
+        circle at 35% 30%,
+        var(--pg-blood-bright),
+        var(--pg-blood) 55%,
+        var(--pg-blood-deep)
+    );
+    box-shadow: 0 0 6px -1px color-mix(in srgb, var(--pg-blood-bright) 70%, transparent);
+}
+
+.levelZero {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--pg-ink-4);
+}
+
+/* ---- Small roll buttons (Rouse, Remorse) ----------------------------------------- */
+
+.rollIcon {
+    display: inline-flex;
+}
+
+.rollIcon[data-result="pass"] {
+    animation: rollPass 520ms var(--ease-out);
+}
+
+.rollIcon[data-result="fail"] {
+    animation: rollFail 480ms var(--ease-in-out);
+}
+
+@keyframes rollPass {
+    0% {
+        transform: scale(1);
+    }
+    35% {
+        transform: scale(1.25) rotate(-8deg);
+    }
+    65% {
+        transform: scale(0.95) rotate(4deg);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes rollFail {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    20% {
+        transform: translateX(-3px) rotate(-6deg);
+    }
+    40% {
+        transform: translateX(3px) rotate(6deg);
+    }
+    60% {
+        transform: translateX(-2px);
+    }
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rollIcon[data-result] {
+        animation: rollFade 300ms linear;
+    }
+
+    .traitRow::before {
+        transform: none;
+    }
+}
+
+@keyframes rollFade {
+    0% {
+        opacity: 0.35;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.disabledWrap {
+    display: inline-flex;
+}
+
+/* ---- Preferences (inside the sheet menu) ------------------------------------------ */
+
+.prefGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.prefTitle {
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--pg-ink);
+}
+
+.prefHint {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--pg-ink-3);
+}
+
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.swatch {
+    position: relative;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    justify-self: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(0, 0, 0, 0.4);
+    color: var(--pg-ink);
+    cursor: pointer;
+    transition:
+        transform var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out);
+}
+
+.swatch[data-auto] {
+    background: conic-gradient(
+        from 200deg,
+        var(--mantine-color-red-6),
+        var(--mantine-color-grape-6),
+        var(--mantine-color-blue-6),
+        var(--mantine-color-teal-6),
+        var(--mantine-color-yellow-6),
+        var(--mantine-color-orange-6),
+        var(--mantine-color-red-6)
+    );
+}
+
+.swatch[data-selected] {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        0 0 0 2px var(--pg-bg),
+        0 0 0 4px var(--pg-ink),
+        0 0 18px -2px var(--swatch, var(--pg-ink));
+}
+
+.swatch svg {
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .swatch:hover {
+        transform: scale(1.08);
+    }
+}
+
+.swatch:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+.backgrounds {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+@media (max-width: 30em) {
+    .backgrounds {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.backgroundOption {
+    position: relative;
+    display: grid;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-surface-3);
+    color: var(--pg-ink-3);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition:
+        transform var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out);
+}
+
+.backgroundOption img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.backgroundOption[data-selected] {
+    border-color: var(--mantine-primary-color-4);
+    box-shadow:
+        0 0 0 1px var(--mantine-primary-color-4),
+        var(--pg-glow-accent);
+}
+
+.backgroundCheck {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--pg-abyss) 45%, transparent);
+    color: var(--pg-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .backgroundOption:hover {
+        border-color: var(--pg-border-strong);
+    }
+}
+
+.backgroundOption:active {
+    transform: scale(var(--pg-press-scale));
+}

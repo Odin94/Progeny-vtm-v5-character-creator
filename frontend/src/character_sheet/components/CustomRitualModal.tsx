@@ -1,5 +1,4 @@
-import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { Alert, Button, NumberInput, TextInput, Textarea } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Ritual } from "~/data/Disciplines"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -12,7 +11,9 @@ import { AttributesKey } from "~/data/Attributes"
 import { SkillsKey } from "~/data/Skills"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, getRitualCost } from "../utils/xp"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
+import { DeleteIconButton } from "~/components/ui"
+import { SheetModal, selectModalClasses as formClasses } from "./selectModalParts"
 
 type CustomRitualModalProps = {
     opened: boolean
@@ -30,7 +31,6 @@ const CustomRitualModal = ({
     onSave
 }: CustomRitualModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -39,6 +39,7 @@ const CustomRitualModal = ({
     const [level, setLevel] = useState<number | string>(1)
     const [rouseChecks, setRouseChecks] = useState<number | string>(1)
     const [error, setError] = useState<string | null>(null)
+    const [confirmDelete, setConfirmDelete] = useState(false)
     const [dicePoolWarning, setDicePoolWarning] = useState<string | null>(null)
 
     const validateDicePool = (dicePoolString: string): string | null => {
@@ -201,25 +202,39 @@ const CustomRitualModal = ({
         onClose()
     }
 
+    // Show each validation message on the field it is about.
+    const errorField = !error
+        ? null
+        : /name/i.test(error)
+          ? "name"
+          : error.startsWith("Level")
+            ? "level"
+            : error.startsWith("Rouse")
+              ? "rouse"
+              : "form"
+
     return (
-        <Modal
+        <SheetModal
             opened={opened}
             onClose={onClose}
             title={editingRitual ? "Edit Custom Ritual" : "Create Custom Ritual"}
-            size="md"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+            size="lg"
         >
-            <Stack gap="md">
+            <form
+                className={formClasses.form}
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    handleSave()
+                }}
+            >
                 <TextInput
                     label="Ritual Name"
                     placeholder="e.g., Ward Against Mirrors"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    error={error}
+                    error={errorField === "name" ? error : undefined}
                     required
+                    data-autofocus
                     color={primaryColor}
                 />
                 <Textarea
@@ -227,71 +242,93 @@ const CustomRitualModal = ({
                     placeholder="Brief description of the ritual"
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
-                    rows={2}
+                    rows={3}
+                    resize="vertical"
                     color={primaryColor}
                 />
-                <TextInput
-                    label="Dice Pool"
-                    placeholder="e.g., Intelligence + Blood Sorcery"
-                    value={dicePool}
-                    onChange={(e) => setDicePool(e.target.value)}
-                    onBlur={() => setDicePoolWarning(validateDicePool(dicePool))}
-                    color={primaryColor}
-                />
+                <div className={formClasses.formRow}>
+                    <TextInput
+                        label="Dice Pool"
+                        placeholder="e.g., Intelligence + Blood Sorcery"
+                        value={dicePool}
+                        onChange={(e) => setDicePool(e.target.value)}
+                        onBlur={() => setDicePoolWarning(validateDicePool(dicePool))}
+                        color={primaryColor}
+                    />
+                    <TextInput
+                        label="Time"
+                        placeholder="e.g., 1 hour"
+                        value={requiredTime}
+                        onChange={(e) => setRequiredTime(e.target.value)}
+                        color={primaryColor}
+                    />
+                </div>
                 {dicePoolWarning ? (
                     <Alert color="yellow" title="Dice Pool Warning">
                         {dicePoolWarning}
                     </Alert>
                 ) : null}
-                <TextInput
-                    label="Time"
-                    placeholder="e.g., 1 hour"
-                    value={requiredTime}
-                    onChange={(e) => setRequiredTime(e.target.value)}
-                    color={primaryColor}
-                />
                 <Textarea
                     label="Ingredients"
                     placeholder="Required ingredients"
                     value={ingredients}
                     onChange={(e) => setIngredients(e.target.value)}
                     rows={2}
+                    resize="vertical"
                     color={primaryColor}
                 />
-                <NumberInput
-                    label="Level"
-                    value={level}
-                    onChange={setLevel}
-                    min={1}
-                    required
-                    color={primaryColor}
-                />
-                <NumberInput
-                    label="Rouse Checks"
-                    value={rouseChecks}
-                    onChange={setRouseChecks}
-                    min={0}
-                    required
-                />
-                <Group justify="space-between">
+                <div className={`${formClasses.formRow} ${formClasses.formRowTight}`}>
+                    <NumberInput
+                        label="Level"
+                        value={level}
+                        onChange={setLevel}
+                        min={1}
+                        error={errorField === "level" ? error : undefined}
+                        required
+                        color={primaryColor}
+                    />
+                    <NumberInput
+                        label="Rouse Checks"
+                        value={rouseChecks}
+                        onChange={setRouseChecks}
+                        min={0}
+                        error={errorField === "rouse" ? error : undefined}
+                        required
+                        color={primaryColor}
+                    />
+                </div>
+                {errorField === "form" ? (
+                    <Alert color="red" variant="light">
+                        {error}
+                    </Alert>
+                ) : null}
+                <div className={formClasses.formFooter}>
+                    <Button variant="subtle" color="gray" onClick={onClose}>
+                        Cancel
+                    </Button>
                     {editingRitual ? (
-                        <Button color="red" variant="subtle" onClick={handleDelete}>
-                            Delete
-                        </Button>
-                    ) : (
-                        <div />
-                    )}
-                    <Group>
-                        <Button variant="subtle" onClick={onClose} color={primaryColor}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSave} color={primaryColor}>
-                            Save
-                        </Button>
-                    </Group>
-                </Group>
-            </Stack>
-        </Modal>
+                        <DeleteIconButton
+                            label="Delete ritual"
+                            onClick={() => setConfirmDelete(true)}
+                        />
+                    ) : null}
+                    <Button type="submit" color={primaryColor} ml="auto">
+                        Save
+                    </Button>
+                </div>
+            </form>
+            <ConfirmActionModal
+                opened={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={() => {
+                    setConfirmDelete(false)
+                    handleDelete()
+                }}
+                title="Delete ritual?"
+                body={`“${editingRitual?.name ?? ""}” will be removed from this character.`}
+                confirmLabel="Delete"
+            />
+        </SheetModal>
     )
 }
 

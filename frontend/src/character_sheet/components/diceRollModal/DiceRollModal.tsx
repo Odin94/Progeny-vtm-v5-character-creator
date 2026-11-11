@@ -1,17 +1,8 @@
-import {
-    Accordion,
-    Button,
-    Group,
-    Paper,
-    Stack,
-    Switch,
-    Text,
-    useMantineTheme
-} from "@mantine/core"
+import { Accordion, Button, Switch } from "@mantine/core"
 import { useLocalStorage, useMediaQuery } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconTrash, IconSortDescending } from "@tabler/icons-react"
-import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion"
+import { IconAdjustments, IconDice5, IconSortDescending, IconTrash } from "@tabler/icons-react"
+import { motion, useMotionValue, useReducedMotion } from "framer-motion"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
@@ -26,6 +17,14 @@ import DiceContainer, { type DieResult } from "./parts/DiceContainer"
 import ModalHeader from "./parts/ModalHeader"
 import SelectedDicePoolDisplay from "./parts/SelectedDicePoolDisplay"
 import SuccessResults from "./parts/SuccessResults"
+import DieGlyphs from "./parts/DieGlyphs"
+import RollHistory from "./parts/RollHistory"
+import { getRollOutcome } from "./rollOutcome"
+import { useRollHistoryStore } from "../../stores/rollHistoryStore"
+import { DisabledReason } from "~/components/ui"
+import { motion as motionTokens } from "~/theme/tokens"
+import { upcase } from "~/generator/utils"
+import classes from "./diceRoller.module.css"
 import { getApplicableDisciplinePowers } from "../../utils/disciplinePowerMatcher"
 import { getSelectedMeritFlawModifierBonus } from "../../utils/meritFlawMatcher"
 import { useSessionChat } from "~/hooks/useSessionChat"
@@ -126,9 +125,7 @@ const DiceRollModal = ({
             complete(landed)
         } else useDiceRollModalStore.getState().setDice(landed)
     }, [])
-    const theme = useMantineTheme()
     const shouldReduceMotion = useReducedMotion()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isMobile = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     const { selectedDicePool, resetSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
@@ -900,6 +897,33 @@ const DiceRollModal = ({
         return { totalSuccesses, results }
     }, [dice])
 
+    const rollOutcome = useMemo(
+        () => getRollOutcome(dice, calculateSuccesses.totalSuccesses),
+        [dice, calculateSuccesses.totalSuccesses]
+    )
+
+    // Presentation-only roll history for this tab; never persisted or shared.
+    const recordRollHistory = useRollHistoryStore((state) => state.record)
+    useEffect(() => {
+        const rollId = currentRollIdRef.current
+        if (!rollId || dice.length === 0 || dice.some((die) => die.isRolling)) return
+        const context = currentRollContextRef.current
+        const pool = context?.selectedDicePool
+        const poolLabel =
+            context?.mode === "selected" && pool?.attribute
+                ? [pool.attribute, pool.secondAttribute, pool.skill, pool.discipline]
+                      .filter((part): part is string => !!part)
+                      .map((part) => upcase(part))
+                      .join(" + ")
+                : `${dice.length} ${dice.length === 1 ? "die" : "dice"}`
+        recordRollHistory({
+            rollId,
+            poolLabel,
+            dice: dice.map((die) => ({ value: die.value, isBloodDie: die.isBloodDie })),
+            totalSuccesses: calculateSuccesses.totalSuccesses
+        })
+    }, [dice, calculateSuccesses.totalSuccesses, recordRollHistory])
+
     useEffect(() => {
         if (
             dice.length > 0 &&
@@ -1013,20 +1037,21 @@ const DiceRollModal = ({
 
     if (!opened) return null
 
+    const isRolling = dice.some((die) => die.isRolling)
+    const hasSettledDice = dice.length > 0 && !isRolling
+    const poolCount = activeTab === "selected" ? selectedPoolDiceCount : diceCount
+    const poolHunger = Math.min(hunger, poolCount)
+    const rollDisabledReason = isRolling
+        ? undefined
+        : activeTab === "selected" && selectedPoolDiceCount === 0
+          ? "Pick an Attribute on your sheet to build a pool"
+          : undefined
+
     const modalContent = (
-        <>
+        <div className={classes.root}>
             <ModalHeader primaryColor={primaryColor} onClose={handleClose} />
 
-            <Stack
-                gap={useThreeDice ? "sm" : "lg"}
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: "hidden"
-                }}
-            >
+            <div className={classes.pool}>
                 {activeTab === "custom" ? (
                     <CustomDicePoolControls primaryColor={primaryColor} />
                 ) : (
@@ -1036,124 +1061,150 @@ const DiceRollModal = ({
                         skillSpecialties={skillSpecialties}
                     />
                 )}
+                {poolCount > 0 ? (
+                    <div className={classes.poolPreview}>
+                        <DieGlyphs
+                            dice={Array.from({ length: poolCount }, (_, index) => ({
+                                isBloodDie: index < poolHunger
+                            }))}
+                            animate={!shouldReduceMotion}
+                            label={`${poolCount} ${poolCount === 1 ? "die" : "dice"}, ${poolHunger} Hunger`}
+                        />
+                        <span className={classes.poolPreviewLabel}>
+                            {poolHunger > 0 ? (
+                                <>
+                                    <strong>{poolHunger}</strong> Hunger
+                                </>
+                            ) : (
+                                "No Hunger dice"
+                            )}
+                        </span>
+                    </div>
+                ) : null}
+            </div>
 
-                <Group
-                    gap="xs"
-                    justify="space-between"
-                    style={{ flexShrink: 0, position: "relative" }}
-                >
-                    <div style={{ width: character && setCharacter ? 36 : 0 }} />
+            <div className={classes.rollRow}>
+                <DisabledReason reason={rollDisabledReason} zIndex={2100}>
                     <Button
                         size="md"
                         color={primaryColor}
+                        className={classes.rollButton}
+                        classNames={{ inner: classes.rollButtonInner }}
+                        data-loading-state={isRolling ? "rolling" : undefined}
                         onClick={() => rollDice()}
                         disabled={
-                            dice.some((d) => d.isRolling) ||
-                            (activeTab === "selected" && selectedPoolDiceCount === 0)
+                            isRolling || (activeTab === "selected" && selectedPoolDiceCount === 0)
                         }
+                        leftSection={<IconDice5 size={20} stroke={1.6} />}
                     >
-                        {dice.some((d) => d.isRolling)
+                        {isRolling
                             ? "Rolling..."
                             : activeTab === "selected"
                               ? `Roll ${selectedPoolDiceCount} ${selectedPoolDiceCount === 1 ? "die" : "dice"}`
                               : "Roll Dice"}
                     </Button>
-                    {character && setCharacter ? (
-                        <RouseCheckButton
-                            character={character}
-                            setCharacter={setCharacter}
-                            primaryColor={primaryColor}
-                            size="lg"
-                            iconSize={20}
-                            tooltipZIndex={3000}
-                            disabledReason={editDisabledReason}
-                            showHungerInTooltip
-                        />
-                    ) : (
-                        <div style={{ width: 36 }} />
-                    )}
-                </Group>
-
-                {useThreeDice ? (
-                    <>
-                        {!isMobile ? (
-                            <Text size="xs" c="dimmed">
-                                Press R, enter a count, then Enter. Select up to 3 regular dice to
-                                reroll.
-                            </Text>
-                        ) : null}
-                        {(dice.length > 0 || prepareThreeDice) && (
-                            <Suspense
-                                fallback={
-                                    dice.length ? <Text size="xs">Preparing 3D dice…</Text> : null
-                                }
-                            >
-                                <ThreeDice
-                                    dice={dice}
-                                    style={diceStyle}
-                                    settings={throwSettings}
-                                    controls={controlsRef}
-                                    isMobile={!!isMobile}
-                                    selectedDiceIds={selectedDiceIds}
-                                    canSelect={
-                                        !!character &&
-                                        !!setCharacter &&
-                                        !editDisabledReason &&
-                                        availableWillpower > 0
-                                    }
-                                    onDieClick={handleDieClick}
-                                    onRemoveAllDice={removeDice}
-                                    onReroll={handleReroll}
-                                    canReroll={canReroll}
-                                    sortRequest={sortRequest}
-                                    onComplete={onThreeComplete}
-                                    onUnavailable={() => {
-                                        setThreeDiceUnavailable(true)
-                                        const resolved = useDiceRollModalStore
-                                            .getState()
-                                            .dice.map((die) =>
-                                                die.isRolling
-                                                    ? { ...die, value: rollDie(), isRolling: false }
-                                                    : die
-                                            )
-                                        onThreeComplete(resolved)
-                                        notifications.show({
-                                            title: "3D dice unavailable",
-                                            message:
-                                                "Using the standard dice roller. Close and reopen to retry.",
-                                            color: "yellow"
-                                        })
-                                    }}
-                                />
-                            </Suspense>
-                        )}
-                    </>
-                ) : (
-                    <DiceContainer
+                </DisabledReason>
+                {character && setCharacter ? (
+                    <RouseCheckButton
+                        character={character}
+                        setCharacter={setCharacter}
                         primaryColor={primaryColor}
-                        onDieClick={handleDieClick}
-                        selectedDiceIds={selectedDiceIds}
-                        isMobile={isMobile}
+                        size="xl"
+                        iconSize={20}
+                        tooltipZIndex={3000}
+                        disabledReason={editDisabledReason}
+                        showHungerInTooltip
                     />
-                )}
+                ) : null}
+            </div>
 
-                <AnimatePresence>
-                    {dice.length > 0 && !dice.some((d) => d.isRolling) ? (
-                        <SuccessResults
-                            key="success-results"
-                            compact={useThreeDice && !!isMobile}
-                            results={calculateSuccesses.results}
-                            totalSuccesses={calculateSuccesses.totalSuccesses}
-                            primaryColor={primaryColor}
-                            onReroll={character && setCharacter ? handleReroll : undefined}
-                            canReroll={canReroll}
-                            rerollDisabledReason={rerollDisabledReason}
-                            selectedDiceCount={selectedRerollDiceIds.size}
-                        />
+            {useThreeDice ? (
+                <>
+                    {!isMobile ? (
+                        <p className={classes.hint}>
+                            <kbd>R</kbd> quick-rolls a count, <kbd>Enter</kbd> throws. Tap up to 3
+                            regular dice to reroll them with Willpower.
+                        </p>
                     ) : null}
-                </AnimatePresence>
-                <Group justify="space-between">
-                    {useThreeDice && (
+                    {(dice.length > 0 || prepareThreeDice) && (
+                        <Suspense
+                            fallback={
+                                dice.length ? (
+                                    <p className={classes.hint}>Preparing 3D dice…</p>
+                                ) : null
+                            }
+                        >
+                            <ThreeDice
+                                dice={dice}
+                                style={diceStyle}
+                                settings={throwSettings}
+                                controls={controlsRef}
+                                isMobile={!!isMobile}
+                                selectedDiceIds={selectedDiceIds}
+                                canSelect={
+                                    !!character &&
+                                    !!setCharacter &&
+                                    !editDisabledReason &&
+                                    availableWillpower > 0
+                                }
+                                onDieClick={handleDieClick}
+                                onRemoveAllDice={removeDice}
+                                onReroll={handleReroll}
+                                canReroll={canReroll}
+                                sortRequest={sortRequest}
+                                onComplete={onThreeComplete}
+                                onUnavailable={() => {
+                                    setThreeDiceUnavailable(true)
+                                    const resolved = useDiceRollModalStore
+                                        .getState()
+                                        .dice.map((die) =>
+                                            die.isRolling
+                                                ? { ...die, value: rollDie(), isRolling: false }
+                                                : die
+                                        )
+                                    onThreeComplete(resolved)
+                                    notifications.show({
+                                        title: "3D dice unavailable",
+                                        message:
+                                            "Using the standard dice roller. Close and reopen to retry.",
+                                        color: "yellow"
+                                    })
+                                }}
+                            />
+                        </Suspense>
+                    )}
+                </>
+            ) : (
+                <DiceContainer
+                    primaryColor={primaryColor}
+                    onDieClick={handleDieClick}
+                    selectedDiceIds={selectedDiceIds}
+                    isMobile={isMobile}
+                />
+            )}
+
+            {hasSettledDice ? (
+                <SuccessResults
+                    key={currentRollIdRef.current ?? "success-results"}
+                    compact={useThreeDice && !!isMobile}
+                    results={calculateSuccesses.results}
+                    totalSuccesses={calculateSuccesses.totalSuccesses}
+                    outcome={rollOutcome}
+                    primaryColor={primaryColor}
+                    onReroll={character && setCharacter ? handleReroll : undefined}
+                    canReroll={canReroll}
+                    rerollDisabledReason={rerollDisabledReason}
+                    selectedDiceCount={selectedRerollDiceIds.size}
+                    availableWillpower={Math.max(0, availableWillpower)}
+                    maxWillpower={character?.willpower}
+                />
+            ) : null}
+
+            <RollHistory currentRollId={hasSettledDice ? currentRollIdRef.current : null} />
+
+            <div className={classes.footer}>
+                <div className={classes.footerActions}>
+                    {useThreeDice ? (
                         <Button
                             variant="subtle"
                             color="gray"
@@ -1164,29 +1215,51 @@ const DiceRollModal = ({
                         >
                             Sort dice
                         </Button>
-                    )}
+                    ) : null}
                     <Button
                         variant="subtle"
                         color="gray"
                         size="xs"
                         leftSection={<IconTrash size={14} />}
-                        disabled={!dice.length || dice.some((die) => die.isRolling)}
+                        disabled={!dice.length || isRolling}
                         style={{ marginLeft: "auto" }}
                         onClick={() => removeDice()}
                     >
                         Remove dice
                     </Button>
-                </Group>
+                </div>
+                {useThreeDice ? (
+                    <ThrowControls
+                        allowCrystalDice={allowCrystalDice}
+                        style={diceStyle}
+                        onStyleChange={setDiceStyle}
+                        settings={throwSettings}
+                        onSettingsChange={setThrowSettings}
+                        disabled={isRolling}
+                    />
+                ) : null}
                 {onLegacyDiceChange ? (
-                    <Accordion>
+                    <Accordion
+                        classNames={{
+                            item: classes.settingsItem,
+                            control: classes.settingsControl,
+                            label: classes.settingsLabel,
+                            content: classes.settingsContent,
+                            chevron: classes.settingsChevron
+                        }}
+                    >
                         <Accordion.Item value="dice-settings">
-                            <Accordion.Control>Dice rolling settings</Accordion.Control>
+                            <Accordion.Control icon={<IconAdjustments size={14} />}>
+                                Dice rolling settings
+                            </Accordion.Control>
                             <Accordion.Panel>
                                 <Switch
+                                    size="sm"
+                                    color={primaryColor}
                                     label="Use legacy dice roller"
                                     description="Turn off to use the new 3D dice again. Saved for this browser."
                                     checked={useLegacyDice}
-                                    disabled={dice.some((die) => die.isRolling)}
+                                    disabled={isRolling}
                                     onChange={(event) =>
                                         onLegacyDiceChange(event.currentTarget.checked)
                                     }
@@ -1195,46 +1268,21 @@ const DiceRollModal = ({
                         </Accordion.Item>
                     </Accordion>
                 ) : null}
-
-                {useThreeDice ? (
-                    <ThrowControls
-                        allowCrystalDice={allowCrystalDice}
-                        style={diceStyle}
-                        onStyleChange={setDiceStyle}
-                        settings={throwSettings}
-                        onSettingsChange={setThrowSettings}
-                        disabled={dice.some((die) => die.isRolling)}
-                    />
-                ) : null}
-            </Stack>
-        </>
+            </div>
+        </div>
     )
 
     if (useThreeDice) {
         return (
-            <Paper
+            <div
                 ref={controlsRef}
                 role="region"
                 aria-label="Dice roll controls"
                 data-testid="vampire-dice-controls"
-                style={{
-                    position: "fixed",
-                    bottom: 12,
-                    right: isMobile ? 8 : 20,
-                    left: isMobile ? 8 : undefined,
-                    width: isMobile ? undefined : 380,
-                    maxHeight: isMobile ? "50dvh" : "90dvh",
-                    overflowY: "auto",
-                    padding: isMobile ? 12 : 16,
-                    borderRadius: 12,
-                    border: `1px solid ${colorValue}`,
-                    background: "rgba(12, 10, 17, 0.96)",
-                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
-                    zIndex: 2000
-                }}
+                className={classes.dock}
             >
                 {modalContent}
-            </Paper>
+            </div>
         )
     }
 
@@ -1242,83 +1290,41 @@ const DiceRollModal = ({
         return (
             <>
                 <motion.div
+                    className={classes.sheetScrim}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: shouldReduceMotion ? 0.12 : 0.2 }}
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: "rgba(0, 0, 0, 0.2)",
-                        zIndex: 1999,
-                        pointerEvents: "none"
-                    }}
                 />
                 <motion.div
+                    className={classes.sheet}
+                    role="dialog"
+                    aria-label="Dice roller"
                     initial={{
-                        y: shouldReduceMotion ? 0 : "100%",
+                        transform: shouldReduceMotion ? "translateY(0%)" : "translateY(100%)",
                         opacity: shouldReduceMotion ? 0 : 1
                     }}
-                    animate={{ y: 0, opacity: 1 }}
+                    animate={{ transform: "translateY(0%)", opacity: 1 }}
                     exit={{
-                        y: shouldReduceMotion ? 0 : "100%",
+                        transform: shouldReduceMotion ? "translateY(0%)" : "translateY(100%)",
                         opacity: shouldReduceMotion ? 0 : 1
                     }}
                     transition={
                         shouldReduceMotion
                             ? { duration: 0.12 }
-                            : { type: "spring", damping: 25, stiffness: 200 }
+                            : { duration: 0.32, ease: motionTokens.curve.drawer }
                     }
                     onClick={(e) => e.stopPropagation()}
-                    style={{
-                        position: "fixed",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: "75vh",
-                        maxHeight: "600px",
-                        backgroundColor: "rgba(0, 0, 0, 0.95)",
-                        backdropFilter: "blur(10px)",
-                        borderTopLeftRadius: "16px",
-                        borderTopRightRadius: "16px",
-                        borderTop: `2px solid ${colorValue}`,
-                        boxShadow: "0 -8px 32px rgba(0, 0, 0, 0.5)",
-                        zIndex: 2000,
-                        display: "flex",
-                        flexDirection: "column",
-                        padding: "1rem",
-                        paddingTop: "0.5rem",
-                        overflow: "hidden",
-                        pointerEvents: "auto"
-                    }}
                 >
-                    <div style={{ overflowY: "auto", flex: 1, minHeight: 0, paddingTop: "0.5rem" }}>
-                        {modalContent}
-                    </div>
+                    <div className={classes.sheetGrabber} aria-hidden="true" />
+                    <div className={classes.sheetScroll}>{modalContent}</div>
                 </motion.div>
             </>
         )
     }
 
     return (
-        <div
-            style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 2000,
-                pointerEvents: "none",
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-            }}
-        >
+        <div className={classes.floatingHost}>
             <motion.div
                 drag
                 dragMomentum={false}
@@ -1332,28 +1338,17 @@ const DiceRollModal = ({
                           }
                         : undefined
                 }
-                style={{
-                    x,
-                    y,
-                    pointerEvents: "auto",
-                    backgroundColor: "rgba(0, 0, 0, 0.8)",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: "12px",
-                    padding: "1.5rem",
-                    width: "min(610px, 90vw)",
-                    height: "min(880px, 90vh)",
-                    maxWidth: "90vw",
-                    maxHeight: "90vh",
-                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${colorValue}`,
-                    cursor: "move",
-                    display: "flex",
-                    flexDirection: "column"
-                }}
-                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.8 }}
+                className={classes.floating}
+                role="dialog"
+                aria-label="Dice roller"
+                style={{ x, y }}
+                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.8 }}
-                transition={{ duration: shouldReduceMotion ? 0.12 : 0.2 }}
+                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96 }}
+                transition={{
+                    duration: shouldReduceMotion ? 0.12 : 0.22,
+                    ease: motionTokens.curve.out
+                }}
             >
                 {modalContent}
             </motion.div>

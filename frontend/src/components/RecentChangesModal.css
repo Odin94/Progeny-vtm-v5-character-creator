@@ -1,8 +1,13 @@
-.recent-changes__modal {
-    background: transparent;
-    box-shadow: none;
-    max-height: calc(100dvh - 2rem);
+/* "Progeny Update" broadsheet: a chamfered, blood-edged page inside a transparent modal.
+   Tokens: src/index.css (--pg-*). */
+
+.recent-changes__modal.recent-changes__modal {
+    max-height: calc(100dvh - 2rem - var(--pg-safe-bottom));
     overflow: auto;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    overscroll-behavior: contain;
 }
 
 .recent-changes__modal-body {
@@ -10,8 +15,14 @@
 }
 
 .recent-changes__sheet-shell {
-    --corner: 1.25rem;
-    background: #8b2b35;
+    --corner: 18px;
+    padding: 1px;
+    background: linear-gradient(
+        160deg,
+        rgba(220, 52, 70, 0.75),
+        rgba(212, 175, 100, 0.35) 45%,
+        rgba(220, 52, 70, 0.55)
+    );
     clip-path: polygon(
         var(--corner) 0,
         calc(100% - var(--corner)) 0,
@@ -22,12 +33,17 @@
         0 calc(100% - var(--corner)),
         0 var(--corner)
     );
-    padding: 2px;
 }
 
 .recent-changes__sheet {
-    --corner: 1.15rem;
-    background: linear-gradient(145deg, #1c1519, #100d11 68%);
+    --corner: 17.5px;
+    position: relative;
+    isolation: isolate;
+    padding: clamp(24px, 5vw, 52px);
+    color: var(--pg-ink-2);
+    background:
+        radial-gradient(90% 50% at 50% 0%, rgba(176, 30, 47, 0.2), transparent 70%),
+        linear-gradient(170deg, var(--pg-surface-2), var(--pg-bg) 70%);
     clip-path: polygon(
         var(--corner) 0,
         calc(100% - var(--corner)) 0,
@@ -38,37 +54,52 @@
         0 calc(100% - var(--corner)),
         0 var(--corner)
     );
-    color: #e8dfdc;
-    padding: clamp(1.5rem, 4vw, 3.25rem);
+}
+
+/* Printed-page grain. */
+.recent-changes__sheet::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--pg-texture-grain);
+    background-size: 220px 220px;
+    opacity: 0.07;
 }
 
 .recent-changes__header {
-    margin-bottom: clamp(1.5rem, 3vw, 2.75rem);
+    margin-bottom: clamp(24px, 3vw, 44px);
     text-align: center;
 }
 
 .recent-changes__title {
-    color: #c74650;
-    font-family: "Cinzel, Georgia, serif";
+    font-family: var(--pg-font-display);
     font-size: clamp(1.5rem, 4vw, 2.75rem);
     font-weight: 700;
     line-height: 1.15;
-    overflow-wrap: anywhere;
+    letter-spacing: var(--recent-changes-tracking, 0.14em);
+    /* Balance the trailing tracking so centered titles stay centered. */
+    text-indent: var(--recent-changes-tracking, 0.14em);
     text-transform: uppercase;
+    overflow-wrap: anywhere;
+    color: var(--pg-blood-bright);
+    text-shadow: 0 0 32px rgba(220, 52, 70, 0.35);
 }
 
 .recent-changes__date {
-    color: #9e8f91;
-    font-size: 0.8rem;
-    letter-spacing: 0.12em;
-    margin-top: 0.7rem;
+    margin-top: var(--pg-space-3);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
     text-transform: uppercase;
+    color: var(--pg-gold-dim);
 }
 
 .recent-changes__intro {
     display: grid;
-    gap: clamp(1.25rem, 3vw, 2.5rem);
     grid-template-columns: minmax(0, 1fr);
+    gap: clamp(20px, 3vw, 40px);
 }
 
 .recent-changes__intro--with-image {
@@ -76,40 +107,46 @@
 }
 
 .recent-changes__intro-copy {
-    font-size: 1.05rem;
+    font-size: 1.125rem;
 }
 
 .recent-changes__intro-copy p:first-child::first-letter {
-    color: #d6c6c3;
     float: left;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: 4.3rem;
+    margin: 0.1em 0.12em 0 0;
+    font-family: var(--pg-font-display);
+    font-size: 4.2rem;
     font-weight: 700;
     line-height: 0.75;
-    margin: 0.13em 0.13em 0 0;
+    color: var(--pg-gold);
 }
 
 .recent-changes__image {
-    border: 1px solid rgba(182, 65, 76, 0.68);
-    height: 100%;
-    max-height: 18rem;
-    min-height: 12rem;
-    object-fit: cover;
     width: 100%;
+    height: 100%;
+    min-height: 12rem;
+    max-height: 18rem;
+    object-fit: cover;
+    border: 1px solid var(--pg-border-blood);
+    border-radius: var(--pg-radius-sm);
+    box-shadow:
+        var(--pg-shadow-3),
+        0 0 0 4px rgba(5, 4, 4, 0.5);
 }
 
 .recent-changes__divider {
-    align-items: center;
     display: flex;
-    gap: 0.65rem;
-    margin: clamp(1.5rem, 4vw, 2.75rem) 0 clamp(1.25rem, 3vw, 2rem);
+    align-items: center;
+    gap: var(--pg-space-3);
+    margin: clamp(24px, 4vw, 44px) 0 clamp(20px, 3vw, 32px);
 }
 
 .recent-changes__divider img {
-    height: auto;
-    min-width: 0;
-    opacity: 0.9;
     width: 42%;
+    min-width: 0;
+    height: auto;
+    /* The asset is a dark burgundy line: lift it toward blood-bright on the dark page. */
+    filter: brightness(1.9) saturate(1.2);
+    opacity: 0.85;
 }
 
 .recent-changes__divider img:first-child {
@@ -117,28 +154,31 @@
 }
 
 .recent-changes__divider .mantine-Text-root {
-    color: #b9414c;
     flex: 0 0 auto;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: clamp(0.73rem, 1.6vw, 0.95rem);
+    font-family: var(--pg-font-display);
+    font-size: clamp(0.75rem, 1.6vw, 0.9375rem);
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
+    color: var(--pg-blood-bright);
 }
 
 .recent-changes__details {
     display: grid;
-    gap: clamp(1.25rem, 3vw, 2.5rem);
+    grid-template-columns: repeat(var(--recent-changes-columns, 1), minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 40px);
 }
 
 .recent-changes__column + .recent-changes__column {
-    border-left: 1px solid rgba(178, 72, 80, 0.42);
-    padding-left: clamp(1.25rem, 3vw, 2.5rem);
+    padding-left: clamp(20px, 3vw, 40px);
+    border-left: 1px solid var(--pg-border-blood);
 }
 
 .recent-changes__markdown {
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: var(--pg-font-lore);
+    font-size: 1.0625rem;
     line-height: 1.6;
+    color: var(--pg-ink-2);
 }
 
 .recent-changes__markdown > :first-child {
@@ -155,23 +195,27 @@
 .recent-changes__markdown h4,
 .recent-changes__markdown h5,
 .recent-changes__markdown h6 {
-    color: #e1cbca;
-    font-family: "Cinzel, Georgia, serif";
-    line-height: 1.25;
     margin: 1.25rem 0 0.5rem;
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.03em;
+    color: var(--pg-ink);
 }
 
 .recent-changes__markdown h1 {
     font-size: 1.45rem;
 }
+
 .recent-changes__markdown h2 {
     font-size: 1.25rem;
 }
+
 .recent-changes__markdown h3,
 .recent-changes__markdown h4,
 .recent-changes__markdown h5,
 .recent-changes__markdown h6 {
-    font-size: 1.08rem;
+    font-size: 1.0625rem;
 }
 
 .recent-changes__markdown p,
@@ -185,77 +229,119 @@
     padding-left: 1.4rem;
 }
 
-.recent-changes__markdown a {
-    color: #d95a65;
+.recent-changes__markdown li::marker {
+    color: var(--pg-blood-bright);
 }
+
+.recent-changes__markdown strong {
+    color: var(--pg-ink);
+}
+
+.recent-changes__markdown a {
+    color: var(--pg-blood-bright);
+    text-underline-offset: 3px;
+}
+
 .recent-changes__markdown code {
-    font-family: var(--mantine-font-family-monospace);
+    padding: 1px 5px;
+    font-family: var(--pg-font-mono);
+    font-size: 0.85em;
+    background: var(--pg-sunken);
+    border-radius: var(--pg-radius-sm);
 }
 
 .recent-changes__announcement-link {
-    color: #d95a65;
     display: inline-block;
-    font-family: "Cinzel, Georgia, serif";
+    margin-top: clamp(24px, 3vw, 40px);
+    font-family: var(--pg-font-display);
     font-weight: 700;
-    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+    letter-spacing: 0.04em;
+    color: var(--pg-blood-bright);
 }
 
 .recent-changes__footer {
-    align-items: center;
-    border-top: 1px solid rgba(178, 72, 80, 0.42);
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    margin-top: clamp(1.5rem, 3vw, 2.5rem);
-    padding-top: 1rem;
+    align-items: center;
+    gap: var(--pg-space-3);
+    margin-top: clamp(24px, 3vw, 40px);
+    padding-top: var(--pg-space-4);
+    border-top: 1px solid var(--pg-border-blood);
 }
 
 .recent-changes__support-link {
-    align-items: center;
-    color: #d95a65;
     display: inline-flex;
-    font-size: 0.9rem;
-    gap: 0.4rem;
+    align-items: center;
+    gap: 6px;
     justify-self: start;
+    padding: 6px 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--pg-ink-2);
+    border-radius: var(--pg-radius-sm);
+    transition: color var(--pg-dur-fast) var(--ease-out);
+}
+
+.recent-changes__support-link svg {
+    color: var(--pg-blood-bright);
 }
 
 .recent-changes__navigation {
     justify-self: center;
 }
 
+.recent-changes__count {
+    min-width: 4.5em;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--pg-ink-3);
+}
+
 .recent-changes__close-button {
     justify-self: end;
+    box-shadow: var(--pg-glow-blood);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .recent-changes__support-link:hover,
+    .recent-changes__announcement-link:hover {
+        color: var(--pg-gold);
+    }
 }
 
 @media (max-width: 40rem) {
-    .recent-changes__sheet {
-        padding: 1.5rem;
-    }
     .recent-changes__intro--with-image {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
+
     .recent-changes__details {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: minmax(0, 1fr);
     }
+
     .recent-changes__column + .recent-changes__column {
-        border-left: 0;
-        border-top: 1px solid rgba(178, 72, 80, 0.42);
+        padding-top: var(--pg-space-5);
         padding-left: 0;
-        padding-top: 1.25rem;
+        border-top: 1px solid var(--pg-border-blood);
+        border-left: 0;
     }
+
     .recent-changes__divider img {
         width: 30%;
     }
+
     .recent-changes__footer {
-        gap: 0.85rem;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
     }
+
     .recent-changes__support-link {
         grid-column: 1;
     }
+
     .recent-changes__navigation {
         grid-column: 1 / -1;
         grid-row: 2;
     }
+
     .recent-changes__close-button {
         grid-column: 2;
         grid-row: 1;

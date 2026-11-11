@@ -1,15 +1,9 @@
-import { Button, Divider, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
-import {
-    ConfirmationModalStyle,
-    confirmationModalBodyStyle,
-    confirmationModalHeadingStyle
-} from "./ConfirmActionModal"
-import {
-    confirmationModalDangerConfirmButtonStyles,
-    generatorOutlineActionButtonStyles
-} from "~/generator/components/sharedGeneratorConfirmButtonStyles"
-import { getGeneratorFieldStyles } from "~/generator/components/sharedGeneratorUi"
-import { COLOR_MODAL_DIVIDER } from "~/theme/colors"
+import { Button, Modal, TextInput } from "@mantine/core"
+import { IconDeviceFloppy, IconTrash } from "@tabler/icons-react"
+import { DisabledReason } from "./ui/IconButtons"
+import { Ornament } from "./ui/Ornament"
+import { ConfirmationModalStyle } from "./ConfirmActionModal"
+import classes from "./AppModals.module.css"
 
 type NameCharacterBeforeSwitchModalProps = {
     opened: boolean
@@ -32,7 +26,6 @@ const NameCharacterBeforeSwitchModal = ({
     onDiscardAndContinue,
     isSaving
 }: NameCharacterBeforeSwitchModalProps) => {
-    const fieldStyles = getGeneratorFieldStyles("gold")
     const hasEnteredName = nameValue.trim().length > 0
 
     return (
@@ -45,56 +38,61 @@ const NameCharacterBeforeSwitchModal = ({
             centered
             size="lg"
             withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
             styles={ConfirmationModalStyle(false)}
         >
-            <Stack gap="md">
-                <Stack gap={6} align="center">
-                    <Text ta="center" style={confirmationModalHeadingStyle(false)}>
-                        Name Current Character?
-                    </Text>
-                    <Text ta="center" style={confirmationModalBodyStyle}>
+            <div className={classes.body}>
+                <div className={classes.intro}>
+                    <h2 className={classes.heading}>Name Current Character?</h2>
+                    <Ornament className={classes.ornament} />
+                    <p className={classes.lede}>
                         Before you {pendingActionLabel}, either give this character a name and save
                         it, or discard it and continue.
-                    </Text>
-                </Stack>
+                    </p>
+                </div>
                 <TextInput
+                    data-autofocus
                     disabled={isSaving}
                     value={nameValue}
                     onChange={(event) => setNameValue(event.currentTarget.value)}
                     label="Character Name"
                     placeholder="Name your character"
-                    color="grape"
-                    style={{ width: "100%" }}
-                    styles={fieldStyles}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" && hasEnteredName && !isSaving) {
+                            event.preventDefault()
+                            onSaveAndContinue()
+                        }
+                    }}
                 />
 
-                <Divider m={"sm"} color={COLOR_MODAL_DIVIDER} />
+                <hr className={classes.rule} />
 
-                <Group justify="space-between" gap="sm" wrap="nowrap">
-                    <Button
-                        color="red"
-                        variant="outline"
-                        onClick={onDiscardAndContinue}
-                        disabled={isSaving || hasEnteredName}
-                        styles={{
-                            root: {
-                                ...generatorOutlineActionButtonStyles.root
-                            }
-                        }}
+                <div className={classes.actions}>
+                    <DisabledReason
+                        reason={
+                            hasEnteredName && !isSaving
+                                ? "Clear the name to delete this character instead"
+                                : undefined
+                        }
                     >
-                        Delete Current
-                    </Button>
+                        <Button
+                            color="red"
+                            variant="light"
+                            leftSection={<IconTrash size={16} />}
+                            onClick={onDiscardAndContinue}
+                            disabled={isSaving || hasEnteredName}
+                        >
+                            Delete Current
+                        </Button>
+                    </DisabledReason>
                     <Button
-                        color="red"
+                        leftSection={<IconDeviceFloppy size={16} />}
                         onClick={onSaveAndContinue}
                         loading={isSaving}
-                        styles={confirmationModalDangerConfirmButtonStyles}
                     >
                         Save and continue
                     </Button>
-                </Group>
-            </Stack>
+                </div>
+            </div>
         </Modal>
     )
 }

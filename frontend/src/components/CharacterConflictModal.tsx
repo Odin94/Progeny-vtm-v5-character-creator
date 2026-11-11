@@ -10,7 +10,9 @@ import {
     markBrowserCharacterReplacement
 } from "~/utils/characterChangeTime"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core"
+import { Alert, Button, Group, Stack, Text } from "@mantine/core"
+import { IconAlertTriangle, IconCopy, IconDownload } from "@tabler/icons-react"
+import classes from "./AppModals.module.css"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Character } from "~/data/Character"
@@ -505,55 +507,50 @@ export default function CharacterConflictModal({
             loading={busy}
             disabled={!backend || busy}
         >
-            <Stack gap="md">
-                <Text ta="center">
+            <div className={classes.body}>
+                <p className={classes.caption}>
                     Browser version: {browser.characterVersion ?? 0} · Backend version:{" "}
                     {backend?.characterVersion ?? (error ? "Unavailable" : "Loading…")}
-                </Text>
-                <SimpleGrid cols={2} spacing="sm">
-                    <Stack gap={4}>
-                        <Text size="sm" fw={600}>
-                            Browser last changed
-                        </Text>
-                        <Text size="sm" c="dimmed">
+                </p>
+                <div className={classes.versionGrid}>
+                    <div className={classes.versionCard}>
+                        <span className={classes.versionCardLabel}>Browser last changed</span>
+                        <span className={classes.versionCardValue}>
                             {formatVersionDate(browserChangedAt)}
-                        </Text>
-                    </Stack>
-                    <Stack gap={4}>
-                        <Text size="sm" fw={600}>
-                            Backend saved
-                        </Text>
-                        <Text size="sm" c="dimmed">
+                        </span>
+                    </div>
+                    <div className={classes.versionCard}>
+                        <span className={classes.versionCardLabel}>Backend saved</span>
+                        <span className={classes.versionCardValue}>
                             {formatVersionDate(backendUpdatedAt)}
-                        </Text>
-                    </Stack>
-                </SimpleGrid>
-                <Paper withBorder p="md" radius="md">
-                    <Stack gap="xs">
-                        <Text fw={600} ta="center">
-                            Keep both versions
-                        </Text>
-                        <Button
-                            color="grape"
-                            disabled={!backend || busy || !browser.name.trim()}
-                            onClick={() => selectChoice("copy")}
-                        >
-                            Save browser as new
-                        </Button>
-                        <Text size="sm" ta="center" c="dimmed">
+                        </span>
+                    </div>
+                </div>
+                <div className={`${classes.field} ${classes.body}`}>
+                    <div className={classes.intro}>
+                        <p className={classes.versionCardLabel}>Keep both versions</p>
+                        <p className={classes.note}>
                             Creates a new character and keeps the existing backend character.
-                        </Text>
-                    </Stack>
-                </Paper>
+                        </p>
+                    </div>
+                    <Button
+                        color="grape"
+                        variant="light"
+                        leftSection={<IconCopy size={16} />}
+                        disabled={!backend || busy || !browser.name.trim()}
+                        onClick={() => selectChoice("copy")}
+                    >
+                        Save browser as new
+                    </Button>
+                </div>
                 <Stack gap="xs">
-                    <Text size="sm" c="dimmed">
-                        Download backups
-                    </Text>
-                    <SimpleGrid cols={2} spacing="sm">
+                    <p className={classes.sectionLabel}>Download backups</p>
+                    <div className={classes.versionGrid}>
                         <Button
                             color="gray"
-                            variant="light"
+                            variant="default"
                             size="sm"
+                            leftSection={<IconDownload size={15} />}
                             aria-label="Download browser JSON"
                             onClick={() => void backup(browser, "browser")}
                         >
@@ -561,22 +558,23 @@ export default function CharacterConflictModal({
                         </Button>
                         <Button
                             color="gray"
-                            variant="light"
+                            variant="default"
                             size="sm"
+                            leftSection={<IconDownload size={15} />}
                             aria-label="Download backend JSON"
                             disabled={!backend}
                             onClick={() => backend && void backup(backend, "backend")}
                         >
                             Backend JSON
                         </Button>
-                    </SimpleGrid>
+                    </div>
                 </Stack>
                 {error && (
-                    <Text role="alert" c="red">
+                    <Alert role="alert" color="red" icon={<IconAlertTriangle size={16} />}>
                         {error}
-                    </Text>
+                    </Alert>
                 )}
-            </Stack>
+            </div>
         </ConfirmActionModal>
     )
 }

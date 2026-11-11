@@ -1,10 +1,11 @@
-import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { Alert, Button, NumberInput, TextInput, Textarea } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { Ceremony } from "~/data/Ceremonies"
 import { SheetOptions } from "../CharacterSheet"
 import { getAvailableXP, getRitualCost } from "../utils/xp"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
+import { DeleteIconButton } from "~/components/ui"
+import { SheetModal, selectModalClasses as formClasses } from "./selectModalParts"
 
 type CustomCeremonyModalProps = {
     opened: boolean
@@ -22,7 +23,6 @@ const CustomCeremonyModal = ({
     onSave
 }: CustomCeremonyModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -32,6 +32,7 @@ const CustomCeremonyModal = ({
     const [level, setLevel] = useState<number | string>(1)
     const [rouseChecks, setRouseChecks] = useState<number | string>(1)
     const [error, setError] = useState<string | null>(null)
+    const [confirmDelete, setConfirmDelete] = useState(false)
 
     useEffect(() => {
         if (!opened) return
@@ -154,25 +155,39 @@ const CustomCeremonyModal = ({
         onClose()
     }
 
+    // Show each validation message on the field it is about.
+    const errorField = !error
+        ? null
+        : /name/i.test(error)
+          ? "name"
+          : error.startsWith("Level")
+            ? "level"
+            : error.startsWith("Rouse")
+              ? "rouse"
+              : "form"
+
     return (
-        <Modal
+        <SheetModal
             opened={opened}
             onClose={onClose}
             title={editingCeremony ? "Edit Custom Ceremony" : "Create Custom Ceremony"}
-            size="md"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+            size="lg"
         >
-            <Stack gap="md">
+            <form
+                className={formClasses.form}
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    handleSave()
+                }}
+            >
                 <TextInput
                     label="Ceremony Name"
                     placeholder="e.g., Toll the Empty Bell"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    error={error}
+                    error={errorField === "name" ? error : undefined}
                     required
+                    data-autofocus
                     color={primaryColor}
                 />
                 <Textarea
@@ -180,28 +195,31 @@ const CustomCeremonyModal = ({
                     placeholder="Brief description of the ceremony"
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
-                    rows={2}
+                    rows={3}
+                    resize="vertical"
                     color={primaryColor}
                 />
-                <TextInput
-                    label="Dice Pool"
-                    placeholder="e.g., Resolve + Oblivion"
-                    value={dicePool}
-                    onChange={(e) => setDicePool(e.target.value)}
-                    color={primaryColor}
-                />
+                <div className={formClasses.formRow}>
+                    <TextInput
+                        label="Dice Pool"
+                        placeholder="e.g., Resolve + Oblivion"
+                        value={dicePool}
+                        onChange={(e) => setDicePool(e.target.value)}
+                        color={primaryColor}
+                    />
+                    <TextInput
+                        label="Time"
+                        placeholder="e.g., 10min"
+                        value={requiredTime}
+                        onChange={(e) => setRequiredTime(e.target.value)}
+                        color={primaryColor}
+                    />
+                </div>
                 <TextInput
                     label="Prerequisite Powers"
                     placeholder="e.g., Where the Shroud Thins, Shadow Cast"
                     value={prerequisitePowers}
                     onChange={(e) => setPrerequisitePowers(e.target.value)}
-                    color={primaryColor}
-                />
-                <TextInput
-                    label="Time"
-                    placeholder="e.g., 10min"
-                    value={requiredTime}
-                    onChange={(e) => setRequiredTime(e.target.value)}
                     color={primaryColor}
                 />
                 <Textarea
@@ -210,47 +228,66 @@ const CustomCeremonyModal = ({
                     value={ingredients}
                     onChange={(e) => setIngredients(e.target.value)}
                     rows={2}
+                    resize="vertical"
                     color={primaryColor}
                 />
-                <NumberInput
-                    label="Level"
-                    value={level}
-                    onChange={setLevel}
-                    min={1}
-                    required
-                    color={primaryColor}
-                />
-                <NumberInput
-                    label="Rouse Checks"
-                    value={rouseChecks}
-                    onChange={setRouseChecks}
-                    min={0}
-                    required
-                />
-                {mode === "xp" && !editingCeremony ? (
-                    <Alert color={primaryColor}>
-                        Saving spends {getRitualCost(Number(level) || 1)} XP.
+                <div className={`${formClasses.formRow} ${formClasses.formRowTight}`}>
+                    <NumberInput
+                        label="Level"
+                        value={level}
+                        onChange={setLevel}
+                        min={1}
+                        error={errorField === "level" ? error : undefined}
+                        required
+                        color={primaryColor}
+                    />
+                    <NumberInput
+                        label="Rouse Checks"
+                        value={rouseChecks}
+                        onChange={setRouseChecks}
+                        min={0}
+                        error={errorField === "rouse" ? error : undefined}
+                        required
+                        color={primaryColor}
+                    />
+                </div>
+                {errorField === "form" ? (
+                    <Alert color="red" variant="light">
+                        {error}
                     </Alert>
                 ) : null}
-                <Group justify="space-between">
+                <div className={formClasses.formFooter}>
+                    <Button variant="subtle" color="gray" onClick={onClose}>
+                        Cancel
+                    </Button>
                     {editingCeremony ? (
-                        <Button color="red" variant="subtle" onClick={handleDelete}>
-                            Delete
-                        </Button>
-                    ) : (
-                        <div />
-                    )}
-                    <Group>
-                        <Button variant="subtle" onClick={onClose} color={primaryColor}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSave} color={primaryColor}>
-                            Save
-                        </Button>
-                    </Group>
-                </Group>
-            </Stack>
-        </Modal>
+                        <DeleteIconButton
+                            label="Delete ceremony"
+                            onClick={() => setConfirmDelete(true)}
+                        />
+                    ) : null}
+                    {mode === "xp" && !editingCeremony ? (
+                        <span className={formClasses.metaLabel}>
+                            Spends {getRitualCost(Number(level) || 1)} XP
+                        </span>
+                    ) : null}
+                    <Button type="submit" color={primaryColor} ml="auto">
+                        Save
+                    </Button>
+                </div>
+            </form>
+            <ConfirmActionModal
+                opened={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={() => {
+                    setConfirmDelete(false)
+                    handleDelete()
+                }}
+                title="Delete ceremony?"
+                body={`“${editingCeremony?.name ?? ""}” will be removed from this character.`}
+                confirmLabel="Delete"
+            />
+        </SheetModal>
     )
 }
 

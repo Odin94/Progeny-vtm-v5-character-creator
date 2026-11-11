@@ -1,12 +1,12 @@
-import { Box, Button, ScrollArea, Select, Stack, Text } from "@mantine/core"
-import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { ScrollArea, Select, Stack } from "@mantine/core"
+import { IconDroplet, IconSparkles, IconStar, IconSkull } from "@tabler/icons-react"
+import { Panel } from "~/components/ui"
 import { useEffect, useMemo } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { calculateBloodPotency } from "../../data/BloodPotency"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { globals } from "../../globals"
-import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
     generatorScrollableAreaStyle,
     generatorScrollableContentStyle,
@@ -14,11 +14,13 @@ import {
 } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 import {
+    GeneratorConfirmButton,
     GeneratorSectionDivider,
+    GeneratorStepFooter,
     GeneratorStepHero,
-    generatorFieldStyles,
     getGeneratorFieldStyles
 } from "./sharedGeneratorUi"
+import classes from "./GenerationPicker.module.css"
 
 type GenerationPickerProps = {
     character: Character
@@ -33,19 +35,6 @@ type GenerationOption = {
     label: string
     tier: string
 }
-
-const summaryLabelStyle = {
-    fontFamily: "Inter, Segoe UI, sans-serif",
-    fontSize: "0.84rem",
-    letterSpacing: "0.05em",
-    color: "rgba(230, 221, 214, 0.72)"
-} as const
-
-const summaryValueStyle = {
-    color: "rgba(244, 236, 232, 0.95)",
-    minWidth: "1.8rem",
-    textAlign: "right" as const
-} as const
 
 const generationOptions: GenerationOption[] = [
     { value: "14", label: "14th Gen - Childer", tier: "Childer" },
@@ -146,11 +135,11 @@ const GenerationPicker = ({
     }
 
     const confirmButton = (
-        <Button
+        <GeneratorConfirmButton
             data-testid="generation-confirm-button"
-            disabled={selectedGenerationValue === null}
-            color="grape"
-            styles={generatorConfirmButtonStyles}
+            disabledReason={
+                selectedGenerationValue === null ? "Choose a generation first" : undefined
+            }
             onClick={() => {
                 const genValue = parseInt(selectedGenerationValue ?? "0")
                 setCharacter(getCharacterWithGeneration(character, genValue))
@@ -161,10 +150,11 @@ const GenerationPicker = ({
                 })
                 nextStep()
             }}
-        >
-            Confirm
-        </Button>
+        />
     )
+
+    const selectedNumber = selectedGenerationValue ? parseInt(selectedGenerationValue, 10) : null
+    const ladder = [14, 13, 12, 11, 10]
 
     return (
         <div style={generatorScrollableShellStyle}>
@@ -192,203 +182,132 @@ const GenerationPicker = ({
                                     ? "Thin-bloods can only begin at 14th generation."
                                     : "Default choice is '13th Gen - Neonate'"
                             }
-                            marginBottom={16}
+                            marginBottom={phoneScreen ? 12 : 16}
                         />
 
-                        <GeneratorSectionDivider label="Generation" />
+                        <GeneratorSectionDivider
+                            label="Generation"
+                            marginY={phoneScreen ? "sm" : "md"}
+                        />
 
-                        <Stack align="center" gap="xl">
+                        <Stack align="center" gap={phoneScreen ? "md" : "lg"}>
                             <Select
                                 value={selectedGenerationValue}
                                 onChange={handleGenerationChange}
                                 placeholder="Select your generation"
+                                aria-label="Generation"
                                 data={availableOptions}
                                 color="grape"
-                                style={{ width: "100%", maxWidth: phoneScreen ? 320 : 430 }}
-                                styles={{
-                                    ...getGeneratorFieldStyles("muted"),
-                                    input: {
-                                        ...generatorFieldStyles.input,
-                                        minHeight: 44,
-                                        fontFamily: "Crimson Text, Georgia, serif",
-                                        fontSize: phoneScreen ? "1rem" : "1.08rem",
-                                        textAlign: "center"
-                                    },
-                                    dropdown: {
-                                        background: "rgba(24, 18, 21, 0.98)",
-                                        borderColor: "rgba(125, 91, 72, 0.45)"
-                                    },
-                                    option: {
-                                        fontFamily: "Crimson Text, Georgia, serif",
-                                        fontSize: "1rem"
-                                    }
-                                }}
+                                size="md"
+                                allowDeselect={false}
+                                className={classes.select}
+                                classNames={{ input: classes.selectInput }}
+                                styles={{ label: getGeneratorFieldStyles("muted").label }}
                             />
 
                             {phoneScreen ? confirmButton : null}
 
-                            {selectedGeneration && generationSummary ? (
-                                <Box
-                                    maw={phoneScreen ? 320 : 430}
-                                    w="100%"
-                                    px={phoneScreen ? 18 : 24}
-                                    py={phoneScreen ? 16 : 20}
-                                    style={{
-                                        borderRadius: 18,
-                                        border: "1px solid rgba(125, 91, 72, 0.4)",
-                                        background:
-                                            "linear-gradient(180deg, rgba(30, 21, 24, 0.92) 0%, rgba(18, 13, 16, 0.96) 100%)",
-                                        boxShadow:
-                                            "0 22px 40px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
-                                    }}
+                            {selectedGeneration && generationSummary && selectedNumber ? (
+                                <Panel
+                                    tone="ornate"
+                                    p={phoneScreen ? "md" : "lg"}
+                                    className={classes.summary}
                                 >
-                                    <Stack gap={12} align="center">
-                                        <Text
-                                            ta="center"
-                                            style={{
-                                                fontFamily: "Cinzel, Georgia, serif",
-                                                fontSize: phoneScreen ? "1rem" : "1.12rem",
-                                                letterSpacing: "0.08em",
-                                                color: "rgba(244, 236, 232, 0.94)"
-                                            }}
-                                        >
-                                            {selectedGeneration.label}
-                                        </Text>
-
-                                        <Text
-                                            ta="center"
-                                            style={{
-                                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                                fontSize: "0.8rem",
-                                                letterSpacing: "0.08em",
-                                                textTransform: "uppercase",
-                                                color: rgba(RAW_GREY, 0.48)
-                                            }}
-                                        >
+                                    <div className={classes.numeralRow}>
+                                        <span className={classes.tier}>
                                             {selectedGeneration.tier}
-                                        </Text>
-
-                                        <Box
-                                            w="100%"
-                                            style={{
-                                                display: "grid",
-                                                gridTemplateColumns: phoneScreen
-                                                    ? "1fr"
-                                                    : "repeat(2, minmax(0, 1fr))",
-                                                gap: phoneScreen ? "0.55rem" : "0.75rem 1.5rem"
-                                            }}
-                                        >
-                                            <Text
-                                                ta={phoneScreen ? "center" : "left"}
-                                                style={summaryLabelStyle}
-                                            >
-                                                <span
-                                                    style={{
-                                                        display: "inline-flex",
-                                                        alignItems: "baseline",
-                                                        gap: "0.4rem",
-                                                        justifyContent: phoneScreen
-                                                            ? "center"
-                                                            : "space-between",
-                                                        width: "100%"
-                                                    }}
-                                                >
-                                                    <span>Blood Potency:</span>
-                                                    <span style={summaryValueStyle}>
-                                                        {generationSummary.bloodPotency}
-                                                    </span>
+                                        </span>
+                                        <span className={classes.numeral}>
+                                            {selectedNumber}
+                                            <sup>th</sup>
+                                        </span>
+                                        <span className={classes.numeralLabel}>Generation</span>
+                                        <div className={classes.ladder} aria-hidden="true">
+                                            {ladder.map((rung, index) => (
+                                                <span key={rung} style={{ display: "contents" }}>
+                                                    {index > 0 ? (
+                                                        <span className={classes.rungLine} />
+                                                    ) : null}
+                                                    <span
+                                                        className={classes.rung}
+                                                        data-reached={
+                                                            rung >= selectedNumber || undefined
+                                                        }
+                                                        data-current={
+                                                            rung === selectedNumber || undefined
+                                                        }
+                                                    />
                                                 </span>
-                                            </Text>
-                                            {generationSummary.bonusXp > 0 ? (
-                                                <Text
-                                                    ta={phoneScreen ? "center" : "left"}
-                                                    style={summaryLabelStyle}
-                                                >
-                                                    <span
-                                                        style={{
-                                                            display: "inline-flex",
-                                                            alignItems: "baseline",
-                                                            gap: "0.4rem",
-                                                            justifyContent: phoneScreen
-                                                                ? "center"
-                                                                : "space-between",
-                                                            width: "100%"
-                                                        }}
-                                                    >
-                                                        <span>Bonus XP:</span>
-                                                        <span style={summaryValueStyle}>
-                                                            {generationSummary.bonusXp}
-                                                        </span>
-                                                    </span>
-                                                </Text>
-                                            ) : phoneScreen ? null : (
-                                                <div />
-                                            )}
-                                            {generationSummary.additionalAdvantageDots > 0 ? (
-                                                <Text
-                                                    ta={phoneScreen ? "center" : "left"}
-                                                    style={summaryLabelStyle}
-                                                >
-                                                    <span
-                                                        style={{
-                                                            display: "inline-flex",
-                                                            alignItems: "baseline",
-                                                            gap: "0.4rem",
-                                                            justifyContent: phoneScreen
-                                                                ? "center"
-                                                                : "space-between",
-                                                            width: "100%"
-                                                        }}
-                                                    >
-                                                        <span>Additional Merits:</span>
-                                                        <span style={summaryValueStyle}>
-                                                            {
-                                                                generationSummary.additionalAdvantageDots
-                                                            }
-                                                        </span>
-                                                    </span>
-                                                </Text>
-                                            ) : phoneScreen ? null : (
-                                                <div />
-                                            )}
-                                            {generationSummary.additionalFlawDots > 0 ? (
-                                                <Text
-                                                    ta={phoneScreen ? "center" : "left"}
-                                                    style={summaryLabelStyle}
-                                                >
-                                                    <span
-                                                        style={{
-                                                            display: "inline-flex",
-                                                            alignItems: "baseline",
-                                                            gap: "0.4rem",
-                                                            justifyContent: phoneScreen
-                                                                ? "center"
-                                                                : "space-between",
-                                                            width: "100%"
-                                                        }}
-                                                    >
-                                                        <span>Additional Flaws:</span>
-                                                        <span style={summaryValueStyle}>
-                                                            {generationSummary.additionalFlawDots}
-                                                        </span>
-                                                    </span>
-                                                </Text>
-                                            ) : phoneScreen ? null : (
-                                                <div />
-                                            )}
-                                        </Box>
-                                    </Stack>
-                                </Box>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className={classes.stats}>
+                                        <div
+                                            className={classes.stat}
+                                            data-wide={generationSummary.bonusXp === 0 || undefined}
+                                        >
+                                            <span className={classes.statValue}>
+                                                {generationSummary.bloodPotency}
+                                            </span>
+                                            <span className={classes.statLabel}>
+                                                <IconDroplet
+                                                    size={12}
+                                                    className={classes.statIcon}
+                                                />
+                                                Blood Potency
+                                            </span>
+                                        </div>
+                                        {generationSummary.bonusXp > 0 ? (
+                                            <div className={classes.stat}>
+                                                <span className={classes.statValue}>
+                                                    +{generationSummary.bonusXp}
+                                                </span>
+                                                <span className={classes.statLabel}>
+                                                    <IconSparkles
+                                                        size={12}
+                                                        className={classes.statIcon}
+                                                    />
+                                                    Bonus XP
+                                                </span>
+                                            </div>
+                                        ) : null}
+                                        {generationSummary.additionalAdvantageDots > 0 ? (
+                                            <div className={classes.stat}>
+                                                <span className={classes.statValue}>
+                                                    +{generationSummary.additionalAdvantageDots}
+                                                </span>
+                                                <span className={classes.statLabel}>
+                                                    <IconStar
+                                                        size={12}
+                                                        className={classes.statIcon}
+                                                    />
+                                                    Additional Merits
+                                                </span>
+                                            </div>
+                                        ) : null}
+                                        {generationSummary.additionalFlawDots > 0 ? (
+                                            <div className={classes.stat}>
+                                                <span className={classes.statValue}>
+                                                    +{generationSummary.additionalFlawDots}
+                                                </span>
+                                                <span className={classes.statLabel}>
+                                                    <IconSkull
+                                                        size={12}
+                                                        className={classes.statIcon}
+                                                    />
+                                                    Additional Flaws
+                                                </span>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                </Panel>
                             ) : null}
                         </Stack>
                     </div>
                 </ScrollArea>
 
-                {!phoneScreen ? (
-                    <Stack gap="xs" align="center">
-                        {confirmButton}
-                    </Stack>
-                ) : null}
+                {!phoneScreen ? <GeneratorStepFooter>{confirmButton}</GeneratorStepFooter> : null}
             </Stack>
         </div>
     )

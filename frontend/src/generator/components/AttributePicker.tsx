@@ -1,14 +1,21 @@
-import { Button, Divider, Grid, Group, Text, Tooltip } from "@mantine/core"
-import { RAW_GOLD, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
+import { Button, Text, Tooltip } from "@mantine/core"
+import { IconRotate2 } from "@tabler/icons-react"
 import { useRef } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
-import { GeneratorPhasePrompt, GeneratorSectionDivider } from "./sharedGeneratorUi"
+import {
+    GeneratorConfirmButton,
+    GeneratorPhasePrompt,
+    GeneratorSectionDivider,
+    GeneratorStepFooter
+} from "./sharedGeneratorUi"
 import { AttributeSetting, emptyAttributeSetting } from "../creatorDrafts"
-import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
+import { PickColumnHeader, PickGrid, PickTile, type PickTone } from "./PickTile"
+
+const toneForLevel: Record<number, PickTone> = { 4: "blood", 3: "gold", 1: "ash" }
 
 type AttributePickerProps = {
     character: Character
@@ -94,7 +101,15 @@ const AttributePicker = ({
         })
     }
 
-    const createButton = (attribute: AttributesKey, i: number) => {
+    const nextLevel = attributeAllocationIsFull
+        ? null
+        : !pickedAttributes.strongest
+          ? 4
+          : !pickedAttributes.weakest
+            ? 1
+            : 3
+
+    const createButton = (attribute: AttributesKey) => {
         const alreadyPicked = [
             pickedAttributes.strongest,
             pickedAttributes.weakest,
@@ -152,118 +167,35 @@ const AttributePicker = ({
         }
 
         return (
-            <Grid.Col key={attribute} span={4}>
-                <Tooltip
-                    disabled={alreadyPicked}
-                    label={attributeDescriptions[attribute]}
-                    transitionProps={{ transition: "slide-up", duration: 200 }}
-                    events={globals.tooltipTriggerEvents}
-                >
-                    <Button
-                        data-testid={`attribute-${attribute}-button`}
-                        className={
-                            nothingPickedYet && !alreadyPicked ? "attribute-pick-pulse" : undefined
-                        }
-                        onMouseEnter={() => {
-                            if (!alreadyPicked) trackTooltipHover(attribute)
-                        }}
-                        onFocus={() => {
-                            if (!alreadyPicked) trackTooltipHover(attribute)
-                        }}
-                        p={phoneScreen ? "xs" : "default"}
-                        variant={alreadyPicked ? "outline" : "filled"}
-                        disabled={!alreadyPicked && attributeAllocationIsFull}
-                        color="grape"
-                        fullWidth={false}
-                        style={{
-                            width: "88%",
-                            marginLeft: "auto",
-                            marginRight: "auto",
-                            display: "flex",
-                            minHeight: phoneScreen ? 36 : 40
-                        }}
-                        styles={{
-                            inner: {
-                                alignItems: "center",
-                                justifyContent: phoneScreen ? "flex-start" : "space-between",
-                                paddingTop: 2,
-                                paddingBottom: 3
-                            },
-                            label: {
-                                lineHeight: 1.3,
-                                overflow: "visible",
-                                flex: 1
-                            },
-                            section: {
-                                overflow: "visible"
-                            },
-                            root: {
-                                justifyContent: "space-between",
-                                background:
-                                    assignedLevel === 4
-                                        ? rgba(RAW_RED, 0.2)
-                                        : assignedLevel === 3
-                                          ? "rgba(204, 166, 51, 0.4)"
-                                          : assignedLevel === 1
-                                            ? "rgba(43, 43, 43, 0.5)"
-                                            : rgba(RAW_GRAPE, 0.8),
-                                borderColor:
-                                    assignedLevel === 4
-                                        ? rgba(RAW_RED, 0.95)
-                                        : assignedLevel === 3
-                                          ? rgba(RAW_GOLD, 0.9)
-                                          : assignedLevel === 1
-                                            ? "rgba(180, 180, 180, 0.42)"
-                                            : undefined,
-                                color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
-                            }
-                        }}
-                        rightSection={
-                            !phoneScreen && assignedLevel ? (
-                                <Group gap={4} wrap="nowrap">
-                                    {Array.from({ length: 5 }).map((_, dotIndex) => (
-                                        <div
-                                            key={`${attribute}-dot-${dotIndex}`}
-                                            style={{
-                                                width: phoneScreen ? 5 : 6,
-                                                height: phoneScreen ? 5 : 6,
-                                                borderRadius: "999px",
-                                                background:
-                                                    dotIndex < assignedLevel
-                                                        ? assignedLevel === 4
-                                                            ? rgba(RAW_RED, 1)
-                                                            : assignedLevel === 3
-                                                              ? "rgba(232, 204, 92, 0.98)"
-                                                              : "rgba(210, 210, 210, 0.85)"
-                                                        : "rgba(255, 255, 255, 0.14)",
-                                                boxShadow:
-                                                    dotIndex < assignedLevel && assignedLevel === 4
-                                                        ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
-                                                        : "none"
-                                            }}
-                                        />
-                                    ))}
-                                </Group>
-                            ) : undefined
-                        }
-                        onClick={() => {
-                            trackClick()
-                            onClick()
-                        }}
-                    >
-                        <Text
-                            fz={phoneScreen ? 12 : "inherit"}
-                            lh={1.3}
-                            ta="left"
-                            style={{ width: "100%" }}
-                        >
-                            {upcase(attribute)}
-                        </Text>
-                    </Button>
-                </Tooltip>
-
-                {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
-            </Grid.Col>
+            <Tooltip
+                key={attribute}
+                disabled={alreadyPicked}
+                label={attributeDescriptions[attribute]}
+                multiline
+                maw={280}
+                events={globals.tooltipTriggerEvents}
+            >
+                <PickTile
+                    data-testid={`attribute-${attribute}-button`}
+                    label={upcase(attribute)}
+                    level={assignedLevel}
+                    tone={assignedLevel ? toneForLevel[assignedLevel] : undefined}
+                    previewLevel={nextLevel ?? undefined}
+                    previewTone={nextLevel ? toneForLevel[nextLevel] : undefined}
+                    nudge={nothingPickedYet && !alreadyPicked}
+                    onMouseEnter={() => {
+                        if (!alreadyPicked) trackTooltipHover(attribute)
+                    }}
+                    onFocus={() => {
+                        if (!alreadyPicked) trackTooltipHover(attribute)
+                    }}
+                    disabled={!alreadyPicked && attributeAllocationIsFull}
+                    onClick={() => {
+                        trackClick()
+                        onClick()
+                    }}
+                />
+            </Tooltip>
         )
     }
 
@@ -306,8 +238,15 @@ const AttributePicker = ({
         }
     ]
 
+    const confirmDisabledReason =
+        excessMediumAttributes > 0
+            ? "Remove the extra medium attributes first"
+            : !isComplete
+              ? "Assign your strongest, weakest and three medium attributes first"
+              : undefined
+
     return (
-        <div>
+        <div style={{ width: "100%", maxWidth: 820 }}>
             <GeneratorPhasePrompt
                 lines={phases}
                 activeKey={toPick}
@@ -315,80 +254,67 @@ const AttributePicker = ({
                 footerText="Remaining attributes will be lvl 2"
             />
 
-            <GeneratorSectionDivider label="Attributes" />
+            <GeneratorSectionDivider label="Attributes" marginY={phoneScreen ? "sm" : "md"} />
 
             {excessMediumAttributes > 0 ? (
-                <Text role="status" ta="center" mb="sm" c="gold">
+                <Text role="status" ta="center" mb="sm" c="gold.4" fz="sm">
                     Your saved character has more than three level-3 attributes. Click a gold
                     attribute to remove its selection, or reset attributes to start again.
                 </Text>
             ) : null}
 
-            {nothingPickedYet ? (
-                <Text
-                    ta="center"
-                    mb="sm"
-                    className="notranslate"
-                    translate="no"
-                    style={{
-                        fontFamily: "Inter, Segoe UI, sans-serif",
-                        fontSize: "0.82rem",
-                        letterSpacing: "0.06em",
-                        color: rgba(RAW_GOLD, 0.78)
-                    }}
-                >
-                    {phoneScreen ? "Tap" : "Click"} an attribute below to assign it
-                </Text>
-            ) : null}
+            <Text
+                ta="center"
+                mb="sm"
+                className="notranslate"
+                translate="no"
+                fz="sm"
+                style={{
+                    color: "var(--pg-gold-dim)",
+                    letterSpacing: "0.04em",
+                    visibility: nothingPickedYet ? "visible" : "hidden"
+                }}
+                aria-hidden={!nothingPickedYet}
+            >
+                {phoneScreen ? "Tap" : "Click"} an attribute below to assign it
+            </Text>
 
-            <Group>
-                <Grid grow>
-                    <Grid.Col span={4}>
-                        <Text fs="italic" fw={700} ta="center">
-                            Physical
-                        </Text>
-                    </Grid.Col>
-                    <Grid.Col span={4}>
-                        <Text fs="italic" fw={700} ta="center">
-                            Social
-                        </Text>
-                    </Grid.Col>
-                    <Grid.Col span={4}>
-                        <Text fs="italic" fw={700} ta="center">
-                            Mental
-                        </Text>
-                    </Grid.Col>
-                    {[
-                        "strength",
-                        "charisma",
-                        "intelligence",
-                        "dexterity",
-                        "manipulation",
-                        "wits",
-                        "stamina",
-                        "composure",
-                        "resolve"
-                    ]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map((clan, i) => createButton(clan, i))}
-                </Grid>
-            </Group>
+            <PickGrid>
+                <PickColumnHeader>Physical</PickColumnHeader>
+                <PickColumnHeader>Social</PickColumnHeader>
+                <PickColumnHeader>Mental</PickColumnHeader>
+                {[
+                    "strength",
+                    "charisma",
+                    "intelligence",
+                    "dexterity",
+                    "manipulation",
+                    "wits",
+                    "stamina",
+                    "composure",
+                    "resolve"
+                ]
+                    .map((a) => attributesKeySchema.parse(a))
+                    .map((attribute) => createButton(attribute))}
+            </PickGrid>
 
             {hasConfirmedAttributes ? (
-                <Group justify="center" mt="xl">
-                    <Button variant="outline" color="red" onClick={resetAttributes}>
+                <GeneratorStepFooter>
+                    <Button
+                        variant="subtle"
+                        color="gray"
+                        size="md"
+                        leftSection={<IconRotate2 size={16} />}
+                        onClick={resetAttributes}
+                    >
                         Reset attributes
                     </Button>
-                    <Button
+                    <GeneratorConfirmButton
                         data-testid="attributes-confirm-button"
-                        color="grape"
-                        disabled={!isComplete}
-                        styles={generatorConfirmButtonStyles}
+                        disabledReason={confirmDisabledReason}
                         onClick={() => commitAttributes(pickedAttributes, true)}
-                    >
-                        Confirm
-                    </Button>
-                </Group>
+                    />
+                </GeneratorStepFooter>
             ) : null}
         </div>
     )

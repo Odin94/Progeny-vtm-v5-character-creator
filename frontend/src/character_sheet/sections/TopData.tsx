@@ -1,18 +1,7 @@
 import { changeSheetPredatorType } from "../utils/changePredatorType"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
-import {
-    Grid,
-    Group,
-    Stack,
-    Text,
-    Title,
-    Box,
-    TextInput,
-    NumberInput,
-    useMantineTheme,
-    Select
-} from "@mantine/core"
-import { memo, useState } from "react"
+import { TextInput, NumberInput, Select } from "@mantine/core"
+import { memo, useState, type ReactNode } from "react"
 import { clans } from "~/data/Clans"
 import { ClanName, PredatorTypeName } from "~/data/NameSchemas"
 import {
@@ -22,7 +11,6 @@ import {
 } from "~/data/predatorTypeOptions"
 import { predatorDisciplineKey } from "~/data/PredatorTypeRules"
 import { SheetOptions } from "../CharacterSheet"
-import { sheetSurfaceStyle } from "../utils/style"
 import {
     useDebouncedUncontrolledStringField,
     useDebouncedUncontrolledNumberField
@@ -33,16 +21,36 @@ import { getHomebrewSource } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import PredatorTypeModal from "~/components/PredatorTypeModal"
 import CharacterDescription from "../components/CharacterDescription"
+import classes from "../sheet.module.css"
+import { getOrdinal } from "../utils/ordinal"
 
 type TopDataProps = {
     options: SheetOptions
 }
 
-const sheetInputStyles = { input: { ...sheetSurfaceStyle, border: "none" } }
+const LedgerField = ({
+    label,
+    children,
+    wide = false
+}: {
+    label: string
+    children: ReactNode
+    wide?: boolean
+}) => (
+    <div className={classes.field} data-wide={wide || undefined}>
+        <span className={classes.label}>{label}</span>
+        {children}
+    </div>
+)
+
+const FieldText = ({ value }: { value?: ReactNode }) => (
+    <p className={classes.fieldValue} data-empty={!value || undefined}>
+        {value || "—"}
+    </p>
+)
 
 const TopData = ({ options }: TopDataProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const theme = useMantineTheme()
     const clan = character.homebrewClan ?? (character.clan ? clans[character.clan] : null)
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const homebrewClans = homebrewCollections.flatMap((collection) =>
@@ -51,7 +59,6 @@ const TopData = ({ options }: TopDataProps) => {
             .map((item) => ({ item, collection }))
     )
     const predatorTypes = getPredatorTypeOptions(homebrewCollections, character)
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const isFreeMode = mode === "free"
     const isExperienceEditable = mode === "xp" || isFreeMode
     const isExperienceSpentEditable = isFreeMode
@@ -109,368 +116,329 @@ const TopData = ({ options }: TopDataProps) => {
         field: "experience"
     })
 
+    const clanSelect = (
+        <Select
+            aria-label="Clan"
+            placeholder="Select a clan"
+            data={Object.keys(clans)
+                .filter((clanName) => clanName !== "")
+                .map((clanName) => ({
+                    value: clanName,
+                    label: clanName
+                }))
+                .concat(
+                    homebrewClans.map(({ item, collection }) => ({
+                        value: `homebrew:${collection.id}:${item.id}`,
+                        label: `${item.name} · Homebrew (${collection.name})`
+                    }))
+                )}
+            value={
+                character.homebrewClan
+                    ? `homebrew:${character.homebrewClan.homebrewSource.collectionId}:${character.homebrewClan.homebrewSource.itemId}`
+                    : character.clan || null
+            }
+            onChange={(value) => {
+                if (value) {
+                    if (value.startsWith("homebrew:")) {
+                        const [, collectionId, itemId] = value.split(":")
+                        const match = homebrewClans.find(
+                            ({ item, collection }) =>
+                                item.id === itemId && collection.id === collectionId
+                        )
+                        if (match) {
+                            setCharacter((current) => ({
+                                ...current,
+                                clan: "",
+                                homebrewClan: {
+                                    ...match.item,
+                                    homebrewSource: getHomebrewSource(match.item, match.collection)
+                                },
+                                availableDisciplineNames: match.item.nativeDisciplines
+                            }))
+                        }
+                        return
+                    }
+                    const selectedClan = value as ClanName
+                    setCharacter((current) => ({
+                        ...current,
+                        clan: selectedClan,
+                        homebrewClan: undefined,
+                        availableDisciplineNames: clans[selectedClan].nativeDisciplines
+                    }))
+                }
+            }}
+            size="sm"
+            color={primaryColor}
+        />
+    )
+
+    const predatorTypeSelect = (
+        <Select
+            aria-label="Predator type"
+            placeholder="Select a predator type"
+            data={Object.keys(predatorTypes)
+                .filter((predatorTypeName) => predatorTypeName !== "")
+                .map((predatorTypeName) => ({
+                    value: predatorTypeName,
+                    label:
+                        predatorTypes[predatorTypeName].name +
+                        (predatorTypes[predatorTypeName].homebrewSource
+                            ? ` — ${predatorTypes[predatorTypeName].homebrewSource!.collectionName}`
+                            : "")
+                }))}
+            value={getCharacterPredatorTypeKey(character) || null}
+            allowDeselect={false}
+            onOptionSubmit={(value) => {
+                if (value) {
+                    const selectedPredatorType = value as PredatorTypeName
+                    const selectedPredatorTypeData = predatorTypes[selectedPredatorType]
+                    const firstSpecialty = selectedPredatorTypeData.specialtyOptions[0]
+                    const storedSpecialty =
+                        getCharacterPredatorTypeKey(character) === selectedPredatorType
+                            ? character.predatorType.pickedSpecialties[0]
+                            : undefined
+                    const storedSpecialtyOption = storedSpecialty
+                        ? (selectedPredatorTypeData.specialtyOptions.find(
+                              (option) =>
+                                  option.skill === storedSpecialty.skill &&
+                                  option.name === storedSpecialty.name
+                          ) ??
+                          selectedPredatorTypeData.specialtyOptions.find(
+                              (option) => option.skill === storedSpecialty.skill
+                          ))
+                        : undefined
+                    const initialSpecialty = storedSpecialtyOption ?? firstSpecialty
+                    setPendingPredatorType(selectedPredatorType)
+                    setPendingPredatorSpecialty(
+                        initialSpecialty ? `${initialSpecialty.skill}_${initialSpecialty.name}` : ""
+                    )
+                    setPendingPredatorDiscipline(
+                        getCharacterPredatorTypeKey(character) === selectedPredatorType
+                            ? getPredatorDisciplineKey(character)
+                            : selectedPredatorTypeData.disciplineOptions[0]
+                              ? predatorDisciplineKey(selectedPredatorTypeData.disciplineOptions[0])
+                              : ""
+                    )
+                    setPredatorTypeModalOpened(true)
+                }
+            }}
+            size="sm"
+            color={primaryColor}
+        />
+    )
+
+    const availableXP = character.experience - character.ephemeral.experienceSpent
+    const eyebrowParts = [
+        character.sect,
+        clan?.name,
+        character.generation ? `${getOrdinal(character.generation)} Generation` : ""
+    ].filter(Boolean)
+    const showClanField = isFreeMode || !clan
+    const lineage = !isFreeMode && (character.sire || character.chronicle)
+
     return (
         <>
-            <Box>
-                <Group gap="md" justify="center" align="center" mb="md">
-                    {isFreeMode ? (
-                        <TextInput
-                            value={nameField.value}
-                            onChange={(e) => nameField.onChange(e.target.value)}
-                            placeholder="Unnamed Character"
-                            color={primaryColor}
-                            styles={{
-                                input: {
-                                    fontSize: "2rem",
-                                    fontWeight: 700,
-                                    textAlign: "center",
-                                    color: colorValue,
-                                    border: "none",
-                                    borderBottom: `2px solid transparent`,
-                                    borderRadius: 0,
-                                    padding: "0.5rem",
-                                    ...sheetSurfaceStyle
-                                }
-                            }}
-                            style={{ width: "100%" }}
-                        />
-                    ) : (
-                        <Title order={1} c={primaryColor} style={{ margin: 0 }}>
-                            {character.name || "Unnamed Character"}
-                        </Title>
-                    )}
-                    {clan?.logo ? (
-                        <Box
-                            style={{
-                                width: "56px",
-                                height: "56px",
-                                backgroundColor: colorValue,
-                                maskImage: `url(${clan.logo})`,
-                                maskSize: "contain",
-                                maskRepeat: "no-repeat",
-                                maskPosition: "center",
-                                WebkitMaskImage: `url(${clan.logo})`,
-                                WebkitMaskSize: "contain",
-                                WebkitMaskRepeat: "no-repeat",
-                                WebkitMaskPosition: "center"
-                            }}
-                        />
-                    ) : null}
-                </Group>
-            </Box>
+            <header className={classes.dossier}>
+                <div className={classes.identity}>
+                    <div className={classes.sigil} aria-hidden="true">
+                        {clan?.logo ? (
+                            <span
+                                className={classes.sigilMark}
+                                style={{
+                                    maskImage: `url(${clan.logo})`,
+                                    WebkitMaskImage: `url(${clan.logo})`
+                                }}
+                            />
+                        ) : (
+                            <span className={classes.sigilEmpty}>?</span>
+                        )}
+                    </div>
+                    <div className={classes.identityText}>
+                        {eyebrowParts.length > 0 || character.homebrewClan ? (
+                            <div className={classes.eyebrow}>
+                                {eyebrowParts.map((part) => (
+                                    <span key={part}>{part}</span>
+                                ))}
+                                {character.homebrewClan ? (
+                                    <HomebrewBadge source={character.homebrewClan.homebrewSource} />
+                                ) : null}
+                            </div>
+                        ) : null}
+                        {isFreeMode ? (
+                            <TextInput
+                                className={classes.nameInput}
+                                aria-label="Character name"
+                                value={nameField.value}
+                                onChange={(e) => nameField.onChange(e.target.value)}
+                                placeholder="Unnamed Character"
+                                color={primaryColor}
+                            />
+                        ) : (
+                            <h1 className={classes.name} data-empty={!character.name || undefined}>
+                                {character.name || "Unnamed Character"}
+                            </h1>
+                        )}
+                        {lineage ? (
+                            <p className={classes.lineage}>
+                                {character.sire ? (
+                                    <>
+                                        Childe of <strong>{character.sire}</strong>
+                                    </>
+                                ) : null}
+                                {character.sire && character.chronicle ? " · " : null}
+                                {character.chronicle}
+                            </p>
+                        ) : null}
+                    </div>
+                </div>
 
-            <Grid>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Stack gap="xs">
-                        <Group gap="xs">
-                            <Text fw={700}>Clan:</Text>
-                            {isFreeMode || !clan ? (
-                                <Select
-                                    placeholder="Select a clan"
-                                    data={Object.keys(clans)
-                                        .filter((clanName) => clanName !== "")
-                                        .map((clanName) => ({
-                                            value: clanName,
-                                            label: clanName
-                                        }))
-                                        .concat(
-                                            homebrewClans.map(({ item, collection }) => ({
-                                                value: `homebrew:${collection.id}:${item.id}`,
-                                                label: `${item.name} · Homebrew (${collection.name})`
-                                            }))
-                                        )}
-                                    value={
-                                        character.homebrewClan
-                                            ? `homebrew:${character.homebrewClan.homebrewSource.collectionId}:${character.homebrewClan.homebrewSource.itemId}`
-                                            : character.clan || null
-                                    }
-                                    onChange={(value) => {
-                                        if (value) {
-                                            if (value.startsWith("homebrew:")) {
-                                                const [, collectionId, itemId] = value.split(":")
-                                                const match = homebrewClans.find(
-                                                    ({ item, collection }) =>
-                                                        item.id === itemId &&
-                                                        collection.id === collectionId
-                                                )
-                                                if (match) {
-                                                    setCharacter((current) => ({
-                                                        ...current,
-                                                        clan: "",
-                                                        homebrewClan: {
-                                                            ...match.item,
-                                                            homebrewSource: getHomebrewSource(
-                                                                match.item,
-                                                                match.collection
-                                                            )
-                                                        },
-                                                        availableDisciplineNames:
-                                                            match.item.nativeDisciplines
-                                                    }))
-                                                }
-                                                return
-                                            }
-                                            const selectedClan = value as ClanName
-                                            setCharacter((current) => ({
-                                                ...current,
-                                                clan: selectedClan,
-                                                homebrewClan: undefined,
-                                                availableDisciplineNames:
-                                                    clans[selectedClan].nativeDisciplines
-                                            }))
-                                        }
-                                    }}
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={{ width: "200px" }}
-                                    styles={sheetInputStyles}
-                                />
-                            ) : (
-                                <Group gap="xs">
-                                    <Text>{clan.name}</Text>
-                                    {character.homebrewClan ? (
-                                        <HomebrewBadge
-                                            source={character.homebrewClan.homebrewSource}
-                                        />
-                                    ) : null}
-                                </Group>
-                            )}
-                        </Group>
-                        <Group gap="xs">
-                            <Text fw={700}>Predator Type:</Text>
-                            {isFreeMode ? (
-                                <Select
-                                    placeholder="Select a predator type"
-                                    data={Object.keys(predatorTypes)
-                                        .filter((predatorTypeName) => predatorTypeName !== "")
-                                        .map((predatorTypeName) => ({
-                                            value: predatorTypeName,
-                                            label:
-                                                predatorTypes[predatorTypeName].name +
-                                                (predatorTypes[predatorTypeName].homebrewSource
-                                                    ? ` — ${predatorTypes[predatorTypeName].homebrewSource!.collectionName}`
-                                                    : "")
-                                        }))}
-                                    value={getCharacterPredatorTypeKey(character) || null}
-                                    allowDeselect={false}
-                                    onOptionSubmit={(value) => {
-                                        if (value) {
-                                            const selectedPredatorType = value as PredatorTypeName
-                                            const selectedPredatorTypeData =
-                                                predatorTypes[selectedPredatorType]
-                                            const firstSpecialty =
-                                                selectedPredatorTypeData.specialtyOptions[0]
-                                            const storedSpecialty =
-                                                getCharacterPredatorTypeKey(character) ===
-                                                selectedPredatorType
-                                                    ? character.predatorType.pickedSpecialties[0]
-                                                    : undefined
-                                            const storedSpecialtyOption = storedSpecialty
-                                                ? (selectedPredatorTypeData.specialtyOptions.find(
-                                                      (option) =>
-                                                          option.skill === storedSpecialty.skill &&
-                                                          option.name === storedSpecialty.name
-                                                  ) ??
-                                                  selectedPredatorTypeData.specialtyOptions.find(
-                                                      (option) =>
-                                                          option.skill === storedSpecialty.skill
-                                                  ))
-                                                : undefined
-                                            const initialSpecialty =
-                                                storedSpecialtyOption ?? firstSpecialty
-                                            setPendingPredatorType(selectedPredatorType)
-                                            setPendingPredatorSpecialty(
-                                                initialSpecialty
-                                                    ? `${initialSpecialty.skill}_${initialSpecialty.name}`
-                                                    : ""
-                                            )
-                                            setPendingPredatorDiscipline(
-                                                getCharacterPredatorTypeKey(character) ===
-                                                    selectedPredatorType
-                                                    ? getPredatorDisciplineKey(character)
-                                                    : selectedPredatorTypeData.disciplineOptions[0]
-                                                      ? predatorDisciplineKey(
-                                                            selectedPredatorTypeData
-                                                                .disciplineOptions[0]
-                                                        )
-                                                      : ""
-                                            )
-                                            setPredatorTypeModalOpened(true)
-                                        }
-                                    }}
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={{ width: "200px" }}
-                                    styles={sheetInputStyles}
-                                />
-                            ) : (
-                                <Text>{character.predatorType.name || "—"}</Text>
-                            )}
-                        </Group>
-                        <CharacterDescription
-                            key={getCharacterDraftIdentity(character)}
-                            character={character}
-                            setCharacter={setCharacter}
-                            primaryColor={primaryColor}
-                            canEdit={options.canEdit}
-                            editDisabledReason={options.editDisabledReason}
-                        />
-                    </Stack>
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Stack gap="xs">
-                        <Group gap="xs">
-                            <Text fw={700}>Ambition:</Text>
-                            {isFreeMode ? (
-                                <TextInput
-                                    value={ambitionField.value}
-                                    onChange={(e) => ambitionField.onChange(e.target.value)}
-                                    placeholder="—"
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={{ width: "100%" }}
-                                    styles={sheetInputStyles}
-                                />
-                            ) : (
-                                <Text>{character.ambition || "—"}</Text>
-                            )}
-                        </Group>
-                        <Group gap="xs">
-                            <Text fw={700}>Desire:</Text>
-                            {isFreeMode ? (
-                                <TextInput
-                                    value={desireField.value}
-                                    onChange={(e) => desireField.onChange(e.target.value)}
-                                    placeholder="—"
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={{ width: "100%" }}
-                                    styles={sheetInputStyles}
-                                />
-                            ) : (
-                                <Text>{character.desire || "—"}</Text>
-                            )}
-                        </Group>
-                        <Group gap="xs">
-                            <Text fw={700}>Player:</Text>
-                            {isFreeMode ? (
-                                <TextInput
-                                    value={playerField.value}
-                                    onChange={(e) => playerField.onChange(e.target.value)}
-                                    placeholder="—"
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={{ width: "100%" }}
-                                    styles={sheetInputStyles}
-                                />
-                            ) : (
-                                <Text>{character.player || "—"}</Text>
-                            )}
-                        </Group>
-                    </Stack>
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                    <Stack gap="xs">
-                        <Group gap="xs">
-                            <Text fw={700}>Generation:</Text>
-                            {isFreeMode ? (
+                <div className={classes.ledger}>
+                    {showClanField ? <LedgerField label="Clan">{clanSelect}</LedgerField> : null}
+                    <LedgerField label="Predator type">
+                        {isFreeMode ? (
+                            predatorTypeSelect
+                        ) : (
+                            <FieldText value={character.predatorType.name} />
+                        )}
+                    </LedgerField>
+                    {isFreeMode ? (
+                        <LedgerField label="Generation">
+                            <NumberInput
+                                aria-label="Generation"
+                                value={generationField.value}
+                                onChange={(value) => {
+                                    const numValue =
+                                        typeof value === "string"
+                                            ? parseInt(value) || 0
+                                            : value || 0
+                                    generationField.onChange(numValue)
+                                }}
+                                min={0}
+                                size="sm"
+                                color={primaryColor}
+                            />
+                        </LedgerField>
+                    ) : null}
+                    <LedgerField label="Sire">
+                        {isFreeMode ? (
+                            <TextInput
+                                aria-label="Sire"
+                                value={sireField.value}
+                                onChange={(e) => sireField.onChange(e.target.value)}
+                                placeholder="—"
+                                size="sm"
+                                color={primaryColor}
+                            />
+                        ) : (
+                            <FieldText value={character.sire} />
+                        )}
+                    </LedgerField>
+                    <LedgerField label="Player">
+                        {isFreeMode ? (
+                            <TextInput
+                                aria-label="Player"
+                                value={playerField.value}
+                                onChange={(e) => playerField.onChange(e.target.value)}
+                                placeholder="—"
+                                size="sm"
+                                color={primaryColor}
+                            />
+                        ) : (
+                            <FieldText value={character.player} />
+                        )}
+                    </LedgerField>
+                    <LedgerField label="Experience">
+                        <div className={classes.xp}>
+                            {isExperienceSpentEditable ? (
                                 <NumberInput
-                                    value={generationField.value}
-                                    onChange={(value) => {
-                                        const numValue =
-                                            typeof value === "string"
-                                                ? parseInt(value) || 0
-                                                : value || 0
-                                        generationField.onChange(numValue)
-                                    }}
+                                    className={classes.xpInput}
+                                    aria-label="Experience spent"
+                                    value={experienceSpentField.value}
+                                    onChange={experienceSpentField.onChange}
                                     min={0}
                                     size="sm"
+                                    hideControls
                                     color={primaryColor}
-                                    style={{ width: "100px" }}
-                                    styles={sheetInputStyles}
                                 />
                             ) : (
-                                <Text>{character.generation || "—"}</Text>
+                                <span className={classes.xpSpent}>
+                                    {character.ephemeral.experienceSpent}
+                                </span>
                             )}
-                        </Group>
-                        <Group gap="xs">
-                            <Text fw={700}>Sire:</Text>
-                            {isFreeMode ? (
-                                <TextInput
-                                    value={sireField.value}
-                                    onChange={(e) => sireField.onChange(e.target.value)}
-                                    placeholder="—"
-                                    size="sm"
-                                    color={primaryColor}
-                                    style={{ width: "50%" }}
-                                    styles={sheetInputStyles}
-                                />
-                            ) : (
-                                <Text>{character.sire || "—"}</Text>
-                            )}
-                        </Group>
-                        <Group gap="xs" align="center">
-                            <Text fw={700}>XP:</Text>
-                            {isExperienceSpentEditable ? (
-                                <>
-                                    <NumberInput
-                                        value={experienceSpentField.value}
-                                        onChange={experienceSpentField.onChange}
-                                        min={0}
-                                        size="sm"
-                                        style={{ width: "72px" }}
-                                        styles={{
-                                            input: {
-                                                ...sheetSurfaceStyle,
-                                                border: "none",
-                                                fontSize: "1rem",
-                                                fontWeight: 700,
-                                                color: colorValue,
-                                                textAlign: "center"
-                                            }
-                                        }}
-                                    />
-                                    <Text c={primaryColor} fw={700}>
-                                        /
-                                    </Text>
-                                </>
-                            ) : (
-                                <>
-                                    <Text c={primaryColor} fw={700}>
-                                        {character.ephemeral.experienceSpent}
-                                    </Text>
-                                    <Text c={primaryColor} fw={700}>
-                                        /
-                                    </Text>
-                                </>
-                            )}
+                            <span className={classes.xpSlash}>/</span>
                             {isExperienceEditable ? (
                                 <NumberInput
+                                    className={classes.xpInput}
+                                    aria-label="Total experience"
                                     value={experienceField.value}
                                     onChange={experienceField.onChange}
                                     min={0}
                                     size="sm"
-                                    style={{ width: "72px" }}
-                                    styles={{
-                                        input: {
-                                            ...sheetSurfaceStyle,
-                                            border: "none",
-                                            fontSize: "1rem",
-                                            fontWeight: 700,
-                                            color: colorValue,
-                                            textAlign: "center"
-                                        }
-                                    }}
+                                    hideControls
+                                    color={primaryColor}
                                 />
                             ) : (
-                                <Text c={primaryColor} fw={700}>
-                                    {character.experience}
-                                </Text>
+                                <span className={classes.xpTotal}>{character.experience}</span>
                             )}
-                        </Group>
-                    </Stack>
-                </Grid.Col>
-            </Grid>
+                        </div>
+                        <span className={classes.xpMeta}>
+                            {availableXP >= 0 ? `${availableXP} available` : "Overspent"}
+                        </span>
+                    </LedgerField>
+                </div>
+
+                <div className={classes.motives}>
+                    <div className={classes.motive}>
+                        <span className={classes.label}>Ambition</span>
+                        {isFreeMode ? (
+                            <TextInput
+                                aria-label="Ambition"
+                                value={ambitionField.value}
+                                onChange={(e) => ambitionField.onChange(e.target.value)}
+                                placeholder="—"
+                                size="sm"
+                                color={primaryColor}
+                            />
+                        ) : (
+                            <p
+                                className={classes.motiveText}
+                                data-empty={!character.ambition || undefined}
+                            >
+                                {character.ambition || "—"}
+                            </p>
+                        )}
+                    </div>
+                    <div className={classes.motive} data-tone="gold">
+                        <span className={classes.label}>Desire</span>
+                        {isFreeMode ? (
+                            <TextInput
+                                aria-label="Desire"
+                                value={desireField.value}
+                                onChange={(e) => desireField.onChange(e.target.value)}
+                                placeholder="—"
+                                size="sm"
+                                color={primaryColor}
+                            />
+                        ) : (
+                            <p
+                                className={classes.motiveText}
+                                data-empty={!character.desire || undefined}
+                            >
+                                {character.desire || "—"}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                <CharacterDescription
+                    key={getCharacterDraftIdentity(character)}
+                    character={character}
+                    setCharacter={setCharacter}
+                    primaryColor={primaryColor}
+                    canEdit={options.canEdit}
+                    editDisabledReason={options.editDisabledReason}
+                />
+            </header>
             {pendingPredatorType ? (
                 <PredatorTypeModal
                     key={pendingPredatorType}
@@ -518,6 +486,9 @@ export default memo(TopData, (prev, next) => {
         p.character.generation === n.character.generation &&
         p.character.experience === n.character.experience &&
         p.character.ephemeral.experienceSpent === n.character.ephemeral.experienceSpent &&
-        p.character.predatorType === n.character.predatorType
+        p.character.predatorType === n.character.predatorType &&
+        p.character.sect === n.character.sect &&
+        p.character.chronicle === n.character.chronicle &&
+        p.character.homebrewClan === n.character.homebrewClan
     )
 })

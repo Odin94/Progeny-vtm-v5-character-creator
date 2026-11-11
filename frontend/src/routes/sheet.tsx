@@ -1,7 +1,7 @@
 import { AppShell } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
 import { lazy, Suspense, useEffect, useRef } from "react"
-import { RAW_GOLD, rgba } from "~/theme/colors"
+import { RouteFallback } from "~/components/ui/RouteFallback"
 import RenderProfiler from "~/components/RenderProfiler"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import posthog from "posthog-js"
@@ -53,13 +53,10 @@ function Sheet() {
             header={{ height: 52 }}
             styles={{
                 root: {
-                    minHeight: "100vh"
+                    minHeight: "100dvh"
                 },
+                // Glass surface + gold seam come from the AppShell theme.
                 header: {
-                    background: "rgba(8, 7, 8, 0.7)",
-                    backdropFilter: "blur(10px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
                     zIndex: 200
                 },
                 main: {
@@ -73,7 +70,7 @@ function Sheet() {
                 </RenderProfiler>
             </AppShell.Header>
             <RenderProfiler id="CharacterSheet">
-                <Suspense fallback={null}>
+                <Suspense fallback={<RouteFallback />}>
                     <CharacterSheet character={character} setCharacter={setCharacter} />
                 </Suspense>
             </RenderProfiler>

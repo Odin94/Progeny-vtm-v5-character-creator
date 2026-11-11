@@ -1,7 +1,8 @@
-import { ActionIcon, Group, Tabs } from "@mantine/core"
+import { ActionIcon, Tabs, Tooltip } from "@mantine/core"
 import { IconX } from "@tabler/icons-react"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import classes from "../diceRoller.module.css"
 
 type ModalHeaderProps = {
     primaryColor: string
@@ -17,33 +18,35 @@ const ModalHeader = ({ primaryColor, onClose }: ModalHeaderProps) => {
     )
 
     return (
-        <Group justify="center" mb="md" style={{ position: "relative", paddingRight: "40px" }}>
+        <div className={classes.header}>
+            <span className={classes.title}>
+                <span className={classes.titleMark} aria-hidden="true" />
+                Roll
+            </span>
             <Tabs
-                value={activeTab}
+                className={classes.tabs}
+                classNames={{ list: classes.tabList, tab: classes.tab }}
+                variant="unstyled"
+                value={activeTab ?? "custom"}
                 onChange={setActiveTab}
                 color={primaryColor}
-                style={{ width: "100%" }}
             >
-                <Tabs.List grow>
+                <Tabs.List aria-label="Dice pool source" grow>
                     <Tabs.Tab value="custom">Custom</Tabs.Tab>
-                    <Tabs.Tab value="selected">Selected Pool</Tabs.Tab>
+                    <Tabs.Tab value="selected">Selected pool</Tabs.Tab>
                 </Tabs.List>
             </Tabs>
-            <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={onClose}
-                style={{
-                    position: "absolute",
-                    right: 0,
-                    top: 0,
-                    zIndex: 10,
-                    pointerEvents: "auto"
-                }}
-            >
-                <IconX size={20} />
-            </ActionIcon>
-        </Group>
+            <Tooltip label="Close dice roller" position="left" zIndex={2100}>
+                <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    aria-label="Close dice roller"
+                    onClick={onClose}
+                >
+                    <IconX size={18} />
+                </ActionIcon>
+            </Tooltip>
+        </div>
     )
 }
 

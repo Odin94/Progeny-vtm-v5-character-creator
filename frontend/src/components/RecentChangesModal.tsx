@@ -1,9 +1,10 @@
-import { ActionIcon, Anchor, Button, Group, Modal, Text } from "@mantine/core"
+import { Anchor, Button, Group, Modal, Text } from "@mantine/core"
 import { IconChevronLeft, IconChevronRight, IconCoffee } from "@tabler/icons-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type CSSProperties } from "react"
 import posthog from "posthog-js"
 import ReactMarkdown from "react-markdown"
 import ornamentalDivider from "~/assets/ornamental-divider.svg"
+import { IconButton } from "~/components/ui/IconButtons"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { useRecentChangeViewedTracking } from "~/hooks/useRecentChangeViewedTracking"
 import { api, type RecentChange } from "~/utils/api"
@@ -115,10 +116,13 @@ const RecentChangesModal = ({
                         <header className="recent-changes__header">
                             <Text
                                 className="recent-changes__title"
-                                style={{
-                                    letterSpacing: getTitleLetterSpacing(currentChange.title),
-                                    textIndent: getTitleLetterSpacing(currentChange.title)
-                                }}
+                                style={
+                                    {
+                                        "--recent-changes-tracking": getTitleLetterSpacing(
+                                            currentChange.title
+                                        )
+                                    } as CSSProperties
+                                }
                             >
                                 {currentChange.title}
                             </Text>
@@ -138,7 +142,7 @@ const RecentChangesModal = ({
                             ) : null}
                         </section>
 
-                        <div className="recent-changes__divider" aria-label="Progeny Update">
+                        <div className="recent-changes__divider">
                             <img src={ornamentalDivider} alt="" />
                             <Text>Progeny Update</Text>
                             <img src={ornamentalDivider} alt="" />
@@ -147,9 +151,11 @@ const RecentChangesModal = ({
                         {columns.length ? (
                             <section
                                 className="recent-changes__details"
-                                style={{
-                                    gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`
-                                }}
+                                style={
+                                    {
+                                        "--recent-changes-columns": columns.length
+                                    } as CSSProperties
+                                }
                             >
                                 {columns.map((column, index) => (
                                     <div className="recent-changes__column" key={index}>
@@ -195,27 +201,32 @@ const RecentChangesModal = ({
                                 Support me
                             </Anchor>
                             <Group className="recent-changes__navigation" gap="xs">
-                                <ActionIcon
-                                    variant="subtle"
-                                    aria-label="Previous update"
-                                    disabled={!canGoPrevious}
+                                <IconButton
+                                    label="Previous update"
+                                    icon={<IconChevronLeft size={20} />}
+                                    disabledReason={
+                                        canGoPrevious ? undefined : "This is the earliest update"
+                                    }
                                     onClick={() => setCurrentIndex((index) => index - 1)}
-                                >
-                                    <IconChevronLeft size={20} />
-                                </ActionIcon>
-                                <Text size="sm" c="dimmed">
+                                />
+                                <Text size="sm" className="recent-changes__count">
                                     {currentIndex + 1} of {changes.length}
                                 </Text>
-                                <ActionIcon
-                                    variant="subtle"
-                                    aria-label="Next update"
-                                    disabled={!canGoNext}
+                                <IconButton
+                                    label="Next update"
+                                    icon={<IconChevronRight size={20} />}
+                                    disabledReason={
+                                        canGoNext ? undefined : "This is the latest update"
+                                    }
                                     onClick={() => setCurrentIndex((index) => index + 1)}
-                                >
-                                    <IconChevronRight size={20} />
-                                </ActionIcon>
+                                />
                             </Group>
-                            <Button className="recent-changes__close-button" onClick={onClose}>
+                            <Button
+                                color="red"
+                                className="recent-changes__close-button"
+                                data-autofocus
+                                onClick={onClose}
+                            >
                                 Got it
                             </Button>
                         </footer>

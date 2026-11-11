@@ -1,0 +1,51 @@
+.sigil {
+    position: relative;
+    display: inline-block;
+    width: var(--loader-size);
+    height: var(--loader-size);
+    color: var(--loader-color);
+}
+
+.ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: max(1.5px, calc(var(--loader-size) / 18)) solid
+        color-mix(in srgb, currentColor 22%, transparent);
+    border-top-color: currentColor;
+    filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 55%, transparent));
+    animation: sigil-spin 0.9s linear infinite;
+}
+
+.core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--loader-size) / 4.5);
+    height: calc(var(--loader-size) / 4.5);
+    background: currentColor;
+    transform: translate(-50%, -50%) rotate(45deg);
+    animation: sigil-pulse 1.8s var(--ease-in-out) infinite;
+}
+
+@keyframes sigil-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes sigil-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ring {
+        animation-duration: 2.4s;
+    }
+}

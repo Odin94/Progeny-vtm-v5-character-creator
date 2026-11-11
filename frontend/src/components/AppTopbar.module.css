@@ -1,0 +1,269 @@
+.bar {
+    height: 100%;
+    min-height: var(--pg-topbar-h);
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Thin blood-to-gold seam along the bottom edge — the one flourish the bar wears. */
+.bar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(220, 52, 70, 0.55) 22%,
+        rgba(212, 175, 100, 0.45) 50%,
+        rgba(220, 52, 70, 0.55) 78%,
+        transparent 100%
+    );
+    opacity: 0.6;
+}
+
+.bar[data-impersonating] {
+    background: repeating-linear-gradient(-45deg, #e3a83f 0 14px, #d99a32 14px 28px);
+    --pg-ink: #1d1206;
+    --pg-ink-2: rgba(29, 18, 6, 0.86);
+    --pg-ink-3: rgba(29, 18, 6, 0.7);
+}
+
+.inner {
+    width: 100%;
+    max-width: var(--pg-content-max);
+    margin-inline: auto;
+    padding-inline: var(--pg-gutter);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-4);
+    min-width: 0;
+}
+
+/* ---- Brand ---- */
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--pg-ink);
+    text-decoration: none;
+    border-radius: var(--pg-radius-sm);
+    padding: 4px 2px;
+    flex: none;
+}
+
+.brandMark {
+    flex: none;
+    transition:
+        transform var(--pg-dur-slow) var(--ease-out),
+        filter var(--pg-dur-slow) var(--ease-out);
+}
+
+.wordmark {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    /* Optical correction: tracking adds trailing space. */
+    margin-right: -0.24em;
+    line-height: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .brand:hover .brandMark {
+        transform: rotate(45deg) scale(0.92);
+        filter: drop-shadow(0 0 8px rgba(220, 52, 70, 0.55));
+    }
+}
+
+/* ---- Nav ---- */
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(2px, 1vw, 8px);
+    min-width: 0;
+}
+
+.navLink {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: var(--pg-radius-sm);
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--pg-ink-2);
+    text-decoration: none;
+    transition:
+        color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.navLink::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 5px;
+    height: 1px;
+    background: var(--pg-blood-bright);
+    box-shadow: 0 0 8px rgba(220, 52, 70, 0.8);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--pg-dur-base) var(--ease-out);
+}
+
+.navLink[data-status="active"],
+.navLink[data-active] {
+    color: var(--pg-ink);
+}
+
+.navLink[data-status="active"]::after,
+.navLink[data-active]::after {
+    transform: scaleX(1);
+}
+
+.navLink[data-pending] {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.navLink:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .navLink:hover {
+        color: var(--pg-ink);
+        background-color: rgba(242, 220, 210, 0.05);
+    }
+
+    .navLink:hover::after {
+        transform: scaleX(0.6);
+    }
+
+    .navLink[data-status="active"]:hover::after,
+    .navLink[data-active]:hover::after {
+        transform: scaleX(1);
+    }
+}
+
+/* ---- Quick nav trigger ---- */
+
+.searchTrigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 10px;
+    margin-left: 4px;
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border);
+    background: var(--pg-sunken);
+    color: var(--pg-ink-3);
+    transition:
+        color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.searchTrigger:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .searchTrigger:hover {
+        color: var(--pg-ink);
+        border-color: var(--pg-border-strong);
+    }
+}
+
+.searchKbd {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--pg-ink-4);
+}
+
+.searchTooltip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* On touch-first / narrow screens the trigger collapses to its icon. */
+@media (max-width: 40em), (hover: none) {
+    .searchTrigger {
+        width: 34px;
+        padding: 0;
+        justify-content: center;
+        border-color: transparent;
+        background: transparent;
+    }
+
+    .searchKbd {
+        display: none;
+    }
+}
+
+/* ---- Impersonation ---- */
+
+.impersonation {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    flex-wrap: nowrap;
+}
+
+.impersonationLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--pg-ink);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.stopButton {
+    color: #f7d76a;
+}
+
+.burger {
+    margin-left: 4px;
+}
+
+@media (max-width: 30em) {
+    .inner {
+        gap: var(--pg-space-2);
+    }
+
+    .wordmark {
+        font-size: 0.85rem;
+        letter-spacing: 0.18em;
+        margin-right: -0.18em;
+    }
+
+    .navLink {
+        padding: 0 7px;
+        letter-spacing: 0.08em;
+    }
+
+    .navLink::after {
+        left: 7px;
+        right: 7px;
+    }
+}

@@ -1,0 +1,94 @@
+/* Drag & drop / paste / click file target. Tokens: src/index.css */
+
+.zone {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-3);
+    width: 100%;
+    min-height: 64px;
+    padding: var(--pg-space-3) var(--pg-space-4);
+    border: 1px dashed var(--pg-border-strong);
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-sunken);
+    color: var(--pg-ink-2);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.zone:active:not([data-disabled]) {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .zone:hover:not([data-disabled]) {
+        border-color: var(--pg-border-accent);
+        background: color-mix(in srgb, var(--pg-accent) 6%, var(--pg-sunken));
+    }
+}
+
+.zone:focus-visible {
+    outline: 2px solid var(--pg-focus-ring);
+    outline-offset: 0;
+}
+
+.zone[data-dragging] {
+    border-style: solid;
+    border-color: var(--pg-accent-bright);
+    background: var(--pg-accent-soft);
+}
+
+.zone[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--pg-radius-sm);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--pg-gold);
+    transition: transform var(--pg-dur-base) var(--ease-out);
+}
+
+.zone[data-dragging] .icon {
+    transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .zone[data-dragging] .icon {
+        transform: none;
+    }
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+}
+
+.hint {
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+}
+
+.input {
+    display: none;
+}

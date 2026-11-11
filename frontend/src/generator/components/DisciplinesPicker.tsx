@@ -1,17 +1,13 @@
-import {
-    Accordion,
-    Badge,
-    Box,
-    Button,
-    Group,
-    Image,
-    List,
-    ScrollArea,
-    Stack,
-    Text
-} from "@mantine/core"
+import { Accordion, Button, ScrollArea, Tooltip } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import {
+    IconArrowBackUp,
+    IconCheck,
+    IconCircleCheck,
+    IconLock,
+    IconPlus,
+    IconPoint
+} from "@tabler/icons-react"
 import { useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import {
@@ -21,18 +17,21 @@ import {
     increaseDisciplineLevelForPower
 } from "../../data/Character"
 import { canAccessOblivionCeremonies } from "../../data/Ceremonies"
-import { Discipline, Power, disciplines } from "../../data/Disciplines"
+import { Discipline, Power } from "../../data/Disciplines"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import { DisciplineName } from "~/data/NameSchemas"
-import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
     generatorScrollableAreaStyle,
     generatorScrollableContentStyle,
     generatorScrollableShellStyle
 } from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
-import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
+import {
+    GeneratorConfirmButton,
+    GeneratorSectionDivider,
+    GeneratorStepHero
+} from "./sharedGeneratorUi"
 import { getDisciplinePowerDisabledReasons } from "../disciplinePowerAvailability"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import {
@@ -44,6 +43,9 @@ import {
 } from "~/utils/homebrewOptions"
 import type { HomebrewDiscipline } from "~/data/Homebrew"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import alchemyLogo from "../../resources/Rombo_Disciplines/rombo_Alchemy.svg"
+import { Dots } from "./generatorCardParts"
+import classes from "./generatorCards.module.css"
 
 type DisciplinesPickerProps = {
     character: Character
@@ -55,27 +57,16 @@ type DisciplinesPickerProps = {
     setPickedPredatorTypePower: (power: Power | undefined) => void
 }
 
-const DisciplineDots = ({ count }: { count: number }) => {
-    if (count <= 0) return null
+type PowerCardState = "available" | "picked" | "locked" | "elsewhere"
 
-    return (
-        <Group gap={6} ml={10} wrap="nowrap">
-            {Array.from({ length: count }, (_, index) => (
-                <Box
-                    key={index}
-                    style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: rgba(RAW_RED, 0.95),
-                        boxShadow: `0 0 10px ${rgba(RAW_RED, 0.35)}`,
-                        flexShrink: 0
-                    }}
-                />
-            ))}
-        </Group>
-    )
+const accordionClassNames = {
+    item: classes.tome,
+    control: classes.tomeControl,
+    icon: classes.tomeIcon,
+    content: classes.tomeContent
 }
+
+const powerSlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-")
 
 const DisciplinesPicker = ({
     character,
@@ -87,7 +78,6 @@ const DisciplinesPicker = ({
     setPickedPredatorTypePower
 }: DisciplinesPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    const [hoveredTakeButton, setHoveredTakeButton] = useState<string | null>(null)
     const [blockedPowerAttempts, setBlockedPowerAttempts] = useState<Set<string>>(() => new Set())
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
 
@@ -259,268 +249,150 @@ const DisciplinesPicker = ({
             isForPredatorType &&
             pickedPowers.some((p) => getPowerIdentity(p) === getPowerIdentity(power))
         const showUndo = picked && !isPickedAsPredatorType && !isPickedAsClan
-        const takeButtonHoverKey = `${isForPredatorType ? "predator" : "clan"}-${getPowerIdentity(power)}`
-        const takeButtonHovered = hoveredTakeButton === takeButtonHoverKey
-        const showBlockedReasons = takeDisabled && blockedPowerAttempts.has(takeButtonHoverKey)
+        const takeButtonKey = `${isForPredatorType ? "predator" : "clan"}-${getPowerIdentity(power)}`
+        const showBlockedReasons = takeDisabled && blockedPowerAttempts.has(takeButtonKey)
+        const state: PowerCardState = showUndo
+            ? "picked"
+            : picked
+              ? "elsewhere"
+              : takeDisabled
+                ? "locked"
+                : "available"
+        const slug = powerSlug(power.name)
+
+        const takeButton = (
+            <Button
+                data-testid={`take-power-${slug}-button`}
+                aria-disabled={takeDisabled}
+                data-disabled={takeDisabled || undefined}
+                size="xs"
+                variant="light"
+                color="red"
+                fullWidth
+                leftSection={
+                    takeDisabled ? (
+                        <IconLock size={13} stroke={1.8} />
+                    ) : (
+                        <IconPlus size={13} stroke={2} />
+                    )
+                }
+                onClick={(event) => {
+                    if (takeDisabled) {
+                        event.preventDefault()
+                        setBlockedPowerAttempts((attempted) =>
+                            new Set(attempted).add(takeButtonKey)
+                        )
+                        return
+                    }
+
+                    trackEvent({
+                        action: "power clicked",
+                        category: "disciplines",
+                        label: power.name
+                    })
+                    if (isForPredatorType) setPickedPredatorTypePower(power)
+                    else setPickedPowers([...pickedPowers, power])
+                }}
+            >
+                Take
+            </Button>
+        )
 
         return (
             <div
-                data-testid={`power-card-${power.name.toLowerCase().replace(/\s+/g, "-")}`}
+                data-testid={`power-card-${slug}`}
                 key={getPowerIdentity(power)}
-                style={{
-                    padding: "12px 14px",
-                    borderRadius: 10,
-                    border: `1px solid ${picked ? rgba(RAW_RED, 0.3) : "rgba(125, 91, 72, 0.25)"}`,
-                    background: picked
-                        ? "linear-gradient(180deg, rgba(52, 18, 22, 0.75) 0%, rgba(34, 10, 13, 0.75) 100%)"
-                        : "linear-gradient(180deg, rgba(18, 13, 16, 0.55) 0%, rgba(8, 6, 8, 1) 100%)",
-                    opacity: takeDisabled && !picked ? 0.6 : 1,
-                    transition: "background 180ms ease, border-color 180ms ease",
-                    marginBottom: 8
-                }}
+                className={classes.power}
+                data-state={state}
             >
-                <Group justify="space-between" align="flex-start" mb={4}>
-                    <Text
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: "0.82rem",
-                            fontWeight: 600,
-                            color: picked ? rgba(RAW_RED, 0.95) : "rgba(244, 236, 232, 0.92)",
-                            letterSpacing: "0.03em",
-                            flex: 1
-                        }}
-                    >
-                        {power.name}
-                    </Text>
-                    <Badge
-                        variant="light"
-                        color="pink"
-                        radius="sm"
-                        size="xs"
-                        style={{ flexShrink: 0 }}
-                    >
-                        lv {power.level}
-                    </Badge>
+                <div className={classes.powerHead}>
+                    <span className={classes.powerName}>{power.name}</span>
                     {power.homebrewSource ? <HomebrewBadge source={power.homebrewSource} /> : null}
-                </Group>
+                    {state === "picked" ? (
+                        <IconCircleCheck className={classes.powerGlyph} size={16} stroke={1.8} />
+                    ) : state === "locked" ? (
+                        <IconLock className={classes.powerGlyph} size={14} stroke={1.8} />
+                    ) : null}
+                </div>
 
-                <Text
-                    style={{
-                        fontFamily: "Crimson Text, Georgia, serif",
-                        fontSize: "0.9rem",
-                        color: rgba(RAW_GREY, 0.65),
-                        lineHeight: 1.4,
-                        marginBottom: power.amalgamPrerequisites.length > 0 ? 6 : 0
-                    }}
-                >
-                    {upcase(power.summary)}
-                </Text>
+                <p className={classes.powerSummary}>{upcase(power.summary)}</p>
 
-                {power.amalgamPrerequisites.length > 0 && (
-                    <div style={{ marginBottom: 8 }}>
-                        <Text
-                            style={{
-                                fontFamily: "Inter, sans-serif",
-                                fontSize: "0.72rem",
-                                color: rgba(RAW_RED, 0.7),
-                                marginBottom: 2
-                            }}
-                        >
-                            Requires:
-                        </Text>
-                        <List
-                            size="xs"
-                            styles={{ item: { color: rgba(RAW_GREY, 0.55), fontSize: "0.72rem" } }}
-                        >
-                            {power.amalgamPrerequisites.map((prereq) => (
-                                <List.Item key={power.name + prereq.discipline}>
-                                    {upcase(prereq.discipline)}: Lv {prereq.level}
-                                </List.Item>
-                            ))}
-                        </List>
-                        {!missingAmalgamPrereq(power) && (
-                            <Text
-                                style={{
-                                    fontSize: "0.72rem",
-                                    color: "rgba(100, 220, 120, 0.8)",
-                                    marginTop: 2
-                                }}
-                            >
-                                Requirements met
-                            </Text>
-                        )}
-                    </div>
-                )}
-
-                {!picked &&
-                    (() => {
-                        const takeButton = (
-                            <Button
-                                data-testid={`take-power-${power.name.toLowerCase().replace(/\s+/g, "-")}-button`}
-                                aria-disabled={takeDisabled}
-                                data-disabled={takeDisabled || undefined}
-                                size="xs"
-                                variant="outline"
-                                color="red"
-                                fullWidth
-                                mt={4}
-                                onMouseEnter={() =>
-                                    !takeDisabled && setHoveredTakeButton(takeButtonHoverKey)
-                                }
-                                onMouseLeave={() => setHoveredTakeButton(null)}
-                                styles={{
-                                    root: {
-                                        alignSelf: "center",
-                                        opacity: takeDisabled ? 0.5 : 1,
-                                        cursor: takeDisabled ? "not-allowed" : "pointer",
-                                        borderColor:
-                                            takeButtonHovered && !takeDisabled
-                                                ? rgba(RAW_RED, 0.85)
-                                                : rgba(RAW_RED, 0.4),
-                                        background:
-                                            takeButtonHovered && !takeDisabled
-                                                ? rgba(RAW_RED, 0.24)
-                                                : rgba(RAW_RED, 0.08),
-                                        boxShadow:
-                                            takeButtonHovered && !takeDisabled
-                                                ? `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`
-                                                : "none",
-                                        transform:
-                                            takeButtonHovered && !takeDisabled
-                                                ? "translateY(-1px) scale(1.01)"
-                                                : "translateY(0) scale(1)",
-                                        transition:
-                                            "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
-                                        letterSpacing: "0.14em",
-                                        textTransform: "uppercase",
-                                        fontFamily: "Cinzel, Georgia, serif",
-                                        fontSize: "0.72rem"
-                                    },
-                                    section: {
-                                        color: rgba(RAW_RED, 1)
-                                    }
-                                }}
-                                onClick={(event) => {
-                                    if (takeDisabled) {
-                                        event.preventDefault()
-                                        setBlockedPowerAttempts((attempted) =>
-                                            new Set(attempted).add(takeButtonHoverKey)
-                                        )
-                                        return
-                                    }
-
-                                    trackEvent({
-                                        action: "power clicked",
-                                        category: "disciplines",
-                                        label: power.name
-                                    })
-                                    if (isForPredatorType) setPickedPredatorTypePower(power)
-                                    else setPickedPowers([...pickedPowers, power])
-                                }}
-                            >
-                                Take
-                            </Button>
-                        )
-
-                        if (showBlockedReasons) {
+                {power.amalgamPrerequisites.length > 0 ? (
+                    <div className={classes.amalgam}>
+                        <span className={classes.amalgamLabel}>Amalgam</span>
+                        {power.amalgamPrerequisites.map((prereq) => {
+                            const met = !missingAmalgamPrereq({
+                                ...power,
+                                amalgamPrerequisites: [prereq]
+                            })
                             return (
-                                <>
-                                    {takeButton}
-                                    <Stack
-                                        gap={2}
-                                        mt={6}
-                                        data-testid={`take-power-${power.name
-                                            .toLowerCase()
-                                            .replace(/\s+/g, "-")}-blocked`}
-                                    >
-                                        {takeDisabledReasons.map((reason) => (
-                                            <Group
-                                                key={reason}
-                                                gap={6}
-                                                wrap="nowrap"
-                                                align="center"
-                                            >
-                                                <Text
-                                                    component="span"
-                                                    aria-hidden
-                                                    style={{
-                                                        color: rgba(RAW_RED, 0.85),
-                                                        fontSize: "0.72rem",
-                                                        lineHeight: 1
-                                                    }}
-                                                >
-                                                    🔒
-                                                </Text>
-                                                <Text
-                                                    style={{
-                                                        fontFamily: "Inter, sans-serif",
-                                                        fontSize: "0.72rem",
-                                                        lineHeight: 1.3,
-                                                        color: rgba(RAW_RED, 0.85)
-                                                    }}
-                                                >
-                                                    {reason}
-                                                </Text>
-                                            </Group>
-                                        ))}
-                                    </Stack>
-                                </>
+                                <span
+                                    key={power.name + prereq.discipline}
+                                    className={classes.amalgamReq}
+                                    data-met={met || undefined}
+                                >
+                                    {met ? (
+                                        <IconCheck size={12} stroke={2.2} />
+                                    ) : (
+                                        <IconPoint size={12} />
+                                    )}
+                                    {upcase(prereq.discipline)} {prereq.level}
+                                </span>
                             )
-                        }
+                        })}
+                    </div>
+                ) : null}
 
-                        return takeButton
-                    })()}
-                {isPickedAsClan && (
-                    <Button
-                        size="xs"
-                        variant="subtle"
-                        color="gray"
-                        fullWidth
-                        mt={4}
-                        disabled
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            letterSpacing: "0.05em",
-                            fontSize: "0.72rem"
-                        }}
-                    >
-                        Taken as clan
-                    </Button>
-                )}
-                {isPickedAsPredatorType && (
-                    <Button
-                        size="xs"
-                        variant="subtle"
-                        color="gray"
-                        fullWidth
-                        mt={4}
-                        disabled
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            letterSpacing: "0.05em",
-                            fontSize: "0.72rem"
-                        }}
-                    >
-                        Taken as predator
-                    </Button>
-                )}
-                {showUndo && (
-                    <Button
-                        size="xs"
-                        variant="subtle"
-                        color="gray"
-                        fullWidth
-                        mt={4}
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            letterSpacing: "0.05em",
-                            fontSize: "0.72rem"
-                        }}
-                        onClick={() => cascadeRemove(power, isForPredatorType)}
-                    >
-                        Undo
-                    </Button>
-                )}
+                <div className={classes.powerFooter}>
+                    {state === "available" || state === "locked" ? (
+                        takeDisabled ? (
+                            <Tooltip
+                                multiline
+                                maw={260}
+                                label={takeDisabledReasons.join(" · ")}
+                                events={{ hover: true, focus: true, touch: false }}
+                            >
+                                {takeButton}
+                            </Tooltip>
+                        ) : (
+                            takeButton
+                        )
+                    ) : null}
+                    {state === "picked" ? (
+                        <>
+                            <span className={classes.powerStatus}>
+                                <IconCheck size={13} stroke={2.2} />
+                                Taken
+                            </span>
+                            <Button
+                                size="compact-xs"
+                                variant="subtle"
+                                color="gray"
+                                leftSection={<IconArrowBackUp size={13} stroke={1.8} />}
+                                onClick={() => cascadeRemove(power, isForPredatorType)}
+                            >
+                                Undo
+                            </Button>
+                        </>
+                    ) : null}
+                    {isPickedAsClan ? (
+                        <span className={classes.powerStatus}>Taken as clan power</span>
+                    ) : null}
+                    {isPickedAsPredatorType ? (
+                        <span className={classes.powerStatus}>Taken as predator power</span>
+                    ) : null}
+                </div>
+
+                {showBlockedReasons ? (
+                    <div className={classes.blocked} data-testid={`take-power-${slug}-blocked`}>
+                        {takeDisabledReasons.map((reason) => (
+                            <p key={reason} className={classes.reason}>
+                                <IconLock size={12} stroke={1.8} aria-hidden />
+                                {reason}
+                            </p>
+                        ))}
+                    </div>
+                ) : null}
             </div>
         )
     }
@@ -559,83 +431,54 @@ const DisciplinesPicker = ({
             clanHasDiscipline(actualDisciplineName)
 
         const columnGroups = canReachLvl3 ? [lvl1, lvl2, lvl3] : [lvl1, lvl2]
-        const colWidth = phoneScreen ? "100%" : `${Math.floor(100 / columnGroups.length)}%`
         const pickedPowerCount = getPickedPowerCountForDiscipline(
             disciplineName,
             discipline,
             isPredatorType
         )
+        const slotCount = isPredatorType ? 1 : 2
 
         return (
             <Accordion.Item
                 key={disciplineName + isPredatorType}
                 value={disciplineName + isPredatorType}
+                data-has-picks={pickedPowerCount > 0 || undefined}
+                data-predator={isPredatorType || undefined}
             >
                 <Accordion.Control
-                    data-testid={`discipline-${disciplineName.toLowerCase().replace(/\s+/g, "-")}-accordion`}
-                    icon={<Image src={discipline.logo} w={20} h={20} fit="contain" />}
-                    styles={{
-                        label: {
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: "0.88rem",
-                            fontWeight: 900,
-                            letterSpacing: "0.1em",
-                            color: "rgb(244, 236, 232)"
-                        },
-                        control: {
-                            borderRadius: 8,
-                            "&:hover": { background: "rgba(255, 255, 255, 0.04)" }
-                        }
-                    }}
+                    data-testid={`discipline-${powerSlug(disciplineName)}-accordion`}
+                    icon={
+                        <span className={classes.sigil}>
+                            <img src={discipline.logo} alt="" />
+                        </span>
+                    }
                 >
-                    <Group gap={0} wrap="nowrap">
-                        <Text
-                            component="span"
-                            style={{
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontSize: "0.88rem",
-                                fontWeight: 900,
-                                letterSpacing: "0.1em",
-                                color: "rgb(244, 236, 232)"
-                            }}
-                        >
-                            {upcase(disciplineLabel)}
-                        </Text>
-                        <DisciplineDots count={pickedPowerCount} />
-                        {pickedPowerCount > 0 && (
-                            <Text
-                                component="span"
-                                ml={8}
-                                style={{
-                                    fontFamily: "Inter, sans-serif",
-                                    fontSize: "0.72rem",
-                                    letterSpacing: "0.04em",
-                                    color: rgba(RAW_GREY, 0.55)
-                                }}
-                            >
-                                {pickedPowerCount} picked
-                            </Text>
-                        )}
-                    </Group>
+                    <span className={classes.tomeLabel}>
+                        <span className={classes.tomeText}>
+                            <span className={classes.tomeName}>{upcase(disciplineLabel)}</span>
+                            {discipline.summary && !phoneScreen ? (
+                                <span className={classes.tomeSummary}>
+                                    {upcase(discipline.summary)}
+                                </span>
+                            ) : null}
+                        </span>
+                        <span className={classes.tomeMeta}>
+                            {pickedPowerCount > 0 ? `${pickedPowerCount} picked` : null}
+                            <Dots filled={pickedPowerCount} total={slotCount} size="lg" />
+                        </span>
+                    </span>
                 </Accordion.Control>
                 <Accordion.Panel>
                     <div
-                        style={{
-                            display: "flex",
-                            gap: 12,
-                            flexDirection: phoneScreen ? "column" : "row",
-                            alignItems: "flex-start"
-                        }}
+                        className={classes.levels}
+                        style={{ ["--cols" as string]: columnGroups.length }}
                     >
                         {columnGroups.map((powers, i) => (
-                            <div
-                                key={i}
-                                style={{
-                                    flex: 1,
-                                    minWidth: 0,
-                                    width: phoneScreen ? "100%" : colWidth
-                                }}
-                            >
+                            <div key={i} className={classes.levelColumn}>
+                                <p className={classes.levelHeading}>
+                                    Level {i + 1}
+                                    <Dots filled={i + 1} />
+                                </p>
                                 {powers.map((p) => renderPowerCard(p, isPredatorType))}
                             </div>
                         ))}
@@ -649,27 +492,17 @@ const DisciplinesPicker = ({
     if (character.clan === "Thin-blood") {
         return (
             <div style={generatorScrollableShellStyle}>
-                <Stack
-                    align="center"
-                    justify="center"
-                    gap="md"
+                <div
+                    className={`${classes.thinBlood} ${classes.enter}`}
                     style={generatorScrollableAreaStyle}
                 >
-                    <Text
-                        ta="center"
-                        style={{
-                            fontFamily: "Crimson Text, Georgia, serif",
-                            fontSize: phoneScreen ? "1.4rem" : "1.8rem",
-                            color: "rgba(244, 236, 232, 0.9)"
-                        }}
-                    >
-                        <b>Thin-bloods</b> do not pick disciplines
-                        <br />
-                        you gain them from blood resonance
-                    </Text>
-                    <Button
-                        color="red"
-                        styles={generatorConfirmButtonStyles}
+                    <img src={alchemyLogo} alt="" />
+                    <h2 className={classes.thinBloodTitle}>No Disciplines to pick</h2>
+                    <p className={classes.thinBloodText}>
+                        Thin-bloods don&apos;t learn Disciplines here. You gain them from blood
+                        resonance during play.
+                    </p>
+                    <GeneratorConfirmButton
                         onClick={() => {
                             trackEvent({
                                 action: "power clicked",
@@ -680,18 +513,20 @@ const DisciplinesPicker = ({
                         }}
                     >
                         Continue
-                    </Button>
-                </Stack>
+                    </GeneratorConfirmButton>
+                </div>
             </div>
         )
     }
+
+    const clanPowersComplete = pickedPowers.length >= 3
 
     return (
         <div style={generatorScrollableShellStyle}>
             <ScrollArea
                 style={generatorScrollableAreaStyle}
                 w="100%"
-                px={20}
+                px={phoneScreen ? 12 : 20}
                 pt={4}
                 pb={8}
                 type="always"
@@ -699,61 +534,42 @@ const DisciplinesPicker = ({
                 styles={nightfallScrollAreaStyles}
             >
                 <div style={generatorScrollableContentStyle}>
-                    <Stack gap={6} align="center" mb={phoneScreen ? 18 : 26}>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: phoneScreen ? "1.95rem" : "2.35rem",
-                                lineHeight: 1.1,
-                                color: "rgba(244, 236, 232, 0.95)"
-                            }}
-                        >
-                            Pick your{" "}
-                            <span
-                                style={{
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    letterSpacing: "0.05em",
-                                    color: rgba(RAW_RED, 1)
-                                }}
-                            >
-                                Disciplines
-                            </span>
-                        </Text>
-                        <Text
-                            ta="center"
-                            style={{
-                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                fontSize: phoneScreen ? "0.82rem" : "0.9rem",
-                                letterSpacing: "0.04em",
-                                color: rgba(RAW_GREY, 0.5)
-                            }}
-                        >
-                            {hasPredatorType
+                    <GeneratorStepHero
+                        leadText="Pick your"
+                        accentText="Disciplines"
+                        description={
+                            hasPredatorType
                                 ? `2 powers in one discipline · 1 in another · 1 from your predator type (${upcase(character.predatorType.pickedDiscipline)})`
-                                : "2 powers in one discipline · 1 in another"}
-                        </Text>
-                        <Group gap="sm" justify="center" mt={6}>
-                            <Badge
-                                color={pickedPowers.length >= 3 ? "green" : "red"}
-                                variant="light"
-                                size="lg"
+                                : "2 powers in one discipline · 1 in another"
+                        }
+                        marginBottom={8}
+                    />
+                    <div className={classes.tally}>
+                        <span
+                            className={classes.tallyItem}
+                            data-complete={clanPowersComplete || undefined}
+                        >
+                            <Dots filled={Math.min(pickedPowers.length, 3)} total={3} size="lg" />
+                            <span>Clan powers {pickedPowers.length}/3</span>
+                            <IconCheck className={classes.tallyCheck} size={14} stroke={2.2} />
+                        </span>
+                        {hasPredatorType && predatorTypeDiscipline ? (
+                            <span
+                                className={classes.tallyItem}
+                                data-complete={pickedPredatorTypePower ? true : undefined}
                             >
-                                Clan powers {pickedPowers.length}/3
-                            </Badge>
-                            {hasPredatorType && predatorTypeDiscipline ? (
-                                <Badge
-                                    color={pickedPredatorTypePower ? "green" : "red"}
-                                    variant="light"
+                                <Dots
+                                    filled={pickedPredatorTypePower ? 1 : 0}
+                                    total={1}
                                     size="lg"
-                                >
-                                    Predator power {pickedPredatorTypePower ? 1 : 0}/1
-                                </Badge>
-                            ) : null}
-                        </Group>
-                    </Stack>
+                                />
+                                <span>Predator power {pickedPredatorTypePower ? 1 : 0}/1</span>
+                                <IconCheck className={classes.tallyCheck} size={14} stroke={2.2} />
+                            </span>
+                        ) : null}
+                    </div>
 
-                    <Box maw={640} mx="auto" px={phoneScreen ? 4 : 0} pb="xl" w="100%">
+                    <div className={classes.stepBody} style={{ marginTop: phoneScreen ? 12 : 20 }}>
                         <GeneratorSectionDivider
                             label="Clan Disciplines"
                             lineHeight={1}
@@ -764,17 +580,9 @@ const DisciplinesPicker = ({
 
                         <Accordion
                             variant="separated"
-                            styles={{
-                                item: {
-                                    background: "rgba(255, 255, 255, 0.03)",
-                                    border: "1px solid rgba(255, 255, 255, 0.07)",
-                                    borderRadius: 10,
-                                    marginBottom: 8
-                                },
-                                panel: {
-                                    paddingTop: 4
-                                }
-                            }}
+                            transitionDuration={0}
+                            classNames={accordionClassNames}
+                            className={classes.tomes}
                         >
                             {officialDisciplinesForClan.map(([name, discipline]) =>
                                 renderDisciplineAccordionItem(name, discipline)
@@ -792,17 +600,9 @@ const DisciplinesPicker = ({
                                 />
                                 <Accordion
                                     variant="separated"
-                                    styles={{
-                                        item: {
-                                            background: "rgba(255, 255, 255, 0.03)",
-                                            border: "1px solid rgba(255, 255, 255, 0.07)",
-                                            borderRadius: 10,
-                                            marginBottom: 8
-                                        },
-                                        panel: {
-                                            paddingTop: 4
-                                        }
-                                    }}
+                                    transitionDuration={0}
+                                    classNames={accordionClassNames}
+                                    className={classes.tomes}
                                 >
                                     {homebrewDisciplinesForClan.map(([name, discipline]) =>
                                         renderDisciplineAccordionItem(name, discipline)
@@ -823,16 +623,9 @@ const DisciplinesPicker = ({
 
                                 <Accordion
                                     variant="separated"
-                                    styles={{
-                                        item: {
-                                            background: rgba(RAW_RED, 0.04),
-                                            border: `1px solid ${rgba(RAW_RED, 0.15)}`,
-                                            borderRadius: 10
-                                        },
-                                        panel: {
-                                            paddingTop: 4
-                                        }
-                                    }}
+                                    transitionDuration={0}
+                                    classNames={accordionClassNames}
+                                    className={classes.tomes}
                                 >
                                     {renderDisciplineAccordionItem(
                                         character.predatorType.pickedDiscipline,
@@ -843,25 +636,20 @@ const DisciplinesPicker = ({
                             </>
                         ) : null}
 
-                        <Stack gap="xs" align="center" mt="xl">
+                        <div className={classes.confirmArea}>
                             {confirmReason ? (
-                                <Text
+                                <p
                                     data-testid="disciplines-confirm-reason"
-                                    ta="center"
-                                    style={{
-                                        fontFamily: "Inter, sans-serif",
-                                        fontSize: "0.82rem",
-                                        color: rgba(RAW_RED, 0.85)
-                                    }}
+                                    className={classes.confirmReason}
                                 >
+                                    <IconLock size={13} stroke={1.8} aria-hidden />
                                     {confirmReason}
-                                </Text>
+                                </p>
                             ) : null}
-                            <Button
+                            <GeneratorConfirmButton
                                 data-testid="disciplines-confirm-button"
                                 disabled={confirmDisabled}
-                                color="grape"
-                                styles={generatorConfirmButtonStyles}
+                                disabledReason={confirmReason}
                                 onClick={() => {
                                     updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                     const pickedDisciplineIdentities = new Set(
@@ -963,9 +751,9 @@ const DisciplinesPicker = ({
                                 }}
                             >
                                 Confirm
-                            </Button>
-                        </Stack>
-                    </Box>
+                            </GeneratorConfirmButton>
+                        </div>
+                    </div>
                 </div>
             </ScrollArea>
         </div>

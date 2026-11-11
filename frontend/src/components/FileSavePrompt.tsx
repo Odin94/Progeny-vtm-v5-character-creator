@@ -1,4 +1,6 @@
-import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
+import { Button, Group, Modal, Stack } from "@mantine/core"
+import { IconExternalLink, IconFile, IconFileTypePdf, IconShare } from "@tabler/icons-react"
+import classes from "./AppModals.module.css"
 import {
     dismissFileSavePrompt,
     dismissFileSavePrompts,
@@ -49,16 +51,25 @@ export const FileSavePrompt = ({
         }
     }
     return (
-        <Stack gap="xs">
-            <Text size="sm">{file.name}</Text>
-            <Text size="sm">
+        <Stack gap="sm">
+            <div className={classes.fileRow}>
+                <span className={classes.fileIcon} aria-hidden="true">
+                    {isPdf ? (
+                        <IconFileTypePdf size={20} stroke={1.6} />
+                    ) : (
+                        <IconFile size={20} stroke={1.6} />
+                    )}
+                </span>
+                <p className={classes.fileName}>{file.name}</p>
+            </div>
+            <p className={classes.lede}>
                 {canShare
                     ? `Tap Save or share ${label}, then choose Save to Files.`
                     : "This app cannot share this file. Try opening it, or open Progeny in Safari and download again."}
-            </Text>
-            <Group gap="xs">
+            </p>
+            <div className={classes.versionGrid}>
                 {canShare && (
-                    <Button size="xs" loading={sharing} onClick={share}>
+                    <Button leftSection={<IconShare size={16} />} loading={sharing} onClick={share}>
                         Save or share {label}
                     </Button>
                 )}
@@ -67,33 +78,34 @@ export const FileSavePrompt = ({
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    size="xs"
-                    variant="light"
+                    variant="default"
+                    leftSection={<IconExternalLink size={16} />}
                     onClick={() =>
                         track("preview_requested", { stage: "preview", method: "preview" })
                     }
                 >
                     Open {label}
                 </Button>
-            </Group>
+            </div>
             {message && (
-                <Text size="sm" role="status">
+                <p className={classes.lede} role="status">
                     {message}
-                </Text>
+                </p>
             )}
-            <Text size="xs">
+            <p className={classes.note}>
                 If saving does not work, open Progeny in Safari and download again.
-            </Text>
+            </p>
             {isPdf && (
-                <Text size="xs" c="dimmed">
+                <p className={classes.note}>
                     PDF template kindly provided by Nerdbert (linktr.ee/nerdbert).
-                </Text>
+                </p>
             )}
             {!feedback && (
                 <Group gap="xs">
                     <Button
                         variant="subtle"
-                        size="compact-xs"
+                        color="gray"
+                        size="compact-sm"
                         onClick={() => {
                             track("reported_saved", { stage: "feedback" })
                             setFeedback(true)
@@ -103,7 +115,8 @@ export const FileSavePrompt = ({
                     </Button>
                     <Button
                         variant="subtle"
-                        size="compact-xs"
+                        color="gray"
+                        size="compact-sm"
                         onClick={() => {
                             track("reported_failed", { stage: "feedback" })
                             setFeedback(true)
@@ -112,7 +125,7 @@ export const FileSavePrompt = ({
                             )
                         }}
                     >
-                        Saving didn't work
+                        Saving didn&apos;t work
                     </Button>
                 </Group>
             )}
@@ -155,7 +168,7 @@ export const FileSaveDialog = () => {
             <Stack>
                 {prompts.map((prompt, index) => (
                     <Stack key={prompt.id}>
-                        {index > 0 && <Divider />}
+                        {index > 0 && <hr className={classes.rule} />}
                         <FileSavePrompt
                             file={prompt.file}
                             url={prompt.url}
@@ -165,6 +178,7 @@ export const FileSaveDialog = () => {
                         {prompts.length > 1 && (
                             <Button
                                 variant="subtle"
+                                color="gray"
                                 onClick={() => dismissFileSavePrompt(prompt.id)}
                             >
                                 Close this file

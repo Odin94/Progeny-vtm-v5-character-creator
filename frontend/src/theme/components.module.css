@@ -1,0 +1,590 @@
+/* ==========================================================================
+   Mantine component skins. Wired up through `classNames` in src/theme/theme.ts so
+   every Mantine primitive in the app picks them up automatically.
+   Tokens come from src/index.css.
+   ========================================================================== */
+
+/* ---- Buttons ------------------------------------------------------------ */
+
+.button {
+    font-family: var(--pg-font-body);
+    font-weight: 600;
+    letter-spacing: 0.015em;
+    transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+    transition-duration: var(--pg-dur-fast);
+    transition-timing-function: var(--ease-out);
+}
+
+.button:where([data-variant="filled"]):where(:not(:disabled, [data-disabled])) {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.12));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+        0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.button:where([data-variant="default"]) {
+    box-shadow: var(--pg-shadow-inset-top);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .button:where([data-variant="filled"]):where(:not(:disabled, [data-disabled])):hover {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.16),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+            0 0 22px -6px color-mix(in srgb, var(--button-bg) 85%, transparent),
+            0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+
+    .button:where([data-variant="default"]):where(:not(:disabled, [data-disabled])):hover {
+        border-color: var(--pg-border-strong);
+    }
+}
+
+.button:where(:disabled, [data-disabled]) {
+    background-image: none;
+    box-shadow: none;
+}
+
+.buttonSection {
+    opacity: 0.9;
+}
+
+.actionIcon {
+    transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+    transition-duration: var(--pg-dur-fast);
+    transition-timing-function: var(--ease-out);
+}
+
+.actionIcon:where([data-variant="filled"]):where(:not(:disabled, [data-disabled])) {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.closeButton {
+    color: var(--pg-ink-3);
+    transition:
+        transform var(--pg-dur-press) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .closeButton:hover {
+        color: var(--pg-ink);
+        background-color: rgba(242, 220, 210, 0.07);
+    }
+}
+
+/* ---- Surfaces ------------------------------------------------------------ */
+
+.paper {
+    background-color: var(--pg-surface-1);
+    --paper-border-color: var(--pg-border);
+}
+
+.card {
+    background-color: var(--pg-surface-1);
+    --paper-border-color: var(--pg-border);
+    box-shadow: var(--pg-shadow-inset-top), var(--paper-shadow, none);
+}
+
+.cardSection {
+    --border-color: var(--pg-border);
+}
+
+.divider {
+    --divider-color: var(--pg-border);
+}
+
+.dividerLabel {
+    color: var(--pg-ink-3);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+}
+
+/* ---- Typography --------------------------------------------------------- */
+
+.title {
+    font-family: var(--pg-font-display);
+    letter-spacing: var(--pg-tracking-display);
+    color: var(--pg-ink);
+}
+
+.anchor {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+    transition: color var(--pg-dur-fast) var(--ease-out);
+}
+
+.kbd {
+    font-family: var(--pg-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--pg-ink-2);
+    background: var(--pg-surface-3);
+    border: 1px solid var(--pg-border-strong);
+    border-bottom-width: 2px;
+    border-radius: var(--pg-radius-sm);
+    padding: 1px 6px;
+    line-height: 1.4;
+}
+
+/* ---- Inputs --------------------------------------------------------------- */
+
+/* Specificity matches Mantine's color-scheme scoped rule so these win by source order,
+   while Mantine's error rule (more specific) still turns the border red. */
+[data-mantine-color-scheme] .inputWrapper[data-variant="default"] {
+    --input-bg: var(--pg-sunken);
+    --input-bd: var(--pg-border-strong);
+}
+
+[data-mantine-color-scheme] .inputWrapper[data-variant="filled"] {
+    --input-bg: var(--pg-surface-3);
+    --input-bd: transparent;
+}
+
+.input {
+    color: var(--pg-ink);
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .input:where(:not(:focus, :focus-within, :disabled, [data-disabled])):hover {
+        border-color: color-mix(in srgb, var(--input-bd) 40%, rgba(242, 220, 210, 0.32));
+    }
+}
+
+.input:where(:focus, :focus-within) {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-bd-focus) 22%, transparent);
+}
+
+.input:where([data-error]):where(:focus, :focus-within) {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mantine-color-error) 22%, transparent);
+}
+
+.input::placeholder {
+    color: var(--pg-ink-4);
+}
+
+.inputSection {
+    color: var(--pg-ink-3);
+}
+
+.inputLabel {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--pg-ink-2);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+}
+
+.inputDescription {
+    color: var(--pg-ink-3);
+}
+
+.inputError {
+    color: var(--pg-blood-bright);
+}
+
+/* ---- Floating surfaces (Popover, Menu, Combobox, HoverCard) ------------------ */
+
+.floating {
+    --popover-border-color: var(--pg-border-strong);
+    background-color: var(--pg-surface-overlay);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow:
+        var(--pg-shadow-3),
+        inset 0 1px 0 rgba(255, 238, 228, 0.05);
+    color: var(--pg-ink);
+    --pg-transform-origin: top center;
+}
+
+/* Origin-aware: grow out of the side that touches the target. */
+.floating[data-position^="bottom"] {
+    --pg-transform-origin: top center;
+}
+.floating[data-position="bottom-start"] {
+    --pg-transform-origin: top left;
+}
+.floating[data-position="bottom-end"] {
+    --pg-transform-origin: top right;
+}
+.floating[data-position^="top"] {
+    --pg-transform-origin: bottom center;
+}
+.floating[data-position="top-start"] {
+    --pg-transform-origin: bottom left;
+}
+.floating[data-position="top-end"] {
+    --pg-transform-origin: bottom right;
+}
+.floating[data-position^="left"] {
+    --pg-transform-origin: center right;
+}
+.floating[data-position="left-start"] {
+    --pg-transform-origin: top right;
+}
+.floating[data-position="left-end"] {
+    --pg-transform-origin: bottom right;
+}
+.floating[data-position^="right"] {
+    --pg-transform-origin: center left;
+}
+.floating[data-position="right-start"] {
+    --pg-transform-origin: top left;
+}
+.floating[data-position="right-end"] {
+    --pg-transform-origin: bottom left;
+}
+
+.floatingArrow {
+    border-color: var(--pg-border-strong);
+}
+
+.menuItem {
+    font-size: 0.875rem;
+    color: var(--menu-item-color, var(--pg-ink-2));
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out);
+}
+
+.menuItem:where(:hover, :focus, [data-hovered]):where(:not(:disabled, [data-disabled])) {
+    background-color: var(--menu-item-hover, rgba(242, 220, 210, 0.07));
+    color: var(--menu-item-color, var(--pg-ink));
+}
+
+.menuItem:focus-visible {
+    /* The tinted row is the focus indicator inside menus. */
+    outline: none;
+    background-color: var(--menu-item-hover, var(--pg-accent-soft));
+    color: var(--menu-item-color, var(--pg-ink));
+}
+
+.menuItemSection {
+    color: inherit;
+    opacity: 0.75;
+}
+
+.menuLabel {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+}
+
+.menuDivider {
+    border-color: var(--pg-border) !important;
+}
+
+/* Select / MultiSelect / Autocomplete options. */
+.option {
+    font-size: 0.875rem;
+    color: var(--pg-ink-2);
+    border-radius: var(--pg-radius-sm);
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out);
+}
+
+.option:where([data-combobox-active], [data-checked]) {
+    color: var(--pg-ink);
+    font-weight: 500;
+}
+
+.option:where(:hover, [data-combobox-selected]):where(:not([data-combobox-disabled])) {
+    background-color: rgba(242, 220, 210, 0.07);
+    color: var(--pg-ink);
+}
+
+/* Keyboard-highlighted option: tinted by the accent so it matches the focus color. */
+.option:where([data-combobox-selected]):where(:not([data-combobox-disabled])) {
+    background-color: var(--pg-accent-soft);
+    box-shadow: inset 2px 0 0 var(--pg-accent);
+}
+
+.comboboxEmpty {
+    color: var(--pg-ink-3);
+    font-size: 0.8125rem;
+}
+
+.comboboxGroupLabel {
+    color: var(--pg-gold-dim);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+}
+
+.pill {
+    background-color: var(--pg-surface-3);
+    color: var(--pg-ink);
+    border: 1px solid var(--pg-border);
+}
+
+/* ---- Tooltip ---------------------------------------------------------------- */
+
+.tooltip {
+    background-color: var(--tooltip-bg, var(--pg-surface-overlay));
+    color: var(--tooltip-color, var(--pg-ink));
+    border: 1px solid var(--pg-border-gold);
+    box-shadow: var(--pg-shadow-2);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    padding: 6px 10px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.tooltip:where([data-multiline]) {
+    max-width: min(320px, calc(100vw - 24px));
+}
+
+.tooltipArrow {
+    border: 1px solid var(--pg-border-gold);
+}
+
+/* ---- Modal / Drawer ---------------------------------------------------- */
+
+.modalContent {
+    border: 1px solid var(--pg-border-gold);
+    background: linear-gradient(180deg, rgba(29, 22, 27, 0.98) 0%, rgba(16, 12, 15, 0.98) 100%);
+    box-shadow:
+        var(--pg-shadow-4),
+        inset 0 1px 0 rgba(255, 238, 228, 0.06);
+}
+
+.modalHeader {
+    /* Sticky while the body scrolls: translucent so the candle glow still reads. */
+    background:
+        radial-gradient(90% 180% at 50% 0%, rgba(120, 18, 32, 0.16), transparent 72%),
+        rgba(29, 22, 27, 0.94);
+}
+
+.modalTitle {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pg-ink);
+}
+
+.overlay {
+    --overlay-bg: var(--pg-scrim) !important;
+}
+
+.drawerContent {
+    background: linear-gradient(180deg, var(--pg-surface-2) 0%, var(--pg-surface-1) 100%);
+    border-color: var(--pg-border-gold);
+    box-shadow: var(--pg-shadow-4);
+}
+
+/* ---- Tabs ------------------------------------------------------------------ */
+
+.tabsList {
+    --tab-border-color: var(--pg-border);
+}
+
+.tab {
+    font-weight: 500;
+    color: var(--pg-ink-3);
+    transition:
+        color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.tab:where([data-active]) {
+    color: var(--pg-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .tab:where(:not([data-active], :disabled, [data-disabled])):hover {
+        color: var(--pg-ink-2);
+        background-color: rgba(242, 220, 210, 0.04);
+        border-color: var(--pg-border-strong);
+    }
+}
+
+/* ---- Feedback ---------------------------------------------------------------- */
+
+.notification {
+    background-color: var(--pg-surface-overlay);
+    border: 1px solid var(--pg-border-strong);
+    box-shadow: var(--pg-shadow-3);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    padding-inline-start: 22px;
+}
+
+.notification::before {
+    top: 10px;
+    bottom: 10px;
+    inset-inline-start: 8px;
+    width: 3px;
+    border-radius: 2px;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--notification-color) 70%, transparent);
+}
+
+.notificationTitle {
+    color: var(--pg-ink);
+    font-weight: 600;
+}
+
+.notificationDescription {
+    color: var(--pg-ink-2);
+}
+
+.alert {
+    border: 1px solid color-mix(in srgb, var(--alert-color) 30%, transparent);
+    border-inline-start-width: 3px;
+}
+
+.alertTitle {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.badge {
+    font-family: var(--pg-font-body);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+}
+
+.skeleton::before {
+    background-color: var(--pg-surface-1);
+}
+
+.skeleton::after {
+    background-color: var(--pg-surface-3);
+}
+
+/* ---- Data / disclosure ---------------------------------------------------------- */
+
+.accordionItem {
+    border-color: var(--pg-border);
+}
+
+.accordionControl {
+    transition: background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .accordionControl:hover {
+        background-color: rgba(242, 220, 210, 0.04);
+    }
+}
+
+.accordionChevron {
+    transition: transform var(--pg-dur-base) var(--ease-out) !important;
+    color: var(--pg-ink-3);
+}
+
+.table {
+    --table-border-color: var(--pg-border);
+    --table-striped-color: rgba(242, 220, 210, 0.025);
+    --table-hover-color: rgba(242, 220, 210, 0.045);
+}
+
+.tableTh {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.segmentedRoot {
+    background-color: var(--pg-sunken);
+    border: 1px solid var(--pg-border);
+}
+
+.segmentedIndicator {
+    background-color: var(--pg-surface-3);
+    box-shadow:
+        var(--pg-shadow-1),
+        inset 0 1px 0 rgba(255, 238, 228, 0.06);
+}
+
+.segmentedLabel {
+    font-weight: 500;
+    color: var(--pg-ink-3);
+}
+
+.segmentedLabel:where([data-active]) {
+    color: var(--pg-ink);
+}
+
+.progressRoot {
+    background-color: var(--pg-sunken);
+}
+
+.checkboxInput {
+    background-color: var(--pg-sunken);
+    border-color: var(--pg-border-strong);
+}
+
+.switchTrack {
+    background-color: var(--pg-sunken);
+    border-color: var(--pg-border-strong);
+}
+
+/* ---- Scroll area --------------------------------------------------------------- */
+
+.scrollbar {
+    padding: 2px;
+    transition: opacity var(--pg-dur-base) var(--ease-out);
+}
+
+.scrollbar:where([data-orientation="vertical"]) {
+    width: 10px;
+}
+
+.scrollbar:where([data-orientation="horizontal"]) {
+    height: 10px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .scrollbar:hover {
+        background-color: transparent;
+    }
+}
+
+.scrollThumb {
+    background-color: rgba(242, 220, 210, 0.18);
+    transition: background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .scrollbar:hover .scrollThumb {
+        background-color: color-mix(in srgb, var(--mantine-primary-color-filled) 75%, transparent);
+    }
+}
+
+/* ---- App shell -------------------------------------------------------------- */
+
+.appShellHeader {
+    background-color: var(--pg-surface-glass);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    backdrop-filter: blur(14px) saturate(1.1);
+    border-bottom: 1px solid var(--pg-border-gold);
+}
+
+.appShellNavbar,
+.appShellAside {
+    background-color: color-mix(in srgb, var(--pg-surface-1) 92%, transparent);
+    border-color: var(--pg-border);
+}
+
+.appShellMain {
+    background-color: transparent;
+}

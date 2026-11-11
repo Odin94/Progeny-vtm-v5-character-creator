@@ -1,20 +1,19 @@
 import { FileSaveDialog } from "~/components/FileSavePrompt"
 import { createRootRoute } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createTheme, MantineProvider } from "@mantine/core"
-import { generateColors } from "@mantine/colors-generator"
+import { MantineProvider, Tooltip } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { useEffect } from "react"
 import posthog, { type PostHogConfig } from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
-import { globals } from "~/globals"
 import DeletedCharacterDraftModal from "~/components/DeletedCharacterDraftModal"
 import BrokenSaveModal from "~/components/BrokenSaveModal"
 import RouteOutlet from "~/components/RouteOutlet"
 import CharacterAutosave from "~/components/CharacterAutosave"
 import { CookiesBanner } from "~/components/CookiesBanner"
-import { inputFocusTheme } from "~/theme/inputFocus"
-import { modalTheme } from "~/theme/modal"
+import { progenyTheme } from "~/theme/theme"
+import { QuickNavigator } from "~/components/QuickNavigator"
+import NotFoundPage from "~/components/NotFoundPage"
 import { removeUtmParametersFromCurrentUrl, resetPostHogIdentity } from "~/utils/analytics"
 import { AUTH_UNAUTHORIZED_EVENT, type ApiError } from "~/utils/api"
 import {
@@ -185,37 +184,30 @@ const AuthUnauthorizedHandler = () => {
 }
 
 export const Route = createRootRoute({
+    notFoundComponent: NotFoundPage,
     component: () => (
         <QueryClientProvider client={queryClient}>
             <PostHogProvider client={posthog}>
-                <MantineProvider
-                    theme={createTheme({
-                        colors: {
-                            red: generateColors("#e03131"),
-                            grape: generateColors("#7e4ac9")
-                        },
-                        primaryColor: "grape",
-                        components: { ...inputFocusTheme, ...modalTheme },
-                        breakpoints: {
-                            xs: "576px",
-                            sm: "768px",
-                            md: "992px",
-                            lg: `${globals.smallScreenW}px`,
-                            xl: `${globals.largeScreenW}px`
-                        }
-                    })}
-                    forceColorScheme="dark"
-                >
-                    <Notifications position="bottom-center" zIndex={3000} />
-                    <FileSaveDialog />
-                    <AuthUnauthorizedHandler />
-                    <AuthSignInConfirmation />
-                    <CharacterAutosave />
-                    <BrokenSaveModal />
-                    <DeletedCharacterDraftModal />
-                    <CookiesBanner />
-                    <RecentChangesGate />
-                    <RouteOutlet />
+                <MantineProvider theme={progenyTheme} forceColorScheme="dark">
+                    {/* One delay group for every tooltip: the first one waits, neighbours
+                        open instantly while one is showing (Mantine's data-instant). */}
+                    <Tooltip.Group openDelay={350} closeDelay={90}>
+                        <Notifications
+                            position="bottom-center"
+                            zIndex={3000}
+                            containerWidth={420}
+                        />
+                        <FileSaveDialog />
+                        <AuthUnauthorizedHandler />
+                        <AuthSignInConfirmation />
+                        <CharacterAutosave />
+                        <BrokenSaveModal />
+                        <DeletedCharacterDraftModal />
+                        <CookiesBanner />
+                        <RecentChangesGate />
+                        <QuickNavigator />
+                        <RouteOutlet />
+                    </Tooltip.Group>
                 </MantineProvider>
             </PostHogProvider>
         </QueryClientProvider>

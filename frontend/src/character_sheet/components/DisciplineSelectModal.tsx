@@ -1,31 +1,17 @@
-import {
-    Badge,
-    Box,
-    Button,
-    Center,
-    Divider,
-    Grid,
-    Group,
-    Loader,
-    Modal,
-    Stack,
-    Text,
-    Title
-} from "@mantine/core"
+import { Button, Center, Loader } from "@mantine/core"
 import { useState, useEffect } from "react"
-import { useMediaQuery } from "@mantine/hooks"
 import { DisciplineName } from "~/data/NameSchemas"
 import { disciplines, Power } from "~/data/Disciplines"
 import { clans } from "~/data/Clans"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { Character, getDisciplineLevel, increaseDisciplineLevelForPower } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
-import DisciplinePowerCard from "./DisciplinePowerCard"
+import { calculateDicePoolValues } from "./DisciplinePowerCard"
 import CustomDisciplineModal from "./CustomDisciplineModal"
 import CustomPowerModal from "./CustomPowerModal"
 import { canAffordUpgrade, getAvailableXP, getDisciplineCost } from "../utils/xp"
 import posthog from "posthog-js"
-import { IconPlus } from "@tabler/icons-react"
+import { IconArrowLeft, IconPlus } from "@tabler/icons-react"
 import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewDiscipline } from "~/data/Homebrew"
 import {
@@ -34,7 +20,26 @@ import {
     getPowerIdentity
 } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import {
+    DisabledLine,
+    LevelTag,
+    MetaRows,
+    OptionCard,
+    OptionGroup,
+    OptionHead,
+    RouseDrops,
+    SearchField,
+    SelectEmpty,
+    SelectFooter,
+    SelectScroll,
+    SelectToolbar,
+    SheetModal,
+    Summary,
+    Tag,
+    matchesQuery,
+    selectModalClasses,
+    useListNav
+} from "./selectModalParts"
 
 type DisciplineSelectModalProps = {
     opened: boolean
@@ -44,7 +49,6 @@ type DisciplineSelectModalProps = {
     hideBackButton?: boolean
 }
 
-// TODOdin: Fix discipline card height
 const DisciplineSelectModal = ({
     opened,
     onClose,
@@ -53,7 +57,6 @@ const DisciplineSelectModal = ({
     hideBackButton
 }: DisciplineSelectModalProps) => {
     const { character, primaryColor, setCharacter } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [selectedDiscipline, setSelectedDiscipline] = useState<DisciplineName | null>(
         initialDiscipline || null
     )
@@ -290,13 +293,31 @@ const DisciplineSelectModal = ({
 
     const availablePowers = selectedDiscipline ? getAvailablePowers(selectedDiscipline) : []
 
+    const [query, setQuery] = useState("")
+    useEffect(() => {
+        setQuery("")
+    }, [selectedDiscipline, opened])
+
+    const visibleDisciplines = availableDisciplines.filter((disciplineName) => {
+        const discipline = disciplineCatalog[disciplineName]
+        return !!discipline && matchesQuery(query, discipline.name, discipline.summary)
+    })
+
+    const disciplineNav = useListNav({
+        items: visibleDisciplines,
+        onPick: handleSelectDiscipline,
+        resetKey: `${query}|${selectedDiscipline ?? ""}`
+    })
+
+    const closeModal = () => {
+        onClose()
+        setSelectedDiscipline(null)
+    }
+
     return (
-        <Modal
+        <SheetModal
             opened={opened}
-            onClose={() => {
-                onClose()
-                setSelectedDiscipline(null)
-            }}
+            onClose={closeModal}
             title={
                 selectedDiscipline
                     ? `Select a Power - ${upcase(
@@ -304,180 +325,100 @@ const DisciplineSelectModal = ({
                       )}`
                     : "Select a Discipline"
             }
-            size="lg"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+            size="xl"
         >
-            {contentReady ? (
-                <Stack gap="md">
-                    {opened && selectedDiscipline ? (
-                        <PowerPicker
-                            availablePowers={availablePowers}
-                            primaryColor={primaryColor}
-                            onSelectPower={handleSelectPower}
-                            onBack={handleBack}
-                            onCreateCustomPower={() => setCustomPowerModalOpened(true)}
-                            hideBackButton={hideBackButton}
-                            character={character}
-                            getPowerDisabledReasons={getPowerDisabledReasons}
-                            getPowerXpCost={getPowerXpCost}
-                            onBlockedPick={handleBlockedPick}
+            {!contentReady ? (
+                <Center mih={320}>
+                    <Loader color={primaryColor} />
+                </Center>
+            ) : opened && selectedDiscipline ? (
+                <PowerPicker
+                    availablePowers={availablePowers}
+                    onSelectPower={handleSelectPower}
+                    onBack={handleBack}
+                    onCreateCustomPower={() => setCustomPowerModalOpened(true)}
+                    hideBackButton={hideBackButton}
+                    character={character}
+                    getPowerDisabledReasons={getPowerDisabledReasons}
+                    getPowerXpCost={getPowerXpCost}
+                    onBlockedPick={handleBlockedPick}
+                    query={query}
+                    onQueryChange={setQuery}
+                />
+            ) : opened ? (
+                <>
+                    <SelectToolbar>
+                        <SearchField
+                            label="Search disciplines"
+                            placeholder="Search disciplines"
+                            value={query}
+                            onChange={setQuery}
+                            nav={disciplineNav}
                         />
-                    ) : opened ? (
-                        <>
-                            {availableDisciplines.length === 0 ? (
-                                <Text c="dimmed" ta="center" py="xl">
-                                    No available disciplines to add.
-                                </Text>
-                            ) : (
-                                <Grid gap="md">
-                                    {availableDisciplines.map((disciplineName) => {
-                                        const discipline = disciplineCatalog[disciplineName]
-                                        if (!discipline) return null
-
-                                        return (
-                                            <Grid.Col
-                                                key={disciplineName}
-                                                span={{ base: 12, sm: 6 }}
-                                            >
-                                                <Box
-                                                    style={{
-                                                        position: "relative",
-                                                        minHeight: "180px"
-                                                    }}
-                                                >
-                                                    <Button
-                                                        variant="light"
-                                                        color={primaryColor}
-                                                        vars={() => ({
-                                                            root: {
-                                                                "--button-bg": "transparent",
-                                                                "--button-hover":
-                                                                    "rgba(130, 25, 35, 0.12)"
-                                                            }
-                                                        })}
-                                                        fullWidth
-                                                        h="auto"
-                                                        p="md"
-                                                        onClick={() =>
-                                                            handleSelectDiscipline(disciplineName)
-                                                        }
-                                                        style={{
-                                                            height: "100%",
-                                                            minHeight: "180px",
-                                                            border: "1px solid var(--mantine-color-gray-8)"
-                                                        }}
-                                                    >
-                                                        <Box pos="relative" w="100%">
-                                                            <Stack
-                                                                gap="xs"
-                                                                align="center"
-                                                                style={{ width: "100%" }}
-                                                            >
-                                                                <Box
-                                                                    style={{
-                                                                        width: "60px",
-                                                                        height: "60px",
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        justifyContent: "center"
-                                                                    }}
-                                                                >
-                                                                    {discipline.logo ? (
-                                                                        <img
-                                                                            src={discipline.logo}
-                                                                            alt={upcase(
-                                                                                disciplineName
-                                                                            )}
-                                                                            style={{
-                                                                                width: "60px",
-                                                                                height: "60px"
-                                                                            }}
-                                                                        />
-                                                                    ) : null}
-                                                                </Box>
-                                                                <Title
-                                                                    order={4}
-                                                                    style={{ margin: 0 }}
-                                                                >
-                                                                    {upcase(discipline.name)}
-                                                                </Title>
-                                                                <Box
-                                                                    style={{
-                                                                        minHeight: "40px",
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        justifyContent: "center"
-                                                                    }}
-                                                                >
-                                                                    {discipline.summary ? (
-                                                                        <Text
-                                                                            size="sm"
-                                                                            c="dimmed"
-                                                                            ta="center"
-                                                                            lineClamp={2}
-                                                                        >
-                                                                            {discipline.summary}
-                                                                        </Text>
-                                                                    ) : null}
-                                                                </Box>
-                                                            </Stack>
-                                                            {discipline.homebrewSource ? (
-                                                                <Box
-                                                                    pos="absolute"
-                                                                    top={0}
-                                                                    right={0}
-                                                                >
-                                                                    <HomebrewBadge
-                                                                        source={
-                                                                            discipline.homebrewSource
-                                                                        }
-                                                                    />
-                                                                </Box>
+                    </SelectToolbar>
+                    <SelectScroll listId={disciplineNav.listId} label="Disciplines">
+                        {availableDisciplines.length === 0 ? (
+                            <SelectEmpty>No available disciplines to add.</SelectEmpty>
+                        ) : visibleDisciplines.length === 0 ? (
+                            <SelectEmpty>No discipline matches “{query.trim()}”.</SelectEmpty>
+                        ) : (
+                            <div className={selectModalClasses.grid}>
+                                {visibleDisciplines.map((disciplineName, index) => {
+                                    const discipline = disciplineCatalog[disciplineName]!
+                                    const isClan = clanDisciplines.has(discipline.name)
+                                    return (
+                                        <OptionCard
+                                            key={disciplineName}
+                                            variant="discipline"
+                                            {...disciplineNav.optionProps(index)}
+                                        >
+                                            <span className={selectModalClasses.disciplineLogo}>
+                                                {discipline.logo ? (
+                                                    <img src={discipline.logo} alt="" />
+                                                ) : null}
+                                            </span>
+                                            <span className={selectModalClasses.disciplineText}>
+                                                <OptionHead
+                                                    display
+                                                    name={upcase(discipline.name)}
+                                                    tags={
+                                                        <>
+                                                            {isClan ? (
+                                                                <Tag tone="accent">Clan</Tag>
                                                             ) : null}
-                                                        </Box>
-                                                    </Button>
-                                                    {clanDisciplines.has(discipline.name) ? (
-                                                        <Badge
-                                                            size="sm"
-                                                            variant="light"
-                                                            color={primaryColor}
-                                                            style={{
-                                                                position: "absolute",
-                                                                top: "8px",
-                                                                right: "8px"
-                                                            }}
-                                                        >
-                                                            Clan
-                                                        </Badge>
-                                                    ) : null}
-                                                </Box>
-                                            </Grid.Col>
-                                        )
-                                    })}
-                                </Grid>
-                            )}
-                            <Divider my="md" />
+                                                            {discipline.homebrewSource ? (
+                                                                <HomebrewBadge
+                                                                    source={
+                                                                        discipline.homebrewSource
+                                                                    }
+                                                                />
+                                                            ) : null}
+                                                        </>
+                                                    }
+                                                />
+                                                <Summary>{discipline.summary}</Summary>
+                                            </span>
+                                        </OptionCard>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </SelectScroll>
+                    <SelectFooter
+                        end={
                             <Button
-                                variant="filled"
-                                color="black"
-                                fullWidth
+                                variant="default"
+                                leftSection={<IconPlus size={16} />}
                                 onClick={() => {
                                     setCustomDisciplineModalOpened(true)
                                 }}
                             >
                                 Create Custom Discipline
                             </Button>
-                        </>
-                    ) : null}
-                </Stack>
-            ) : (
-                <Center mih={240}>
-                    <Loader color={primaryColor} />
-                </Center>
-            )}
+                        }
+                    />
+                </>
+            ) : null}
             <CustomDisciplineModal
                 opened={customDisciplineModalOpened}
                 onClose={() => {
@@ -506,13 +447,12 @@ const DisciplineSelectModal = ({
                         : undefined
                 }
             />
-        </Modal>
+        </SheetModal>
     )
 }
 
 type PowerPickerProps = {
     availablePowers: Power[]
-    primaryColor: string
     onSelectPower: (power: Power) => void
     onBack: () => void
     onCreateCustomPower: () => void
@@ -521,11 +461,12 @@ type PowerPickerProps = {
     getPowerDisabledReasons: (power: Power) => string[]
     getPowerXpCost: (power: Power) => number | null
     onBlockedPick: (power: Power, reason: string) => void
+    query: string
+    onQueryChange: (query: string) => void
 }
 
 const PowerPicker = ({
     availablePowers,
-    primaryColor,
     onSelectPower,
     onBack,
     onCreateCustomPower,
@@ -533,96 +474,148 @@ const PowerPicker = ({
     character,
     getPowerDisabledReasons,
     getPowerXpCost,
-    onBlockedPick
+    onBlockedPick,
+    query,
+    onQueryChange
 }: PowerPickerProps) => {
-    const powersByLevel = new Map<number, Power[]>()
-    availablePowers.forEach((power) => {
-        const level = power.level
-        if (!powersByLevel.has(level)) {
-            powersByLevel.set(level, [])
-        }
-        powersByLevel.get(level)!.push(power)
-    })
+    const visiblePowers = availablePowers
+        .filter((power) => matchesQuery(query, power.name, power.summary))
+        .sort((a, b) => a.level - b.level)
 
+    const powersByLevel = new Map<number, Array<{ power: Power; index: number }>>()
+    visiblePowers.forEach((power, index) => {
+        if (!powersByLevel.has(power.level)) powersByLevel.set(power.level, [])
+        powersByLevel.get(power.level)!.push({ power, index })
+    })
     const sortedLevels = Array.from(powersByLevel.keys()).sort((a, b) => a - b)
+
+    const pick = (power: Power) => {
+        const disabledTooltip = getPowerDisabledReasons(power).join(" · ") || null
+        if (disabledTooltip !== null) onBlockedPick(power, disabledTooltip)
+        else onSelectPower(power)
+    }
+
+    const nav = useListNav({ items: visiblePowers, onPick: pick, resetKey: query })
 
     return (
         <>
-            {!hideBackButton ? (
-                <Group>
-                    <Button variant="subtle" onClick={onBack} color={primaryColor}>
-                        ← Back
+            <SelectToolbar>
+                <SearchField
+                    label="Search powers"
+                    placeholder="Search powers"
+                    value={query}
+                    onChange={onQueryChange}
+                    nav={nav}
+                />
+            </SelectToolbar>
+            <SelectScroll listId={nav.listId} label="Powers">
+                {availablePowers.length === 0 ? (
+                    <SelectEmpty>No available powers to add for this discipline.</SelectEmpty>
+                ) : visiblePowers.length === 0 ? (
+                    <SelectEmpty>No power matches “{query.trim()}”.</SelectEmpty>
+                ) : (
+                    sortedLevels.map((level) => (
+                        <OptionGroup key={level} label={`Level ${level}`}>
+                            <div className={selectModalClasses.grid}>
+                                {powersByLevel.get(level)!.map(({ power, index }) => {
+                                    const disabledReasons = getPowerDisabledReasons(power)
+                                    const disabled = disabledReasons.length > 0
+                                    const xpCost = getPowerXpCost(power)
+                                    const poolValues =
+                                        power.dicePool && power.dicePool !== "-"
+                                            ? calculateDicePoolValues(power.dicePool, character)
+                                            : null
+                                    return (
+                                        <OptionCard
+                                            key={getPowerIdentity(power)}
+                                            disabled={disabled}
+                                            {...nav.optionProps(index)}
+                                        >
+                                            <OptionHead
+                                                name={power.name}
+                                                tags={
+                                                    <>
+                                                        {power.homebrewSource ? (
+                                                            <HomebrewBadge
+                                                                source={power.homebrewSource}
+                                                            />
+                                                        ) : null}
+                                                        {xpCost !== null ? (
+                                                            <Tag tone="accent">{xpCost} XP</Tag>
+                                                        ) : null}
+                                                        <LevelTag level={power.level} />
+                                                    </>
+                                                }
+                                            />
+                                            <Summary>{power.summary}</Summary>
+                                            <MetaRows
+                                                rows={[
+                                                    power.dicePool && power.dicePool !== "-"
+                                                        ? [
+                                                              "Pool",
+                                                              <span
+                                                                  key="pool"
+                                                                  className={
+                                                                      selectModalClasses.pool
+                                                                  }
+                                                                  title={poolValues ?? undefined}
+                                                              >
+                                                                  {power.dicePool}
+                                                              </span>
+                                                          ]
+                                                        : null,
+                                                    [
+                                                        "Rouse",
+                                                        power.rouseChecks > 0 ? (
+                                                            <RouseDrops n={power.rouseChecks} />
+                                                        ) : (
+                                                            "Free"
+                                                        )
+                                                    ],
+                                                    power.requiredTime
+                                                        ? ["Time", power.requiredTime]
+                                                        : null,
+                                                    power.ingredients
+                                                        ? ["Needs", power.ingredients]
+                                                        : null
+                                                ]}
+                                            />
+                                            {disabled ? (
+                                                <DisabledLine>
+                                                    {disabledReasons.join(" · ")}
+                                                </DisabledLine>
+                                            ) : null}
+                                        </OptionCard>
+                                    )
+                                })}
+                            </div>
+                        </OptionGroup>
+                    ))
+                )}
+            </SelectScroll>
+            <SelectFooter
+                start={
+                    !hideBackButton ? (
+                        <Button
+                            variant="subtle"
+                            color="gray"
+                            leftSection={<IconArrowLeft size={16} />}
+                            onClick={onBack}
+                        >
+                            Back
+                        </Button>
+                    ) : undefined
+                }
+                end={
+                    <Button
+                        variant="default"
+                        leftSection={<IconPlus size={16} />}
+                        onClick={onCreateCustomPower}
+                    >
+                        Create Custom Power
                     </Button>
-                </Group>
-            ) : null}
-            <Group justify="flex-end">
-                <Button
-                    variant="light"
-                    color={primaryColor}
-                    leftSection={<IconPlus size={16} />}
-                    onClick={onCreateCustomPower}
-                >
-                    Create Custom Power
-                </Button>
-            </Group>
-            {availablePowers.length === 0 ? (
-                <Text c="dimmed" ta="center" py="xl">
-                    No available powers to add for this discipline.
-                </Text>
-            ) : (
-                <Stack gap="lg">
-                    {sortedLevels.map((level) => {
-                        const powers = powersByLevel.get(level)!
-                        return (
-                            <Stack key={level} gap="md">
-                                <Title order={4} c={primaryColor}>
-                                    Level {level}
-                                </Title>
-                                <Grid gap="md">
-                                    {powers.map((power) => {
-                                        const disabledReasons = getPowerDisabledReasons(power)
-                                        const disabledTooltip = disabledReasons.join(" · ") || null
-                                        const disabled = disabledTooltip !== null
-                                        const xpCost = getPowerXpCost(power)
-                                        return (
-                                            <Grid.Col
-                                                key={getPowerIdentity(power)}
-                                                span={{ base: 12, sm: 6 }}
-                                            >
-                                                <DisciplinePowerCard
-                                                    power={power}
-                                                    primaryColor={primaryColor}
-                                                    onClick={() => onSelectPower(power)}
-                                                    onDisabledClick={() =>
-                                                        onBlockedPick(power, disabledTooltip ?? "")
-                                                    }
-                                                    inModal={true}
-                                                    character={character}
-                                                    disabled={disabled}
-                                                    disabledTooltip={disabledTooltip}
-                                                    renderActions={
-                                                        xpCost !== null
-                                                            ? () => (
-                                                                  <Badge
-                                                                      size="sm"
-                                                                      variant="light"
-                                                                      color={primaryColor}
-                                                                  >
-                                                                      {xpCost} XP
-                                                                  </Badge>
-                                                              )
-                                                            : undefined
-                                                    }
-                                                />
-                                            </Grid.Col>
-                                        )
-                                    })}
-                                </Grid>
-                            </Stack>
-                        )
-                    })}
-                </Stack>
-            )}
+                }
+            />
         </>
     )
 }

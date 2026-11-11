@@ -1,19 +1,7 @@
-import {
-    Box,
-    Card,
-    Center,
-    Grid,
-    Image,
-    rgba as mantineRgba,
-    ScrollArea,
-    Stack,
-    Text,
-    Title,
-    useMantineTheme
-} from "@mantine/core"
-import { RAW_RED, rgba } from "~/theme/colors"
+import { ScrollArea, UnstyledButton } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { IconBook2 } from "@tabler/icons-react"
+import { IconBook2, IconCheck } from "@tabler/icons-react"
+import type { CSSProperties, ReactNode } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { isThinbloodFlaw, isThinbloodMerit, loresheets } from "~/data/MeritsAndFlaws"
 import { ClanName, clanNameSchema, DisciplineName } from "~/data/NameSchemas"
@@ -31,6 +19,15 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewClan } from "~/data/Homebrew"
 import { replacePredatorSkillBonuses } from "~/data/predatorTypeOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import { getPrimaryColor } from "~/character_sheet/utils/style"
+import { GeneratorSectionDivider, GeneratorStepHero } from "./sharedGeneratorUi"
+import classes from "./ClanPicker.module.css"
+
+/** Clan accent: the same Mantine color the character sheet uses for that clan. */
+const clanAccent = (clan: ClanName) => {
+    const color = getPrimaryColor(clan)
+    return `var(--mantine-color-${color}-${color === "gray" ? 3 : 5})`
+}
 
 type ClanPickerProps = {
     character: Character
@@ -40,7 +37,6 @@ type ClanPickerProps = {
 }
 
 const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPickerProps) => {
-    const theme = useMantineTheme()
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const homebrewClans = homebrewCollections.flatMap((collection) =>
         collection.items
@@ -48,147 +44,90 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
             .map((clan) => ({ clan, collection }))
     )
 
-    const c1 = "rgba(26, 27, 30, 0.90)"
-
-    const createClanPick = (clan: ClanName, accentColor: string) => {
-        const bgColor = `linear-gradient(0deg, ${c1}, ${mantineRgba(accentColor, 0.9)})`
+    const createClanPick = (clan: ClanName) => {
         const clanDisciplines = clan === "Caitiff" ? [] : clans[clan].nativeDisciplines
+        const isSelected = character.clan === clan && character.homebrewClan === undefined
 
         return (
-            <Grid.Col key={clan} span={globals.isPhoneScreen ? 12 : 4}>
-                <Card
-                    data-testid={`clan-${clan.toLowerCase().replace(/\s+/g, "-")}-card`}
-                    shadow="sm"
-                    padding="lg"
-                    radius="md"
-                    h={globals.isPhoneScreen ? 350 : 330}
-                    style={{
-                        background: bgColor,
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        transition: "transform 160ms ease, box-shadow 160ms ease"
-                    }}
-                    onMouseEnter={(event) => {
-                        event.currentTarget.style.transform = "translateY(-8px)"
-                        event.currentTarget.style.boxShadow = "rgba(0, 0, 0, 0.22) 0px 19px 43px"
-                    }}
-                    onMouseLeave={(event) => {
-                        event.currentTarget.style.transform = "translateY(0)"
-                        event.currentTarget.style.boxShadow = ""
-                    }}
-                    onClick={() => {
-                        const clanChanged =
-                            clan !== character.clan || character.homebrewClan !== undefined
-                        const predatorType =
-                            clan === "Thin-blood" ||
-                            (clans[clan].excludedPredatorTypes ?? []).includes(
-                                character.predatorType.name
-                            )
-                                ? getEmptyCharacter().predatorType
-                                : character.predatorType
-                        const newMerits =
-                            clan === character.clan
-                                ? character.merits
-                                : getNewMerits(clan, character)
-                        const newFlaws =
-                            clan === "Thin-blood"
-                                ? character.flaws
-                                : flawsWithoutThinbloodFlaws(character.flaws)
-                        if (
-                            (notDefault(character, "disciplines") ||
-                                notDefault(character, "predatorType")) &&
-                            clan !== character.clan
-                        ) {
-                            notifications.show({
-                                title: "Reset Disciplines",
-                                message: "Because you changed your clan",
-                                autoClose: 7000,
-                                color: "yellow"
-                            })
-
-                            setCharacter({
-                                ...character,
-                                clan,
-                                homebrewClan: undefined,
-                                disciplines: [],
-                                disciplineLevels: {},
-                                rituals: [],
-                                ceremonies: [],
-                                availableDisciplineNames: clans[clan].nativeDisciplines,
-                                ...replacePredatorSkillBonuses(character, predatorType),
-                                merits: newMerits,
-                                flaws: newFlaws
-                            })
-                        } else {
-                            setCharacter({
-                                ...character,
-                                clan,
-                                homebrewClan: undefined,
-                                availableDisciplineNames: clans[clan].nativeDisciplines,
-                                ...replacePredatorSkillBonuses(character, predatorType),
-                                merits: newMerits,
-                                flaws: newFlaws
-                            })
-                        }
-
-                        if (clanChanged) onClanChanged?.()
-
-                        trackEvent({
-                            action: "clan clicked",
-                            category: "clans",
-                            label: clan
+            <ClanCard
+                key={clan}
+                testId={`clan-${clan.toLowerCase().replace(/\s+/g, "-")}-card`}
+                accent={clanAccent(clan)}
+                selected={isSelected}
+                name={clan}
+                sigil={
+                    <span
+                        className={classes.sigil}
+                        style={{ "--sigil": `url("${clans[clan].logo}")` } as CSSProperties}
+                        role="img"
+                        aria-label={`${clan} clan symbol`}
+                    />
+                }
+                description={clans[clan].description}
+                disciplines={clanDisciplines}
+                onClick={() => {
+                    const clanChanged =
+                        clan !== character.clan || character.homebrewClan !== undefined
+                    const predatorType =
+                        clan === "Thin-blood" ||
+                        (clans[clan].excludedPredatorTypes ?? []).includes(
+                            character.predatorType.name
+                        )
+                            ? getEmptyCharacter().predatorType
+                            : character.predatorType
+                    const newMerits =
+                        clan === character.clan ? character.merits : getNewMerits(clan, character)
+                    const newFlaws =
+                        clan === "Thin-blood"
+                            ? character.flaws
+                            : flawsWithoutThinbloodFlaws(character.flaws)
+                    if (
+                        (notDefault(character, "disciplines") ||
+                            notDefault(character, "predatorType")) &&
+                        clan !== character.clan
+                    ) {
+                        notifications.show({
+                            title: "Reset Disciplines",
+                            message: "Because you changed your clan",
+                            autoClose: 7000,
+                            color: "yellow"
                         })
-                        nextStep()
-                    }}
-                >
-                    <Card.Section>
-                        <Center pt={10}>
-                            <Image
-                                fit="contain"
-                                src={clans[clan].logo}
-                                height={120}
-                                width={120}
-                                loading="eager"
-                                decoding="sync"
-                                alt={`${clan} clan symbol`}
-                            />
-                        </Center>
-                    </Card.Section>
 
-                    <Center>
-                        <Title p="md">{clan}</Title>
-                    </Center>
+                        setCharacter({
+                            ...character,
+                            clan,
+                            homebrewClan: undefined,
+                            disciplines: [],
+                            disciplineLevels: {},
+                            rituals: [],
+                            ceremonies: [],
+                            availableDisciplineNames: clans[clan].nativeDisciplines,
+                            ...replacePredatorSkillBonuses(character, predatorType),
+                            merits: newMerits,
+                            flaws: newFlaws
+                        })
+                    } else {
+                        setCharacter({
+                            ...character,
+                            clan,
+                            homebrewClan: undefined,
+                            availableDisciplineNames: clans[clan].nativeDisciplines,
+                            ...replacePredatorSkillBonuses(character, predatorType),
+                            merits: newMerits,
+                            flaws: newFlaws
+                        })
+                    }
 
-                    <Text h={55} size="sm" color="dimmed" ta="center">
-                        {clans[clan].description}
-                    </Text>
+                    if (clanChanged) onClanChanged?.()
 
-                    {clanDisciplines.length > 0 && (
-                        <Box
-                            mt="auto"
-                            pt="sm"
-                            style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: 4,
-                                justifyContent: "center",
-                                marginLeft: -8,
-                                marginRight: -8,
-                                width: "calc(100% + 16px)"
-                            }}
-                        >
-                            {clanDisciplines.map((discipline) => (
-                                <DisciplineCard
-                                    key={discipline}
-                                    discipline={discipline}
-                                    accentColor={accentColor}
-                                />
-                            ))}
-                        </Box>
-                    )}
-                </Card>
-            </Grid.Col>
+                    trackEvent({
+                        action: "clan clicked",
+                        category: "clans",
+                        label: clan
+                    })
+                    nextStep()
+                }}
+            />
         )
     }
 
@@ -196,90 +135,64 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
         clan: HomebrewClan & { id: string },
         collection: (typeof homebrewCollections)[number]
     ) => (
-        <Grid.Col key={`${collection.id}-${clan.id}`} span={globals.isPhoneScreen ? 12 : 4}>
-            <Card
-                shadow="sm"
-                padding="lg"
-                radius="md"
-                h={globals.isPhoneScreen ? 350 : 330}
-                style={{
-                    background: `linear-gradient(0deg, ${c1}, ${mantineRgba(theme.colors.grape[8], 0.9)})`,
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column"
-                }}
-                onClick={() => {
-                    const clanChanged =
-                        character.homebrewClan?.homebrewSource.itemId !== clan.id ||
-                        character.homebrewClan?.homebrewSource.collectionId !== collection.id
-                    const predatorType = (clan.excludedPredatorTypes ?? []).includes(
-                        character.predatorType.name
-                    )
-                        ? getEmptyCharacter().predatorType
-                        : character.predatorType
-                    const source = {
-                        itemId: clan.id,
-                        collectionId: collection.id,
-                        collectionName: collection.name
-                    }
-                    setCharacter({
-                        ...character,
-                        clan: "",
-                        homebrewClan: {
-                            ...clan,
-                            excludedPredatorTypes: clan.excludedPredatorTypes ?? [],
-                            excludedMeritsAndFlaws: clan.excludedMeritsAndFlaws ?? [],
-                            homebrewSource: source
-                        },
-                        disciplines: [],
-                        disciplineLevels: {},
-                        rituals: [],
-                        ceremonies: [],
-                        availableDisciplineNames: clan.nativeDisciplines,
-                        ...replacePredatorSkillBonuses(character, predatorType)
-                    })
-                    if (clanChanged) onClanChanged?.()
-                    nextStep()
-                }}
-            >
-                <Card.Section>
-                    <Center pt={10}>
-                        {clan.logo ? (
-                            <Image
-                                fit="contain"
-                                src={clan.logo}
-                                height={120}
-                                width={120}
-                                alt={`${clan.name} clan symbol`}
-                            />
-                        ) : (
-                            <Center h={120}>
-                                <IconBook2 size={64} />
-                            </Center>
-                        )}
-                    </Center>
-                </Card.Section>
-                <Center>
-                    <Title p="md">{clan.name}</Title>
-                </Center>
-                <Center>
-                    <HomebrewBadge source={{ ...sourceFor(clan, collection) }} />
-                </Center>
-                <Text h={55} size="sm" c="dimmed" ta="center" mt="xs">
-                    {clan.summary || clan.description}
-                </Text>
-                <Box mt="auto" style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                    {clan.nativeDisciplines.map((discipline) => (
-                        <DisciplineCard
-                            key={discipline}
-                            discipline={discipline}
-                            accentColor={theme.colors.grape[8]}
-                        />
-                    ))}
-                </Box>
-            </Card>
-        </Grid.Col>
+        <ClanCard
+            key={`${collection.id}-${clan.id}`}
+            accent="var(--mantine-color-grape-5)"
+            selected={
+                character.homebrewClan?.homebrewSource.itemId === clan.id &&
+                character.homebrewClan?.homebrewSource.collectionId === collection.id
+            }
+            name={clan.name}
+            badge={<HomebrewBadge source={{ ...sourceFor(clan, collection) }} />}
+            sigil={
+                clan.logo ? (
+                    <img
+                        className={classes.sigilImage}
+                        src={clan.logo}
+                        alt={`${clan.name} clan symbol`}
+                    />
+                ) : (
+                    <IconBook2 size={52} stroke={1.3} className={classes.sigilFallback} />
+                )
+            }
+            description={clan.summary || clan.description}
+            disciplines={clan.nativeDisciplines}
+            onClick={() => {
+                const clanChanged =
+                    character.homebrewClan?.homebrewSource.itemId !== clan.id ||
+                    character.homebrewClan?.homebrewSource.collectionId !== collection.id
+                const predatorType = (clan.excludedPredatorTypes ?? []).includes(
+                    character.predatorType.name
+                )
+                    ? getEmptyCharacter().predatorType
+                    : character.predatorType
+                const source = {
+                    itemId: clan.id,
+                    collectionId: collection.id,
+                    collectionName: collection.name
+                }
+                setCharacter({
+                    ...character,
+                    clan: "",
+                    homebrewClan: {
+                        ...clan,
+                        excludedPredatorTypes: clan.excludedPredatorTypes ?? [],
+                        excludedMeritsAndFlaws: clan.excludedMeritsAndFlaws ?? [],
+                        homebrewSource: source
+                    },
+                    disciplines: [],
+                    disciplineLevels: {},
+                    rituals: [],
+                    ceremonies: [],
+                    availableDisciplineNames: clan.nativeDisciplines,
+                    ...replacePredatorSkillBonuses(character, predatorType)
+                })
+                if (clanChanged) onClanChanged?.()
+                nextStep()
+            }}
+        />
     )
+
     return (
         <div style={generatorScrollableShellStyle}>
             <ScrollArea
@@ -295,92 +208,40 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                 styles={nightfallScrollAreaStyles}
             >
                 <div style={generatorScrollableContentStyle}>
-                    <Stack gap={4} align="center" mb={globals.isPhoneScreen ? 18 : 26}>
-                        <Title
-                            data-testid="clan-picker-heading"
-                            order={2}
-                            ta="center"
-                            style={{
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontWeight: 600,
-                                letterSpacing: "0.05em",
-                                color: "rgba(248, 240, 235, 0.96)"
-                            }}
-                        >
-                            Pick your{" "}
-                            <Text
-                                component="strong"
-                                inherit
-                                c="red.5"
-                                style={{ textShadow: `0 0 18px ${rgba(RAW_RED, 0.35)}` }}
-                            >
-                                Clan
-                            </Text>
-                        </Title>
-                        <Text
-                            ta="center"
-                            maw={620}
-                            style={{
-                                fontFamily: "Crimson Text, Georgia, serif",
-                                fontSize: "1.1rem",
-                                color: "rgba(235, 225, 218, 0.74)"
-                            }}
-                        >
-                            Your clan defines your lineage, your powers, and your curse.
-                        </Text>
-                    </Stack>
+                    <GeneratorStepHero
+                        leadText="Pick your"
+                        accentText="Clan"
+                        titleTestId="clan-picker-heading"
+                        description="Your clan defines your lineage, your powers, and your curse."
+                        marginBottom={globals.isPhoneScreen ? 14 : 22}
+                    />
 
-                    <CategoryHeading label="Rulers & Commanders" />
-                    <Grid grow m={0}>
-                        {["Ventrue", "Tzimisce", "Lasombra"]
-                            .map((c) => clanNameSchema.parse(c))
-                            .map((clan) => createClanPick(clan, theme.colors.blue[8]))}
-                    </Grid>
-
-                    <CategoryHeading label="Fighters & Protectors" />
-                    <Grid grow m={0}>
-                        {["Brujah", "Gangrel", "Banu Haqim"]
-                            .map((c) => clanNameSchema.parse(c))
-                            .map((clan) => createClanPick(clan, theme.colors.red[8]))}
-                    </Grid>
-
-                    <CategoryHeading label="Seducers & Deceivers" />
-                    <Grid grow m={0}>
-                        {["Toreador", "Ravnos", "Ministry"]
-                            .map((c) => clanNameSchema.parse(c))
-                            .map((clan) => createClanPick(clan, theme.colors.grape[8]))}
-                    </Grid>
-
-                    <CategoryHeading label="Investigators & Researchers" />
-                    <Grid grow m={0}>
-                        {["Malkavian", "Tremere", "Hecata"]
-                            .map((c) => clanNameSchema.parse(c))
-                            .map((clan) => createClanPick(clan, theme.colors.green[9]))}
-                    </Grid>
-
-                    <CategoryHeading label="Hidden Lurkers" />
-                    <Grid grow m={0}>
-                        {["Nosferatu", "Salubri"]
-                            .map((c) => clanNameSchema.parse(c))
-                            .map((clan) => createClanPick(clan, theme.colors.gray[6]))}
-                    </Grid>
-
-                    <CategoryHeading label="Advanced & Special Clans" />
-                    <Grid grow m={0}>
-                        {["Caitiff", "Thin-blood"]
-                            .map((c) => clanNameSchema.parse(c))
-                            .map((clan) => createClanPick(clan, theme.colors.teal[8]))}
-                    </Grid>
+                    {clanSections.map((section) => (
+                        <section key={section.label} aria-label={section.label}>
+                            <GeneratorSectionDivider
+                                label={section.label}
+                                marginY={globals.isPhoneScreen ? "sm" : "md"}
+                            />
+                            <div className={classes.grid}>
+                                {section.clans
+                                    .map((c) => clanNameSchema.parse(c))
+                                    .map((clan) => createClanPick(clan))}
+                            </div>
+                        </section>
+                    ))}
 
                     {homebrewClans.length > 0 ? (
-                        <>
-                            <CategoryHeading label="Homebrew Clans" />
-                            <Grid grow m={0}>
+                        <section aria-label="Homebrew Clans">
+                            <GeneratorSectionDivider
+                                label="Homebrew Clans"
+                                marginY={globals.isPhoneScreen ? "sm" : "md"}
+                            />
+                            <div className={classes.grid}>
                                 {homebrewClans.map(({ clan, collection }) =>
                                     createHomebrewClanPick(clan, collection)
                                 )}
-                            </Grid>
-                        </>
+                            </div>
+                        </section>
                     ) : null}
                 </div>
             </ScrollArea>
@@ -393,75 +254,68 @@ const sourceFor = (
     collection: { id: string; name: string }
 ) => ({ itemId: clan.id, collectionId: collection.id, collectionName: collection.name })
 
-const CategoryHeading = ({ label }: { label: string }) => (
-    <Box my="md">
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div
-                style={{
-                    flex: 1,
-                    height: "2px",
-                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)`
-                }}
-            />
-            <Text
-                ta="center"
-                style={{
-                    fontFamily: "Cinzel, Georgia, serif",
-                    fontSize: "0.96rem",
-                    fontWeight: 600,
-                    letterSpacing: "0.22em",
-                    textTransform: "uppercase",
-                    color: rgba(RAW_RED, 1)
-                }}
-            >
-                {label}
-            </Text>
-            <div
-                style={{
-                    flex: 1,
-                    height: "2px",
-                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, 0.38)} 50%, transparent 100%)`
-                }}
-            />
-        </div>
-    </Box>
-)
+const clanSections = [
+    { label: "Rulers & Commanders", clans: ["Ventrue", "Tzimisce", "Lasombra"] },
+    { label: "Fighters & Protectors", clans: ["Brujah", "Gangrel", "Banu Haqim"] },
+    { label: "Seducers & Deceivers", clans: ["Toreador", "Ravnos", "Ministry"] },
+    { label: "Investigators & Researchers", clans: ["Malkavian", "Tremere", "Hecata"] },
+    { label: "Hidden Lurkers", clans: ["Nosferatu", "Salubri"] },
+    { label: "Advanced & Special Clans", clans: ["Caitiff", "Thin-blood"] }
+]
 
-const DisciplineCard = ({
-    discipline,
-    accentColor
-}: {
-    discipline: DisciplineName
-    accentColor: string
-}) => (
-    <Box
-        style={{
-            border: `1px solid ${mantineRgba(accentColor, 0.42)}`,
-            borderRadius: 6,
-            background: `linear-gradient(180deg, ${mantineRgba(accentColor, 0.24)} 0%, ${mantineRgba(accentColor, 0.1)} 100%)`,
-            boxShadow: `inset 0 0 12px ${mantineRgba(accentColor, 0.14)}`,
-            padding: "5px 6px",
-            minWidth: 0,
-            flexShrink: 0
-        }}
+type ClanCardProps = {
+    name: string
+    accent: string
+    sigil: ReactNode
+    description: string
+    disciplines: DisciplineName[]
+    selected: boolean
+    badge?: ReactNode
+    testId?: string
+    onClick: () => void
+}
+
+const ClanCard = ({
+    name,
+    accent,
+    sigil,
+    description,
+    disciplines,
+    selected,
+    badge,
+    testId,
+    onClick
+}: ClanCardProps) => (
+    <UnstyledButton
+        data-testid={testId}
+        className={classes.card}
+        data-selected={selected || undefined}
+        aria-pressed={selected}
+        style={{ "--clan": accent } as CSSProperties}
+        onClick={onClick}
     >
-        <Text
-            component="span"
-            style={{
-                display: "block",
-                fontFamily: "Cinzel, Georgia, serif",
-                fontSize: "0.64rem",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                lineHeight: 1,
-                textTransform: "uppercase",
-                color: "rgba(248, 240, 235, 0.9)",
-                whiteSpace: "nowrap"
-            }}
-        >
-            {formatDisciplineName(discipline)}
-        </Text>
-    </Box>
+        {selected ? (
+            <span className={classes.chosen}>
+                <IconCheck size={11} stroke={3} />
+                Chosen
+            </span>
+        ) : null}
+        <span className={classes.medallion}>{sigil}</span>
+        <span className={classes.body}>
+            <span className={classes.name}>{name}</span>
+            {badge}
+            <span className={classes.description}>{description}</span>
+            {disciplines.length > 0 ? (
+                <span className={classes.disciplines}>
+                    {disciplines.map((discipline) => (
+                        <span key={discipline} className={classes.discipline}>
+                            {formatDisciplineName(discipline)}
+                        </span>
+                    ))}
+                </span>
+            ) : null}
+        </span>
+    </UnstyledButton>
 )
 
 const formatDisciplineName = (discipline: DisciplineName) =>

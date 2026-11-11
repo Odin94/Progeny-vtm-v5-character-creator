@@ -1,0 +1,9 @@
+.main {
+    min-height: 100dvh;
+}
+
+.content {
+    padding-inline: var(--pg-gutter);
+    padding-top: clamp(var(--pg-space-8), 6vw, var(--pg-space-16));
+    padding-bottom: calc(var(--pg-space-16) + var(--pg-safe-bottom));
+}

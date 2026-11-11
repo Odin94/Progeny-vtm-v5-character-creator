@@ -1,6 +1,6 @@
 import { replacePredatorSkillBonuses } from "~/data/predatorTypeOptions"
-import { Button, Divider, Grid, Group, ScrollArea, Space, Text, Tooltip } from "@mantine/core"
-import { RAW_GOLD, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
+import { Badge, Button, ScrollArea, Tooltip } from "@mantine/core"
+import { IconRotate2 } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import { memo, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
@@ -16,12 +16,14 @@ import { globals } from "../../globals"
 import { upcase } from "../utils"
 import { SpecialtyModal } from "./SkillSpecialtyModal"
 import {
+    GeneratorConfirmButton,
     GeneratorPhasePrompt,
     GeneratorSectionDivider,
+    GeneratorStepFooter,
     GeneratorStepHero
 } from "./sharedGeneratorUi"
 import { DistributionKey, emptySkillsSetting, SkillsSetting } from "../creatorDrafts"
-import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
+import { PickColumnHeader, PickGrid, PickTile, pickTileClasses, type PickTone } from "./PickTile"
 import {
     generatorScrollableAreaStyle,
     generatorScrollableContentStyle,
@@ -72,133 +74,58 @@ const getAll = (skillSetting: SkillsSetting): SkillsKey[] => {
     return Object.values(skillSetting).reduce((acc, s) => [...acc, ...s], [])
 }
 
+const toneForSkillLevel: Record<number, PickTone> = {
+    4: "blood",
+    3: "crimson",
+    2: "gold",
+    1: "ash"
+}
+
 const SkillButton = memo(function SkillButton({
     skill,
-    i,
     assignedLevel,
+    previewLevel,
     hasDistribution,
-    skillAllocationIsFull,
-    phoneScreen
+    skillAllocationIsFull
 }: {
     skill: SkillsKey
-    i: number
     assignedLevel: number | null
+    previewLevel: number | null
     hasDistribution: boolean
     skillAllocationIsFull: boolean
-    phoneScreen: boolean
 }) {
     const alreadyPicked = assignedLevel !== null
     return (
-        <Grid.Col span={4}>
-            <Tooltip
-                disabled={alreadyPicked}
-                label={skillsDescriptions[skill]}
-                transitionProps={{ transition: "slide-up", duration: 200 }}
-                events={globals.tooltipTriggerEvents}
-            >
-                <Button
-                    data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
-                    p={phoneScreen ? "xs" : "default"}
-                    variant={alreadyPicked ? "outline" : "filled"}
-                    disabled={!hasDistribution || (!alreadyPicked && skillAllocationIsFull)}
-                    color="grape"
-                    fullWidth={false}
-                    style={{
-                        width: "88%",
-                        marginLeft: "auto",
-                        marginRight: "auto",
-                        display: "flex",
-                        minHeight: phoneScreen ? 36 : 40
-                    }}
-                    styles={{
-                        inner: {
-                            alignItems: "center",
-                            justifyContent: phoneScreen ? "flex-start" : "space-between",
-                            paddingTop: 2,
-                            paddingBottom: 3
-                        },
-                        label: {
-                            lineHeight: 1.3,
-                            overflow: "visible",
-                            flex: 1
-                        },
-                        section: {
-                            overflow: "visible"
-                        },
-                        root: {
-                            justifyContent: "space-between",
-                            background:
-                                assignedLevel === 4
-                                    ? rgba(RAW_RED, 0.38)
-                                    : assignedLevel === 3
-                                      ? rgba(RAW_RED, 0.2)
-                                      : assignedLevel === 2
-                                        ? "rgba(204, 166, 51, 0.4)"
-                                        : assignedLevel === 1
-                                          ? "rgba(43, 43, 43, 0.5)"
-                                          : !hasDistribution
-                                            ? "rgba(43, 43, 43, 0.3)"
-                                            : rgba(RAW_GRAPE, 0.8),
-                            borderColor:
-                                assignedLevel === 4
-                                    ? rgba(RAW_RED, 1)
-                                    : assignedLevel === 3
-                                      ? rgba(RAW_RED, 0.95)
-                                      : assignedLevel === 2
-                                        ? rgba(RAW_GOLD, 0.9)
-                                        : assignedLevel === 1
-                                          ? "rgba(180, 180, 180, 0.42)"
-                                          : !hasDistribution
-                                            ? "rgba(180, 180, 180, 0.24)"
-                                            : rgba(RAW_GRAPE, 0.45),
-                            color: alreadyPicked ? "rgba(244, 236, 232, 0.95)" : undefined
-                        }
-                    }}
-                    rightSection={
-                        !phoneScreen && assignedLevel ? (
-                            <Group gap={4} wrap="nowrap">
-                                {Array.from({ length: 5 }).map((_, dotIndex) => (
-                                    <div
-                                        key={`${skill}-dot-${dotIndex}`}
-                                        style={{
-                                            width: 6,
-                                            height: 6,
-                                            borderRadius: "999px",
-                                            background:
-                                                dotIndex < assignedLevel
-                                                    ? assignedLevel === 4 || assignedLevel === 3
-                                                        ? rgba(RAW_RED, 1)
-                                                        : assignedLevel === 2
-                                                          ? "rgba(232, 204, 92, 0.98)"
-                                                          : "rgba(210, 210, 210, 0.85)"
-                                                    : "rgba(255, 255, 255, 0.14)",
-                                            boxShadow:
-                                                dotIndex < assignedLevel &&
-                                                (assignedLevel === 4 || assignedLevel === 3)
-                                                    ? `0 0 6px ${rgba(RAW_RED, 0.38)}`
-                                                    : "none"
-                                        }}
-                                    />
-                                ))}
-                            </Group>
-                        ) : undefined
-                    }
-                    data-skill={skill}
-                >
-                    <Text
-                        fz={phoneScreen ? 12 : "inherit"}
-                        lh={1.3}
-                        ta="left"
-                        style={{ width: "100%" }}
-                    >
-                        {upcase(skill)}
-                    </Text>
-                </Button>
-            </Tooltip>
-            {i % 3 === 0 || i % 3 === 1 ? <Divider size="xl" orientation="vertical" /> : null}
-        </Grid.Col>
+        <Tooltip
+            disabled={alreadyPicked}
+            label={skillsDescriptions[skill]}
+            multiline
+            maw={280}
+            events={globals.tooltipTriggerEvents}
+        >
+            <PickTile
+                data-testid={`skill-${skill.replace(/\s+/g, "-")}-button`}
+                label={upcase(skill)}
+                level={assignedLevel}
+                tone={assignedLevel ? toneForSkillLevel[assignedLevel] : undefined}
+                previewLevel={previewLevel ?? undefined}
+                previewTone={previewLevel ? toneForSkillLevel[previewLevel] : undefined}
+                disabled={!hasDistribution || (!alreadyPicked && skillAllocationIsFull)}
+                data-skill={skill}
+            />
+        </Tooltip>
     )
 })
+
+const distributionRows = (distribution: SkillDistribution) =>
+    (
+        [
+            { level: 4, count: distribution.special },
+            { level: 3, count: distribution.strongest },
+            { level: 2, count: distribution.decent },
+            { level: 1, count: distribution.acceptable }
+        ] as const
+    ).filter((row) => row.count > 0)
 
 const SkillsPicker = ({
     character,
@@ -339,87 +266,80 @@ const SkillsPicker = ({
 
     // Delegate native button clicks so each memoized button only receives visual props.
     // Passing a selection-dependent callback to every button would invalidate all 27.
+    const previewLevel = skillAllocationIsFull
+        ? null
+        : toPick === "special"
+          ? 4
+          : toPick === "strongest"
+            ? 3
+            : toPick === "decent"
+              ? 2
+              : 1
+
     const createSkillButtons = () => (
-        <Group>
-            <Grid
-                grow
-                m={0}
-                onClick={(event) => {
-                    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
-                        "button[data-skill]"
-                    )
-                    if (button && !button.disabled)
-                        pickSkill(skillsKeySchema.parse(button.dataset.skill))
-                }}
-            >
-                <Grid.Col span={4}>
-                    <Text fs="italic" fw={700} ta="center">
-                        Physical
-                    </Text>
-                </Grid.Col>
-                <Grid.Col span={4}>
-                    <Text fs="italic" fw={700} ta="center">
-                        Social
-                    </Text>
-                </Grid.Col>
-                <Grid.Col span={4}>
-                    <Text fs="italic" fw={700} ta="center">
-                        Mental
-                    </Text>
-                </Grid.Col>
-                {[
-                    "athletics",
-                    "animal ken",
-                    "academics",
-                    "brawl",
-                    "etiquette",
-                    "awareness",
-                    "craft",
-                    "insight",
-                    "finance",
-                    "drive",
-                    "intimidation",
-                    "investigation",
-                    "firearms",
-                    "leadership",
-                    "medicine",
-                    "melee",
-                    "performance",
-                    "occult",
-                    "larceny",
-                    "persuasion",
-                    "politics",
-                    "stealth",
-                    "streetwise",
-                    "science",
-                    "survival",
-                    "subterfuge",
-                    "technology"
-                ]
-                    .map((s) => skillsKeySchema.parse(s))
-                    .map((skill, i) => (
-                        <SkillButton
-                            key={skill}
-                            skill={skill}
-                            i={i}
-                            assignedLevel={
-                                pickedSkills.special.includes(skill)
-                                    ? 4
-                                    : pickedSkills.strongest.includes(skill)
-                                      ? 3
-                                      : pickedSkills.decent.includes(skill)
-                                        ? 2
-                                        : pickedSkills.acceptable.includes(skill)
-                                          ? 1
-                                          : null
-                            }
-                            hasDistribution={pickedDistribution !== null}
-                            skillAllocationIsFull={skillAllocationIsFull}
-                            phoneScreen={phoneScreen}
-                        />
-                    ))}
-            </Grid>
-        </Group>
+        <PickGrid
+            onClick={(event) => {
+                const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+                    "button[data-skill]"
+                )
+                if (button && !button.disabled)
+                    pickSkill(skillsKeySchema.parse(button.dataset.skill))
+            }}
+        >
+            <PickColumnHeader>Physical</PickColumnHeader>
+            <PickColumnHeader>Social</PickColumnHeader>
+            <PickColumnHeader>Mental</PickColumnHeader>
+            {[
+                "athletics",
+                "animal ken",
+                "academics",
+                "brawl",
+                "etiquette",
+                "awareness",
+                "craft",
+                "insight",
+                "finance",
+                "drive",
+                "intimidation",
+                "investigation",
+                "firearms",
+                "leadership",
+                "medicine",
+                "melee",
+                "performance",
+                "occult",
+                "larceny",
+                "persuasion",
+                "politics",
+                "stealth",
+                "streetwise",
+                "science",
+                "survival",
+                "subterfuge",
+                "technology"
+            ]
+                .map((s) => skillsKeySchema.parse(s))
+                .map((skill) => (
+                    <SkillButton
+                        key={skill}
+                        skill={skill}
+                        assignedLevel={
+                            pickedSkills.special.includes(skill)
+                                ? 4
+                                : pickedSkills.strongest.includes(skill)
+                                  ? 3
+                                  : pickedSkills.decent.includes(skill)
+                                    ? 2
+                                    : pickedSkills.acceptable.includes(skill)
+                                      ? 1
+                                      : null
+                        }
+                        previewLevel={pickedDistribution !== null ? previewLevel : null}
+                        hasDistribution={pickedDistribution !== null}
+                        skillAllocationIsFull={skillAllocationIsFull}
+                    />
+                ))}
+        </PickGrid>
     )
 
     const phases = [
@@ -485,60 +405,95 @@ const SkillsPicker = ({
                                 leadText="Pick your"
                                 accentText="Skill Distribution"
                                 description="Balanced is the default choice"
-                                marginBottom={32}
+                                marginBottom={phoneScreen ? 20 : 28}
                             />
-                            <Grid grow m={0}>
+                            <div className={pickTileClasses.choices}>
                                 {(
                                     [
                                         "Jack of All Trades",
                                         "Balanced",
                                         "Specialist"
                                     ] as DistributionKey[]
-                                ).map((distribution) => {
-                                    return (
-                                        <Grid.Col span={4} key={distribution}>
-                                            <Tooltip
-                                                disabled={pickedDistribution !== null}
-                                                label={distributionDescriptions[distribution]}
-                                                transitionProps={{
-                                                    transition: "slide-up",
-                                                    duration: 200
-                                                }}
-                                                events={globals.tooltipTriggerEvents}
-                                            >
-                                                <Button
-                                                    data-testid={`skill-distribution-${distribution
-                                                        .toLowerCase()
-                                                        .replace(/\s+/g, "-")}-button`}
-                                                    p={phoneScreen ? "xs" : "default"}
-                                                    disabled={pickedDistribution !== null}
-                                                    color="red"
-                                                    fullWidth={false}
-                                                    style={{
-                                                        width: "88%",
-                                                        marginLeft: "auto",
-                                                        marginRight: "auto",
-                                                        display: "flex"
-                                                    }}
-                                                    onClick={() => {
-                                                        setPickedSkills(emptySkillsSetting)
-                                                        setPickedDistribution(distribution)
-                                                    }}
-                                                >
-                                                    <Text
-                                                        fz={phoneScreen ? 12 : "inherit"}
-                                                        ta="left"
+                                ).map((distribution) => (
+                                    <Button
+                                        unstyled
+                                        key={distribution}
+                                        className={pickTileClasses.choice}
+                                        data-recommended={distribution === "Balanced" || undefined}
+                                        data-testid={`skill-distribution-${distribution
+                                            .toLowerCase()
+                                            .replace(/\s+/g, "-")}-button`}
+                                        disabled={pickedDistribution !== null}
+                                        onClick={() => {
+                                            setPickedSkills(emptySkillsSetting)
+                                            setPickedDistribution(distribution)
+                                        }}
+                                    >
+                                        <span className={pickTileClasses.choiceHead}>
+                                            <span className={pickTileClasses.choiceTitle}>
+                                                {distribution}
+                                            </span>
+                                            {distribution === "Balanced" ? (
+                                                <Badge color="gold" variant="light" size="sm">
+                                                    Default
+                                                </Badge>
+                                            ) : null}
+                                        </span>
+                                        <span className={pickTileClasses.choiceText}>
+                                            {distributionDescriptions[distribution].replace(
+                                                /\s*\(.*\)$/,
+                                                ""
+                                            )}
+                                        </span>
+                                        <span className={pickTileClasses.choiceRows}>
+                                            {distributionRows(distributionByType[distribution]).map(
+                                                (row) => (
+                                                    <span
+                                                        key={row.level}
+                                                        className={pickTileClasses.choiceRow}
+                                                        style={
+                                                            {
+                                                                "--tone": `var(--pick-tone-${toneForSkillLevel[row.level]})`
+                                                            } as React.CSSProperties
+                                                        }
                                                     >
-                                                        {distribution}
-                                                    </Text>
-                                                </Button>
-                                            </Tooltip>
-                                        </Grid.Col>
-                                    )
-                                })}
-                            </Grid>
-                            <Space h="xl" />
-                            <Space h="xl" />
+                                                        <span
+                                                            className={pickTileClasses.choiceCount}
+                                                        >
+                                                            {row.count}×
+                                                        </span>
+                                                        <span
+                                                            className={pickTileClasses.pips}
+                                                            aria-hidden="true"
+                                                        >
+                                                            {Array.from(
+                                                                { length: 4 },
+                                                                (_, index) => (
+                                                                    <span
+                                                                        key={index}
+                                                                        className={
+                                                                            pickTileClasses.pip
+                                                                        }
+                                                                        data-filled={
+                                                                            index < row.level ||
+                                                                            undefined
+                                                                        }
+                                                                    />
+                                                                )
+                                                            )}
+                                                        </span>
+                                                        <span>
+                                                            {row.count === 1 ? "skill" : "skills"}{" "}
+                                                            at {row.level}
+                                                        </span>
+                                                    </span>
+                                                )
+                                            )}
+                                        </span>
+                                    </Button>
+                                ))}
+                            </div>
+                            <div style={{ height: phoneScreen ? 16 : 28 }} />
                         </>
                     ) : (
                         <GeneratorPhasePrompt
@@ -549,9 +504,7 @@ const SkillsPicker = ({
                         />
                     )}
 
-                    <GeneratorSectionDivider label="Skills" />
-
-                    <Space h="sm" />
+                    <GeneratorSectionDivider label="Skills" marginY={phoneScreen ? "sm" : "md"} />
 
                     {createSkillButtons()}
                 </div>
@@ -568,20 +521,26 @@ const SkillsPicker = ({
                 skills={skillsFromSelection(pickedSkills)}
             />
             {hasConfirmedSkills ? (
-                <Group justify="center" mt="md">
-                    <Button variant="outline" color="red" onClick={resetSkills}>
+                <GeneratorStepFooter>
+                    <Button
+                        variant="subtle"
+                        color="gray"
+                        size="md"
+                        leftSection={<IconRotate2 size={16} />}
+                        onClick={resetSkills}
+                    >
                         Reset skills
                     </Button>
-                    <Button
+                    <GeneratorConfirmButton
                         data-testid="skills-confirm-button"
-                        color="grape"
-                        disabled={!isComplete}
-                        styles={generatorConfirmButtonStyles}
+                        disabledReason={
+                            isComplete
+                                ? undefined
+                                : "Assign every skill dot of your distribution first"
+                        }
                         onClick={confirmEditedSkills}
-                    >
-                        Confirm
-                    </Button>
-                </Group>
+                    />
+                </GeneratorStepFooter>
             ) : null}
         </div>
     )

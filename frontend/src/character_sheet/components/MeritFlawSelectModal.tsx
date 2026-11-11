@@ -1,26 +1,8 @@
-import {
-    Badge,
-    Box,
-    Button,
-    Card,
-    Center,
-    Grid,
-    Group,
-    Loader,
-    Modal,
-    ScrollArea,
-    Stack,
-    Tabs,
-    Text,
-    Textarea,
-    TextInput,
-    Title,
-    Tooltip
-} from "@mantine/core"
-import { IconSearch } from "@tabler/icons-react"
-import { useMediaQuery } from "@mantine/hooks"
+import { Box, Button, Center, Group, Loader, Tabs, Text, Textarea, TextInput } from "@mantine/core"
+import { IconArrowLeft } from "@tabler/icons-react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import posthog from "posthog-js"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { MeritFlaw } from "~/data/Character"
 import { clans } from "~/data/Clans"
 import {
@@ -45,7 +27,24 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewLoresheet, HomebrewMeritFlaw, HomebrewSource } from "~/data/Homebrew"
 import { getHomebrewSource, getMeritFlawIdentity } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import { DisabledReason } from "~/components/ui"
+import {
+    DisabledLine,
+    MetaRows,
+    OptionCard,
+    OptionHead,
+    SearchField,
+    SelectEmpty,
+    SelectFooter,
+    SelectScroll,
+    SelectToolbar,
+    SheetModal,
+    Summary,
+    Tag,
+    matchesQuery,
+    selectModalClasses,
+    useListNav
+} from "./selectModalParts"
 
 type DisplayMeritFlaw = MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
 type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMeritFlaw[] }
@@ -59,7 +58,6 @@ type MeritFlawSelectModalProps = {
 
 const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelectModalProps) => {
     const { character, primaryColor, mode, setCharacter } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [selectedMeritFlaw, setSelectedMeritFlaw] = useState<DisplayMeritFlaw | null>(null)
     const [selectedLevel, setSelectedLevel] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<string | null>("regular")
@@ -496,710 +494,569 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
     const openLoresheet = loresheetCatalog.find((sheet) => sheet.title === openLoresheetTitle)
     const pickedMeritsAndFlaws = [...character.merits, ...character.flaws]
 
+    const pickedIdentities = new Set(
+        pickedMeritsAndFlaws.map((item) => getMeritFlawIdentity(item, item.type))
+    )
+    const availableXP = getAvailableXP(character)
+    const typeLabel = type === "merit" ? "merits" : "flaws"
+
+    // Why an item can't be picked right now, or undefined when it can.
+    const getItemBlockedReason = (item: DisplayMeritFlaw, checkCost: boolean) => {
+        const excludingItems = exclusionMap.get(item.name) ?? []
+        if (excludingItems.length > 0) return `Excluded by: ${excludingItems.join(", ")}`
+        if (checkCost && mode === "xp") {
+            const lowestCost = getCostForItem(item, item.cost[0])
+            if (!canAffordUpgrade(availableXP, lowestCost)) {
+                return `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
+            }
+        }
+        return undefined
+    }
+
+    const renderItemCard = (
+        item: DisplayMeritFlaw,
+        blockedReason: string | undefined,
+        navProps: ReturnType<ReturnType<typeof useListNav>["optionProps"]>,
+        tone: "accent" | "blood"
+    ) => {
+        const existingLevel = getExistingLevel(item)
+        return (
+            <OptionCard disabled={!!blockedReason} {...navProps}>
+                <OptionHead
+                    name={item.name}
+                    tags={
+                        <>
+                            {item.homebrewSource ? (
+                                <HomebrewBadge source={item.homebrewSource} />
+                            ) : null}
+                            {existingLevel > 0 ? (
+                                <Tag tone="success">Has {existingLevel}</Tag>
+                            ) : null}
+                            <Tag tone={tone}>
+                                {item.cost.join(" / ")}
+                                <span className={selectModalClasses.dot} aria-hidden="true" />
+                            </Tag>
+                        </>
+                    }
+                />
+                <Summary lines={2}>{item.summary}</Summary>
+                {blockedReason ? <DisabledLine>{blockedReason}</DisabledLine> : null}
+            </OptionCard>
+        )
+    }
+
+    const renderLevelPicker = (meritFlaw: DisplayMeritFlaw) => (
+        <>
+            <div className={selectModalClasses.detail} style={{ flex: 1 }}>
+                <h3 className={selectModalClasses.detailTitle}>{meritFlaw.name}</h3>
+                {meritFlaw.summary ? (
+                    <Text className={selectModalClasses.detailLore}>{meritFlaw.summary}</Text>
+                ) : null}
+                <Text className={selectModalClasses.fieldLabel} mt="md">
+                    Select Level
+                </Text>
+                <Group gap="xs">
+                    {meritFlaw.cost.map((level) => {
+                        const existingLevel = getExistingLevel(meritFlaw)
+                        const cost = getCostForLevel(level)
+                        const canAfford =
+                            type === "flaw" || mode !== "xp" || canAffordUpgrade(availableXP, cost)
+                        const disabledReason =
+                            level <= existingLevel
+                                ? `Already at level ${existingLevel}`
+                                : type === "flaw" || mode !== "xp"
+                                  ? undefined
+                                  : canAfford
+                                    ? undefined
+                                    : `Insufficient XP. Need ${cost}, have ${availableXP}`
+
+                        return (
+                            <PipButton
+                                key={level}
+                                filled={selectedLevel >= level}
+                                onClick={() => setSelectedLevel(level)}
+                                options={options}
+                                disabledReason={disabledReason}
+                                xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
+                            />
+                        )
+                    })}
+                </Group>
+            </div>
+            <SelectFooter
+                start={
+                    <Button
+                        variant="subtle"
+                        color="gray"
+                        leftSection={<IconArrowLeft size={16} />}
+                        onClick={() => setSelectedMeritFlaw(null)}
+                    >
+                        Back
+                    </Button>
+                }
+                end={
+                    <Button
+                        onClick={handleSelect}
+                        color={primaryColor}
+                        disabled={
+                            mode === "xp" &&
+                            type === "merit" &&
+                            !canAffordUpgrade(availableXP, getCostForLevel(selectedLevel))
+                        }
+                    >
+                        {getExistingLevel(meritFlaw) > 0 ? "Upgrade" : "Add"}
+                    </Button>
+                }
+            />
+        </>
+    )
+
+    const renderRegularContent = () => {
+        const visibleCategories = allMeritsAndFlaws
+            .map((category) => {
+                const items = type === "merit" ? category.merits : category.flaws
+                return {
+                    category,
+                    availableCategoryItems: items.filter(
+                        (item) => canAddOrUpgrade(item) && matchesQuery(regularQuery, item.name)
+                    )
+                }
+            })
+            .filter(({ availableCategoryItems }) => availableCategoryItems.length > 0)
+
+        return (
+            <MeritFlawVirtualList
+                listLabel={type === "merit" ? "Merits" : "Flaws"}
+                query={regularQuery}
+                onQueryChange={setRegularQuery}
+                searchLabel={`Search ${typeLabel}`}
+                searchPlaceholder={`Search ${typeLabel} by name`}
+                toolbarExtra={
+                    <Button
+                        data-testid="toggle-advanced-merits-flaws-button"
+                        variant="default"
+                        aria-pressed={showAdvancedMeritsAndFlaws}
+                        onClick={() =>
+                            setShowAdvancedMeritsAndFlaws((showingAdvanced) => !showingAdvanced)
+                        }
+                    >
+                        {showAdvancedMeritsAndFlaws ? "Show essential list" : "Show advanced list"}
+                    </Button>
+                }
+                emptyText={
+                    availableItems.length === 0
+                        ? `No available ${typeLabel} to add.`
+                        : `No ${typeLabel} match that name.`
+                }
+                groups={visibleCategories.map(({ category, availableCategoryItems }) => ({
+                    title: category.title,
+                    items: availableCategoryItems
+                }))}
+                getKey={(item) => getMeritFlawIdentity(item, type)}
+                onPick={handleItemClick}
+                renderItem={(item, navProps) =>
+                    renderItemCard(
+                        item,
+                        getItemBlockedReason(item, type === "merit"),
+                        navProps,
+                        type === "flaw" ? "blood" : "accent"
+                    )
+                }
+            />
+        )
+    }
+
+    const normalizedLoresheetQuery = loresheetQuery.trim().toLocaleLowerCase()
+    const availableLoresheets = loresheetCatalog.filter((loresheet) => {
+        const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
+        if (!requirementsMet) return false
+        const titleMatches =
+            normalizedLoresheetQuery.length === 0 ||
+            loresheet.title.toLocaleLowerCase().includes(normalizedLoresheetQuery)
+        if (!titleMatches) return false
+        const sheetPicked = loresheet.merits.some((merit) =>
+            pickedIdentities.has(getMeritFlawIdentity(merit, "merit"))
+        )
+        const hasAvailableMerits = loresheet.merits.some(
+            (merit) => !characterMeritFlawIdentities.has(getMeritFlawIdentity(merit, "merit"))
+        )
+        return hasAvailableMerits || sheetPicked
+    })
+    const openLoresheetMerits = openLoresheet
+        ? openLoresheet.merits.filter(
+              (merit) => !characterMeritFlawIdentities.has(getMeritFlawIdentity(merit, "merit"))
+          )
+        : []
+
+    const loresheetNav = useListNav({
+        items: availableLoresheets,
+        onPick: (loresheet) => setOpenLoresheetTitle(loresheet.title),
+        resetKey: `${loresheetQuery}|${activeTab}`
+    })
+    const loresheetMeritNav = useListNav({
+        items: openLoresheetMerits,
+        onPick: handleItemClick,
+        resetKey: openLoresheetTitle
+    })
+
     const renderLoresheetsContent = () => {
         if (openLoresheet) {
-            const availableMerits = openLoresheet.merits.filter(
-                (merit) => !characterMeritFlawIdentities.has(getMeritFlawIdentity(merit, "merit"))
-            )
-
             return (
-                <Stack gap="md">
-                    <Group justify="space-between" align="flex-start">
-                        <Box style={{ flex: 1 }}>
-                            <Title order={4} mb="sm" c={primaryColor}>
-                                {openLoresheet.title}
-                            </Title>
-                            <Text size="sm" c="dimmed" mb="md">
-                                {openLoresheet.summary}
-                            </Text>
-                            <Text size="xs" c="dimmed">
-                                Source: {openLoresheet.source}
-                            </Text>
-                        </Box>
-                        <Button
-                            variant="subtle"
-                            onClick={() => setOpenLoresheetTitle("")}
-                            color={primaryColor}
-                        >
-                            Back
-                        </Button>
-                    </Group>
-                    {availableMerits.length === 0 ? (
-                        <Text c="dimmed" ta="center" py="xl">
-                            All merits from this loresheet have been added.
-                        </Text>
-                    ) : (
-                        <Grid gap="md">
-                            {availableMerits.map((merit) => {
-                                const excludingItems = exclusionMap.get(merit.name) ?? []
-                                const isExcluded = excludingItems.length > 0
-                                const lowestLevel = merit.cost[0]
-                                const lowestCost =
-                                    mode === "xp" ? getCostForItem(merit, lowestLevel) : 0
-                                const availableXP = getAvailableXP(character)
-                                const canAffordLowest =
-                                    mode !== "xp" || canAffordUpgrade(availableXP, lowestCost)
-                                const canClick = !isExcluded && canAffordLowest
-                                const tooltipLabel = isExcluded
-                                    ? `Excluded by: ${excludingItems.join(", ")}`
-                                    : mode === "xp" && !canAffordLowest
-                                      ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                      : undefined
-
-                                const boxContent = (
-                                    <Box
-                                        p="xs"
-                                        onClick={() => handleItemClick(merit)}
-                                        style={{
-                                            border: "1px solid var(--mantine-color-gray-8)",
-                                            borderRadius: "var(--mantine-radius-sm)",
-                                            cursor: canClick ? "pointer" : "default",
-                                            transition: "background-color 0.2s",
-                                            opacity: isExcluded ? 0.5 : 1
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (canClick) {
-                                                e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = "transparent"
-                                        }}
-                                    >
-                                        <Stack gap="xs">
-                                            <Group justify="space-between" align="flex-start">
-                                                <Text
-                                                    fw={600}
-                                                    size="sm"
-                                                    style={{ flex: 1 }}
-                                                    c={isExcluded ? "dimmed" : undefined}
-                                                >
-                                                    {merit.name}
-                                                </Text>
-                                                <Badge size="sm" variant="dot" color={primaryColor}>
-                                                    {merit.cost.join("/")}
-                                                </Badge>
-                                                {merit.homebrewSource ? (
-                                                    <HomebrewBadge source={merit.homebrewSource} />
-                                                ) : null}
-                                            </Group>
-                                            {merit.summary ? (
-                                                <Text size="xs" c="dimmed" lineClamp={3}>
-                                                    {merit.summary}
-                                                </Text>
-                                            ) : null}
-                                        </Stack>
-                                    </Box>
-                                )
-
-                                if (tooltipLabel) {
-                                    return (
-                                        <Grid.Col
-                                            key={getMeritFlawIdentity(merit, "merit")}
-                                            span={{ base: 12, sm: 6 }}
-                                        >
-                                            <Tooltip label={tooltipLabel} withArrow>
-                                                {boxContent}
-                                            </Tooltip>
-                                        </Grid.Col>
-                                    )
-                                }
-
-                                return (
-                                    <Grid.Col
-                                        key={getMeritFlawIdentity(merit, "merit")}
-                                        span={{ base: 12, sm: 6 }}
-                                    >
-                                        {boxContent}
-                                    </Grid.Col>
-                                )
-                            })}
-                        </Grid>
-                    )}
-                </Stack>
-            )
-        }
-
-        const normalizedLoresheetQuery = loresheetQuery.trim().toLocaleLowerCase()
-        const availableLoresheets = loresheetCatalog.filter((loresheet) => {
-            const requirementsMet = loresheet.requirementFunctions.every((fun) => fun(character))
-            if (!requirementsMet) return false
-            const titleMatches =
-                normalizedLoresheetQuery.length === 0 ||
-                loresheet.title.toLocaleLowerCase().includes(normalizedLoresheetQuery)
-            if (!titleMatches) return false
-            const pickedIdentities = new Set(
-                pickedMeritsAndFlaws.map((item) => getMeritFlawIdentity(item, item.type))
-            )
-            const sheetPicked = loresheet.merits.some((merit) =>
-                pickedIdentities.has(getMeritFlawIdentity(merit, "merit"))
-            )
-            const hasAvailableMerits = loresheet.merits.some(
-                (merit) => !characterMeritFlawIdentities.has(getMeritFlawIdentity(merit, "merit"))
-            )
-            return hasAvailableMerits || sheetPicked
-        })
-
-        if (availableLoresheets.length === 0) {
-            return (
-                <Stack gap="md">
-                    <TextInput
-                        aria-label="Search loresheets"
-                        leftSection={<IconSearch size={16} />}
-                        placeholder="Search loresheets by title"
-                        value={loresheetQuery}
-                        onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
-                    />
-                    <Text c="dimmed" ta="center" py="xl">
-                        {normalizedLoresheetQuery.length > 0
-                            ? "No loresheets match that title."
-                            : "No available loresheets."}
-                    </Text>
-                </Stack>
+                <>
+                    <SelectToolbar>
+                        <div className={selectModalClasses.detail}>
+                            <Group justify="space-between" align="flex-start" wrap="nowrap">
+                                <h3 className={selectModalClasses.detailTitle}>
+                                    {openLoresheet.title}
+                                </h3>
+                                <Button
+                                    variant="subtle"
+                                    color="gray"
+                                    size="xs"
+                                    leftSection={<IconArrowLeft size={14} />}
+                                    onClick={() => setOpenLoresheetTitle("")}
+                                >
+                                    Back
+                                </Button>
+                            </Group>
+                            <Summary lines={4}>{openLoresheet.summary}</Summary>
+                            <span className={selectModalClasses.metaLabel}>
+                                Source · {openLoresheet.source}
+                            </span>
+                        </div>
+                    </SelectToolbar>
+                    <SelectScroll
+                        listId={loresheetMeritNav.listId}
+                        label={openLoresheet.title}
+                        focusNav={loresheetMeritNav}
+                    >
+                        {openLoresheetMerits.length === 0 ? (
+                            <SelectEmpty>
+                                All merits from this loresheet have been added.
+                            </SelectEmpty>
+                        ) : (
+                            <div className={selectModalClasses.stack}>
+                                {openLoresheetMerits.map((merit, index) => (
+                                    <div key={getMeritFlawIdentity(merit, "merit")}>
+                                        {renderItemCard(
+                                            merit,
+                                            getItemBlockedReason(merit, true),
+                                            loresheetMeritNav.optionProps(index),
+                                            "accent"
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </SelectScroll>
+                </>
             )
         }
 
         return (
-            <Stack gap="md">
-                <TextInput
-                    aria-label="Search loresheets"
-                    leftSection={<IconSearch size={16} />}
-                    placeholder="Search loresheets by title"
-                    value={loresheetQuery}
-                    onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
-                />
-                <ScrollArea h={400}>
-                    <Grid gap="md">
-                        {availableLoresheets.map((loresheet) => {
-                            const pickedIdentities = new Set(
-                                pickedMeritsAndFlaws.map((item) =>
-                                    getMeritFlawIdentity(item, item.type)
+            <>
+                <SelectToolbar>
+                    <SearchField
+                        label="Search loresheets"
+                        placeholder="Search loresheets by title"
+                        value={loresheetQuery}
+                        onChange={setLoresheetQuery}
+                        nav={loresheetNav}
+                    />
+                </SelectToolbar>
+                <SelectScroll listId={loresheetNav.listId} label="Loresheets">
+                    {availableLoresheets.length === 0 ? (
+                        <SelectEmpty>
+                            {normalizedLoresheetQuery.length > 0
+                                ? "No loresheets match that title."
+                                : "No available loresheets."}
+                        </SelectEmpty>
+                    ) : (
+                        <div className={selectModalClasses.grid}>
+                            {availableLoresheets.map((loresheet, index) => {
+                                const sheetPicked = loresheet.merits.some((merit) =>
+                                    pickedIdentities.has(getMeritFlawIdentity(merit, "merit"))
                                 )
-                            )
-                            const sheetPicked = loresheet.merits.some((merit) =>
-                                pickedIdentities.has(getMeritFlawIdentity(merit, "merit"))
-                            )
-
-                            return (
-                                <Grid.Col key={loresheet.title} span={{ base: 12, sm: 6, md: 4 }}>
-                                    <Card
-                                        h={250}
-                                        style={{
-                                            backgroundColor: "rgba(26, 27, 30, 0.90)",
-                                            borderColor: sheetPicked ? "green" : "black"
-                                        }}
-                                        withBorder={sheetPicked}
+                                return (
+                                    <OptionCard
+                                        key={loresheet.title}
+                                        picked={sheetPicked}
+                                        {...loresheetNav.optionProps(index)}
                                     >
-                                        <Stack gap="xs" h="100%">
-                                            <Text fw={600} size="sm" ta="center">
-                                                {loresheet.title}
-                                            </Text>
-                                            {loresheet.merits[0]?.homebrewSource ? (
-                                                <HomebrewBadge
-                                                    source={loresheet.merits[0].homebrewSource}
-                                                />
-                                            ) : null}
-                                            <Text
-                                                size="xs"
-                                                c="dimmed"
-                                                lineClamp={4}
-                                                style={{ flex: 1 }}
-                                            >
-                                                {loresheet.summary}
-                                            </Text>
-                                            <Text size="xs" c="dimmed">
-                                                {loresheet.source}
-                                            </Text>
-                                            <Button
-                                                variant="light"
-                                                color="blue"
-                                                fullWidth
-                                                size="xs"
-                                                onClick={() =>
-                                                    setOpenLoresheetTitle(loresheet.title)
-                                                }
-                                            >
-                                                Open
-                                            </Button>
-                                        </Stack>
-                                    </Card>
-                                </Grid.Col>
-                            )
-                        })}
-                    </Grid>
-                </ScrollArea>
-            </Stack>
+                                        <OptionHead
+                                            display
+                                            name={loresheet.title}
+                                            tags={
+                                                <>
+                                                    {loresheet.merits[0]?.homebrewSource ? (
+                                                        <HomebrewBadge
+                                                            source={
+                                                                loresheet.merits[0].homebrewSource
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                    {sheetPicked ? (
+                                                        <Tag tone="success">In use</Tag>
+                                                    ) : null}
+                                                </>
+                                            }
+                                        />
+                                        <Summary lines={4}>{loresheet.summary}</Summary>
+                                        <MetaRows rows={[["Source", loresheet.source]]} />
+                                    </OptionCard>
+                                )
+                            })}
+                        </div>
+                    )}
+                </SelectScroll>
+            </>
+        )
+    }
+
+    const renderCustomContent = () => {
+        const addDisabledReason = !customName.trim()
+            ? "Name it first"
+            : type === "merit" && customLevel <= getExistingCustomMeritLevel()
+              ? `Already at level ${getExistingCustomMeritLevel()}`
+              : mode === "xp" &&
+                  type === "merit" &&
+                  !canAffordUpgrade(availableXP, getCustomMeritCost(customLevel))
+                ? `Insufficient XP. Need ${getCustomMeritCost(customLevel)}, have ${availableXP}`
+                : undefined
+        return (
+            <>
+                <div className={selectModalClasses.form} style={{ flex: 1 }}>
+                    <TextInput
+                        label="Name"
+                        placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} name`}
+                        value={customName}
+                        onChange={(e) => setCustomName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !addDisabledReason) handleAddCustom()
+                        }}
+                        required
+                        autoFocus
+                        data-autofocus
+                    />
+                    <Textarea
+                        label="Description"
+                        placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} description (optional)`}
+                        value={customDescription}
+                        onChange={(e) => setCustomDescription(e.target.value)}
+                        rows={3}
+                        resize="vertical"
+                    />
+                    <Box>
+                        <Text className={selectModalClasses.fieldLabel}>Select Level</Text>
+                        <Group gap="xs">
+                            {[1, 2, 3, 4, 5].map((level) => {
+                                const existingLevel = getExistingCustomMeritLevel()
+                                const cost = getCustomMeritCost(level)
+                                const canAfford =
+                                    type === "flaw" ||
+                                    mode !== "xp" ||
+                                    canAffordUpgrade(availableXP, cost)
+                                const disabledReason =
+                                    level <= existingLevel
+                                        ? `Already at level ${existingLevel}`
+                                        : type === "flaw" || mode !== "xp"
+                                          ? undefined
+                                          : canAfford
+                                            ? undefined
+                                            : `Insufficient XP. Need ${cost}, have ${availableXP}`
+
+                                return (
+                                    <PipButton
+                                        key={level}
+                                        filled={customLevel >= level}
+                                        onClick={() => setCustomLevel(level)}
+                                        options={options}
+                                        disabledReason={disabledReason}
+                                        xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
+                                    />
+                                )
+                            })}
+                        </Group>
+                    </Box>
+                </div>
+                <SelectFooter
+                    end={
+                        <DisabledReason reason={addDisabledReason}>
+                            <Button
+                                onClick={handleAddCustom}
+                                color={primaryColor}
+                                disabled={!!addDisabledReason}
+                            >
+                                Add
+                            </Button>
+                        </DisabledReason>
+                    }
+                />
+            </>
         )
     }
 
     return (
-        <Modal
+        <SheetModal
             opened={opened}
             onClose={onClose}
             title={`Select a ${type === "merit" ? "Merit" : "Flaw"}`}
-            size="lg"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+            size="xl"
         >
-            {contentReady ? (
-                <Stack gap="md">
-                    {selectedMeritFlaw ? (
-                        <>
-                            <Box>
-                                <Title order={4} mb="sm" c={primaryColor}>
-                                    {selectedMeritFlaw.name}
-                                </Title>
-                                <Text size="sm" c="dimmed" mb="md">
-                                    {selectedMeritFlaw.summary}
-                                </Text>
-                                <Text size="sm" fw={600} mb="xs">
-                                    Select Level:
-                                </Text>
-                                <Group gap="xs">
-                                    {selectedMeritFlaw.cost.map((level) => {
-                                        const existingLevel = getExistingLevel(selectedMeritFlaw)
-                                        const cost = getCostForLevel(level)
-                                        const availableXP = getAvailableXP(character)
-                                        const canAfford =
-                                            type === "flaw" ||
-                                            mode !== "xp" ||
-                                            canAffordUpgrade(availableXP, cost)
-                                        const disabledReason =
-                                            level <= existingLevel
-                                                ? `Already at level ${existingLevel}`
-                                                : type === "flaw" || mode !== "xp"
-                                                  ? undefined
-                                                  : canAfford
-                                                    ? undefined
-                                                    : `Insufficient XP. Need ${cost}, have ${availableXP}`
-
-                                        return (
-                                            <PipButton
-                                                key={level}
-                                                filled={selectedLevel >= level}
-                                                onClick={() => setSelectedLevel(level)}
-                                                options={options}
-                                                disabledReason={disabledReason}
-                                                xpCost={
-                                                    type === "flaw" || mode !== "xp"
-                                                        ? undefined
-                                                        : cost
-                                                }
-                                            />
-                                        )
-                                    })}
-                                </Group>
-                            </Box>
-                            <Group justify="flex-end" mt="md">
-                                <Button
-                                    variant="subtle"
-                                    onClick={() => setSelectedMeritFlaw(null)}
-                                    color={primaryColor}
-                                >
-                                    Back
-                                </Button>
-                                <Button
-                                    onClick={handleSelect}
-                                    color={primaryColor}
-                                    disabled={
-                                        mode === "xp" &&
-                                        type === "merit" &&
-                                        !canAffordUpgrade(
-                                            getAvailableXP(character),
-                                            getCostForLevel(selectedLevel)
-                                        )
-                                    }
-                                >
-                                    {getExistingLevel(selectedMeritFlaw) > 0 ? "Upgrade" : "Add"}
-                                </Button>
-                            </Group>
-                        </>
-                    ) : (
-                        <Tabs value={activeTab} onChange={setActiveTab} color={primaryColor}>
-                            <Stack gap="xs">
-                                <Tabs.List>
-                                    <Tabs.Tab value="regular">
-                                        {type === "merit" ? "Merits" : "Flaws"}
-                                    </Tabs.Tab>
-                                    {type === "merit" ? (
-                                        <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
-                                    ) : null}
-                                    {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
-                                </Tabs.List>
-                                <Button
-                                    data-testid="toggle-advanced-merits-flaws-button"
-                                    variant="outline"
-                                    color={primaryColor}
-                                    size={phoneScreen ? "sm" : "xs"}
-                                    fullWidth={phoneScreen}
-                                    aria-pressed={showAdvancedMeritsAndFlaws}
-                                    onClick={() =>
-                                        setShowAdvancedMeritsAndFlaws(
-                                            (showingAdvanced) => !showingAdvanced
-                                        )
-                                    }
-                                >
-                                    {showAdvancedMeritsAndFlaws
-                                        ? "Show essential list"
-                                        : "Show advanced list"}
-                                </Button>
-                            </Stack>
-
-                            <Tabs.Panel value="regular" pt="md">
-                                {availableItems.length === 0 ? (
-                                    <Text c="dimmed" ta="center" py="xl">
-                                        No available {type === "merit" ? "merits" : "flaws"} to add.
-                                    </Text>
-                                ) : (
-                                    <Stack gap="md">
-                                        <TextInput
-                                            aria-label={`Search ${type === "merit" ? "merits" : "flaws"}`}
-                                            leftSection={<IconSearch size={16} />}
-                                            placeholder={`Search ${type === "merit" ? "merits" : "flaws"} by name`}
-                                            value={regularQuery}
-                                            onChange={(event) =>
-                                                setRegularQuery(event.currentTarget.value)
-                                            }
-                                        />
-                                        {(() => {
-                                            const normalizedRegularQuery = regularQuery
-                                                .trim()
-                                                .toLocaleLowerCase()
-                                            const matchesQuery = (name: string) =>
-                                                normalizedRegularQuery.length === 0 ||
-                                                name
-                                                    .toLocaleLowerCase()
-                                                    .includes(normalizedRegularQuery)
-
-                                            const visibleCategories = allMeritsAndFlaws
-                                                .map((category) => {
-                                                    const items =
-                                                        type === "merit"
-                                                            ? category.merits
-                                                            : category.flaws
-                                                    const availableCategoryItems = items.filter(
-                                                        (item) =>
-                                                            canAddOrUpgrade(item) &&
-                                                            matchesQuery(item.name)
-                                                    )
-                                                    return { category, availableCategoryItems }
-                                                })
-                                                .filter(
-                                                    ({ availableCategoryItems }) =>
-                                                        availableCategoryItems.length > 0
-                                                )
-
-                                            if (visibleCategories.length === 0) {
-                                                return (
-                                                    <Text c="dimmed" ta="center" py="xl">
-                                                        No {type === "merit" ? "merits" : "flaws"}{" "}
-                                                        match that name.
-                                                    </Text>
-                                                )
-                                            }
-
-                                            return (
-                                                <Stack gap="lg">
-                                                    {visibleCategories.map(
-                                                        ({ category, availableCategoryItems }) => (
-                                                            <Stack key={category.title} gap="md">
-                                                                <Title order={4} c={primaryColor}>
-                                                                    {category.title}
-                                                                </Title>
-                                                                <Grid gap="md">
-                                                                    {availableCategoryItems.map(
-                                                                        (item) => {
-                                                                            const excludingItems =
-                                                                                exclusionMap.get(
-                                                                                    item.name
-                                                                                ) ?? []
-                                                                            const isExcluded =
-                                                                                excludingItems.length >
-                                                                                0
-                                                                            const lowestLevel =
-                                                                                item.cost[0]
-                                                                            const lowestCost =
-                                                                                mode === "xp" &&
-                                                                                type === "merit"
-                                                                                    ? getCostForItem(
-                                                                                          item,
-                                                                                          lowestLevel
-                                                                                      )
-                                                                                    : 0
-                                                                            const availableXP =
-                                                                                getAvailableXP(
-                                                                                    character
-                                                                                )
-                                                                            const canAffordLowest =
-                                                                                type === "flaw" ||
-                                                                                mode !== "xp" ||
-                                                                                canAffordUpgrade(
-                                                                                    availableXP,
-                                                                                    lowestCost
-                                                                                )
-                                                                            const canClick =
-                                                                                !isExcluded &&
-                                                                                canAffordLowest
-                                                                            const tooltipLabel =
-                                                                                isExcluded
-                                                                                    ? `Excluded by: ${excludingItems.join(", ")}`
-                                                                                    : mode ===
-                                                                                            "xp" &&
-                                                                                        type ===
-                                                                                            "merit" &&
-                                                                                        !canAffordLowest
-                                                                                      ? `Insufficient XP. Need ${lowestCost}, have ${availableXP}`
-                                                                                      : undefined
-
-                                                                            const boxContent = (
-                                                                                <Box
-                                                                                    p="xs"
-                                                                                    onClick={() =>
-                                                                                        handleItemClick(
-                                                                                            item
-                                                                                        )
-                                                                                    }
-                                                                                    style={{
-                                                                                        border: "1px solid var(--mantine-color-gray-8)",
-                                                                                        borderRadius:
-                                                                                            "var(--mantine-radius-sm)",
-                                                                                        cursor: canClick
-                                                                                            ? "pointer"
-                                                                                            : "default",
-                                                                                        transition:
-                                                                                            "background-color 0.2s",
-                                                                                        opacity:
-                                                                                            isExcluded
-                                                                                                ? 0.5
-                                                                                                : 1
-                                                                                    }}
-                                                                                    onMouseEnter={(
-                                                                                        e
-                                                                                    ) => {
-                                                                                        if (
-                                                                                            canClick
-                                                                                        ) {
-                                                                                            e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
-                                                                                        }
-                                                                                    }}
-                                                                                    onMouseLeave={(
-                                                                                        e
-                                                                                    ) => {
-                                                                                        e.currentTarget.style.backgroundColor =
-                                                                                            "transparent"
-                                                                                    }}
-                                                                                >
-                                                                                    <Stack gap="xs">
-                                                                                        <Group
-                                                                                            justify="space-between"
-                                                                                            align="flex-start"
-                                                                                        >
-                                                                                            <Text
-                                                                                                fw={
-                                                                                                    600
-                                                                                                }
-                                                                                                size="sm"
-                                                                                                style={{
-                                                                                                    flex: 1
-                                                                                                }}
-                                                                                                c={
-                                                                                                    isExcluded
-                                                                                                        ? "dimmed"
-                                                                                                        : undefined
-                                                                                                }
-                                                                                            >
-                                                                                                {
-                                                                                                    item.name
-                                                                                                }
-                                                                                            </Text>
-                                                                                            <Badge
-                                                                                                size="sm"
-                                                                                                variant="dot"
-                                                                                                color={
-                                                                                                    type ===
-                                                                                                    "flaw"
-                                                                                                        ? "red"
-                                                                                                        : primaryColor
-                                                                                                }
-                                                                                            >
-                                                                                                {item.cost.join(
-                                                                                                    "/"
-                                                                                                )}
-                                                                                            </Badge>
-                                                                                            {item.homebrewSource ? (
-                                                                                                <HomebrewBadge
-                                                                                                    source={
-                                                                                                        item.homebrewSource
-                                                                                                    }
-                                                                                                />
-                                                                                            ) : null}
-                                                                                        </Group>
-                                                                                        {item.summary ? (
-                                                                                            <Text
-                                                                                                size="xs"
-                                                                                                c="dimmed"
-                                                                                                lineClamp={
-                                                                                                    3
-                                                                                                }
-                                                                                            >
-                                                                                                {
-                                                                                                    item.summary
-                                                                                                }
-                                                                                            </Text>
-                                                                                        ) : null}
-                                                                                    </Stack>
-                                                                                </Box>
-                                                                            )
-
-                                                                            if (tooltipLabel) {
-                                                                                return (
-                                                                                    <Grid.Col
-                                                                                        key={getMeritFlawIdentity(
-                                                                                            item,
-                                                                                            type
-                                                                                        )}
-                                                                                        span={{
-                                                                                            base: 12,
-                                                                                            sm: 6
-                                                                                        }}
-                                                                                    >
-                                                                                        <Tooltip
-                                                                                            label={
-                                                                                                tooltipLabel
-                                                                                            }
-                                                                                            withArrow
-                                                                                        >
-                                                                                            {
-                                                                                                boxContent
-                                                                                            }
-                                                                                        </Tooltip>
-                                                                                    </Grid.Col>
-                                                                                )
-                                                                            }
-
-                                                                            return (
-                                                                                <Grid.Col
-                                                                                    key={getMeritFlawIdentity(
-                                                                                        item,
-                                                                                        type
-                                                                                    )}
-                                                                                    span={{
-                                                                                        base: 12,
-                                                                                        sm: 6
-                                                                                    }}
-                                                                                >
-                                                                                    {boxContent}
-                                                                                </Grid.Col>
-                                                                            )
-                                                                        }
-                                                                    )}
-                                                                </Grid>
-                                                            </Stack>
-                                                        )
-                                                    )}
-                                                </Stack>
-                                            )
-                                        })()}
-                                    </Stack>
-                                )}
-                            </Tabs.Panel>
-
-                            {type === "merit" ? (
-                                <Tabs.Panel value="loresheets" pt="md">
-                                    {renderLoresheetsContent()}
-                                </Tabs.Panel>
-                            ) : null}
-                            {isEditable ? (
-                                <Tabs.Panel value="custom" pt="md">
-                                    <Stack gap="md">
-                                        <TextInput
-                                            label="Name"
-                                            placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} name`}
-                                            value={customName}
-                                            onChange={(e) => setCustomName(e.target.value)}
-                                            required
-                                        />
-                                        <Textarea
-                                            label="Description"
-                                            placeholder={`Enter ${type === "merit" ? "merit" : "flaw"} description (optional)`}
-                                            value={customDescription}
-                                            onChange={(e) => setCustomDescription(e.target.value)}
-                                            minRows={3}
-                                        />
-                                        <Box>
-                                            <Text size="sm" fw={600} mb="xs">
-                                                Select Level:
-                                            </Text>
-                                            <Group gap="xs">
-                                                {[1, 2, 3, 4, 5].map((level) => {
-                                                    const existingLevel =
-                                                        getExistingCustomMeritLevel()
-                                                    const cost = getCustomMeritCost(level)
-                                                    const availableXP = getAvailableXP(character)
-                                                    const canAfford =
-                                                        type === "flaw" ||
-                                                        mode !== "xp" ||
-                                                        canAffordUpgrade(availableXP, cost)
-                                                    const disabledReason =
-                                                        level <= existingLevel
-                                                            ? `Already at level ${existingLevel}`
-                                                            : type === "flaw" || mode !== "xp"
-                                                              ? undefined
-                                                              : canAfford
-                                                                ? undefined
-                                                                : `Insufficient XP. Need ${cost}, have ${availableXP}`
-
-                                                    return (
-                                                        <PipButton
-                                                            key={level}
-                                                            filled={customLevel >= level}
-                                                            onClick={() => setCustomLevel(level)}
-                                                            options={options}
-                                                            disabledReason={disabledReason}
-                                                            xpCost={
-                                                                type === "flaw" || mode !== "xp"
-                                                                    ? undefined
-                                                                    : cost
-                                                            }
-                                                        />
-                                                    )
-                                                })}
-                                            </Group>
-                                        </Box>
-                                        <Group justify="flex-end" mt="md">
-                                            <Button
-                                                onClick={handleAddCustom}
-                                                color={primaryColor}
-                                                disabled={
-                                                    !customName.trim() ||
-                                                    (type === "merit" &&
-                                                        customLevel <=
-                                                            getExistingCustomMeritLevel()) ||
-                                                    (mode === "xp" &&
-                                                        type === "merit" &&
-                                                        !canAffordUpgrade(
-                                                            getAvailableXP(character),
-                                                            getCustomMeritCost(customLevel)
-                                                        ))
-                                                }
-                                            >
-                                                Add
-                                            </Button>
-                                        </Group>
-                                    </Stack>
-                                </Tabs.Panel>
-                            ) : null}
-                        </Tabs>
-                    )}
-                </Stack>
-            ) : (
+            {!contentReady ? (
                 <Center mih={320}>
                     <Loader color={primaryColor} />
                 </Center>
+            ) : selectedMeritFlaw ? (
+                renderLevelPicker(selectedMeritFlaw)
+            ) : (
+                <Tabs
+                    value={activeTab}
+                    onChange={setActiveTab}
+                    color={primaryColor}
+                    className={selectModalClasses.tabs}
+                    keepMounted={false}
+                >
+                    <Tabs.List>
+                        <Tabs.Tab value="regular">{type === "merit" ? "Merits" : "Flaws"}</Tabs.Tab>
+                        {type === "merit" ? (
+                            <Tabs.Tab value="loresheets">Loresheets</Tabs.Tab>
+                        ) : null}
+                        {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
+                    </Tabs.List>
+
+                    <Tabs.Panel value="regular" className={selectModalClasses.tabPanel}>
+                        {renderRegularContent()}
+                    </Tabs.Panel>
+                    {type === "merit" ? (
+                        <Tabs.Panel value="loresheets" className={selectModalClasses.tabPanel}>
+                            {renderLoresheetsContent()}
+                        </Tabs.Panel>
+                    ) : null}
+                    {isEditable ? (
+                        <Tabs.Panel value="custom" className={selectModalClasses.tabPanel}>
+                            {renderCustomContent()}
+                        </Tabs.Panel>
+                    ) : null}
+                </Tabs>
             )}
-        </Modal>
+        </SheetModal>
+    )
+}
+
+type VirtualRow<T> = { kind: "header"; title: string } | { kind: "item"; item: T; navIndex: number }
+
+/** Long merit/flaw catalogs: one virtualized column with sticky-free group labels as rows. */
+function MeritFlawVirtualList<T>({
+    groups,
+    getKey,
+    onPick,
+    renderItem,
+    query,
+    onQueryChange,
+    searchLabel,
+    searchPlaceholder,
+    toolbarExtra,
+    emptyText,
+    listLabel
+}: {
+    groups: Array<{ title: string; items: T[] }>
+    getKey: (item: T) => string
+    onPick: (item: T) => void
+    renderItem: (
+        item: T,
+        navProps: ReturnType<ReturnType<typeof useListNav>["optionProps"]>
+    ) => ReactNode
+    query: string
+    onQueryChange: (value: string) => void
+    searchLabel: string
+    searchPlaceholder: string
+    toolbarExtra?: ReactNode
+    emptyText: string
+    listLabel: string
+}) {
+    const scrollRef = useRef<HTMLDivElement>(null)
+    const rows: VirtualRow<T>[] = []
+    const items: T[] = []
+    const rowIndexByNav: number[] = []
+    for (const group of groups) {
+        rows.push({ kind: "header", title: group.title })
+        for (const item of group.items) {
+            rowIndexByNav.push(rows.length)
+            rows.push({ kind: "item", item, navIndex: items.length })
+            items.push(item)
+        }
+    }
+
+    const virtualizer = useVirtualizer({
+        count: rows.length,
+        getScrollElement: () => scrollRef.current,
+        estimateSize: (index) => (rows[index]?.kind === "header" ? 44 : 104),
+        overscan: 10,
+        getItemKey: (index) => {
+            const row = rows[index]
+            return row.kind === "header" ? `h:${row.title}` : `i:${getKey(row.item)}`
+        }
+    })
+
+    const nav = useListNav({
+        items,
+        onPick,
+        resetKey: query,
+        scrollToIndex: (index) =>
+            virtualizer.scrollToIndex(rowIndexByNav[index] ?? 0, { align: "auto" })
+    })
+
+    useEffect(() => {
+        scrollRef.current?.scrollTo({ top: 0 })
+    }, [query, groups.length])
+
+    return (
+        <>
+            <SelectToolbar>
+                <div className={selectModalClasses.toolbarRow}>
+                    <SearchField
+                        label={searchLabel}
+                        placeholder={searchPlaceholder}
+                        value={query}
+                        onChange={onQueryChange}
+                        nav={nav}
+                    />
+                    {toolbarExtra}
+                </div>
+            </SelectToolbar>
+            <SelectScroll ref={scrollRef} listId={nav.listId} label={listLabel}>
+                {items.length === 0 ? (
+                    <SelectEmpty>{emptyText}</SelectEmpty>
+                ) : (
+                    <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+                        {virtualizer.getVirtualItems().map((virtualRow) => {
+                            const row = rows[virtualRow.index]
+                            return (
+                                <div
+                                    key={virtualRow.key}
+                                    data-index={virtualRow.index}
+                                    ref={virtualizer.measureElement}
+                                    className={selectModalClasses.virtualRow}
+                                    style={{ top: Math.round(virtualRow.start) }}
+                                >
+                                    {row.kind === "header" ? (
+                                        <h3
+                                            className={selectModalClasses.groupLabel}
+                                            style={{ paddingTop: virtualRow.index ? 16 : 4 }}
+                                        >
+                                            {row.title}
+                                        </h3>
+                                    ) : (
+                                        renderItem(row.item, nav.optionProps(row.navIndex))
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </SelectScroll>
+        </>
     )
 }
 

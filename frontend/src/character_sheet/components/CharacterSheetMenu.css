@@ -1,66 +1,100 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
+/* Character sheet menu — tokens from src/index.css (see frontend/DESIGN.md). */
+
+.sheet-menu__fab {
+    position: fixed;
+    right: 2rem;
+    bottom: calc(2rem + var(--pg-safe-bottom));
+    z-index: var(--pg-z-header);
+    border: 1px solid var(--pg-border-strong);
+    background: var(--pg-surface-glass);
+    color: var(--pg-ink);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--pg-shadow-3), var(--pg-shadow-inset-top);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__fab:hover {
+        border-color: var(--pg-border-accent);
+        background: color-mix(in srgb, var(--mantine-primary-color-6) 22%, var(--pg-surface-2));
+        box-shadow: var(--pg-shadow-3), var(--pg-glow-accent);
+    }
+}
+
+@media (max-width: 36em) {
+    .sheet-menu__fab {
+        right: 1rem;
+        bottom: calc(1rem + var(--pg-safe-bottom));
+    }
+}
 
 .sheet-menu__overlay {
-    background: rgba(5, 3, 4, 0.78);
+    background: var(--pg-scrim);
+    -webkit-backdrop-filter: blur(7px);
     backdrop-filter: blur(7px);
 }
 
 .sheet-menu__modal {
     overflow: hidden;
-    border: 1px solid rgba(212, 175, 100, 0.2);
-    border-radius: 18px;
+    border: 1px solid var(--pg-border-gold);
+    border-radius: var(--pg-radius-xl);
     background:
-        radial-gradient(circle at 85% 0%, rgba(179, 39, 56, 0.15), transparent 34%),
-        linear-gradient(160deg, rgba(32, 23, 25, 0.99), rgba(13, 10, 11, 0.99));
-    box-shadow:
-        0 32px 90px rgba(0, 0, 0, 0.68),
-        0 0 45px rgba(179, 39, 56, 0.08);
+        radial-gradient(
+            circle at 85% 0%,
+            color-mix(in srgb, var(--mantine-primary-color-6) 16%, transparent),
+            transparent 38%
+        ),
+        linear-gradient(160deg, var(--pg-surface-2), var(--pg-bg));
+    box-shadow: var(--pg-shadow-4), var(--pg-shadow-inset-top);
 }
 
 .sheet-menu__header {
-    min-height: 98px;
-    padding: 24px 28px 18px;
-    align-items: flex-start;
+    min-height: 84px;
+    padding: 22px 26px 16px;
+    align-items: center;
     background: transparent;
-    border-bottom: 1px solid rgba(212, 175, 100, 0.13);
+    border-bottom: 1px solid var(--pg-border-gold);
 }
 
 .sheet-menu__body {
-    padding: 24px 28px 26px;
+    padding: 22px 26px 24px;
 }
+
 .sheet-menu__close {
-    margin-top: 2px;
-    color: rgba(244, 236, 232, 0.65);
-}
-.sheet-menu__close:hover {
-    background: rgba(224, 49, 49, 0.12);
-    color: #f4ece8;
+    color: var(--pg-ink-3);
 }
 
-.sheet-menu__eyebrow,
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__close:hover {
+        background: var(--pg-accent-soft);
+        color: var(--pg-ink);
+    }
+}
+
 .sheet-menu__section-label {
-    font-family: Inter, "Segoe UI", sans-serif;
-    letter-spacing: 0.18em;
+    font-family: var(--pg-font-body);
+    letter-spacing: var(--pg-tracking-caps);
     text-transform: uppercase;
-    color: #d4af64;
+    margin: 0 0 10px 2px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--pg-gold-dim);
 }
 
-.sheet-menu__eyebrow {
-    margin-bottom: 5px;
-    font-size: 0.68rem;
-}
 .sheet-menu__title {
-    font:
-        600 1.35rem Cinzel,
-        Georgia,
-        serif;
-    letter-spacing: 0.035em;
-    color: #f4ece8;
+    font-family: var(--pg-font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--pg-ink);
 }
-.sheet-menu__section-label {
-    margin: 0 0 10px 2px;
-    font-size: 0.64rem;
-    color: rgba(212, 175, 100, 0.76);
+
+.sheet-menu__subtitle {
+    margin-top: 2px;
+    font-family: var(--pg-font-lore);
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--pg-ink-3);
 }
 
 .sheet-menu__action-grid {
@@ -71,50 +105,74 @@
 
 .sheet-menu__action {
     height: 72px;
-    padding: 0 20px;
-    border: 1px solid rgba(125, 91, 72, 0.38);
-    border-radius: 12px;
-    background: rgba(29, 20, 23, 0.78);
-    color: rgba(244, 236, 232, 0.92);
+    padding: 0 18px;
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-surface-3) 70%, transparent);
+    color: var(--pg-ink);
+    box-shadow: var(--pg-shadow-inset-top);
     transition:
-        transform 180ms ease,
-        border-color 180ms ease,
-        background 180ms ease,
-        box-shadow 180ms ease;
+        transform var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out);
 }
 
-.sheet-menu__action:hover {
-    transform: translateY(-2px);
-    border-color: rgba(224, 49, 49, 0.48);
-    background: rgba(43, 27, 31, 0.96);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__action:hover {
+        transform: translateY(-1px);
+        border-color: var(--pg-border-accent);
+        background: color-mix(in srgb, var(--mantine-primary-color-6) 10%, var(--pg-surface-3));
+        box-shadow: var(--pg-shadow-2);
+    }
+}
+
+.sheet-menu__action:active {
+    transform: scale(var(--pg-press-scale));
 }
 
 .sheet-menu__action--featured {
-    border-color: rgba(224, 49, 49, 0.5);
-    background: linear-gradient(135deg, rgba(165, 30, 45, 0.82), rgba(106, 18, 30, 0.86));
-    box-shadow: 0 0 25px rgba(179, 39, 56, 0.12);
+    border-color: color-mix(in srgb, var(--mantine-primary-color-4) 45%, transparent);
+    background: linear-gradient(
+        135deg,
+        var(--mantine-primary-color-7),
+        var(--mantine-primary-color-9)
+    );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        var(--pg-glow-accent);
 }
 
-.sheet-menu__action--featured:hover {
-    background: linear-gradient(135deg, rgba(193, 38, 55, 0.92), rgba(124, 20, 34, 0.94));
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__action--featured:hover {
+        background: linear-gradient(
+            135deg,
+            var(--mantine-primary-color-6),
+            var(--mantine-primary-color-8)
+        );
+    }
 }
+
 .sheet-menu__action .mantine-Button-inner {
     height: 100%;
     justify-content: flex-start;
 }
+
 .sheet-menu__action .mantine-Button-section {
     align-self: center;
-    margin-inline-end: 15px;
-    color: #d4af64;
+    margin-inline-end: 14px;
+    color: var(--pg-gold);
 }
+
 .sheet-menu__action--featured .mantine-Button-section {
-    color: #fff1ed;
+    color: var(--pg-ink);
 }
+
 .sheet-menu__action .mantine-Button-label {
     height: 100%;
     overflow: visible;
 }
+
 .sheet-menu__action-copy {
     display: flex;
     height: 100%;
@@ -124,25 +182,26 @@
     justify-content: center;
     text-align: left;
 }
+
 .sheet-menu__action strong {
+    font-family: var(--pg-font-display);
+    font-size: 0.875rem;
+    font-weight: 600;
     line-height: 1.15;
-    font:
-        600 0.86rem Cinzel,
-        Georgia,
-        serif;
-    letter-spacing: 0.035em;
+    letter-spacing: 0.04em;
 }
+
 .sheet-menu__action small {
-    margin-top: 6px;
+    margin-top: 5px;
+    font-family: var(--pg-font-body);
+    font-size: 0.72rem;
+    font-weight: 400;
     line-height: 1.2;
-    font:
-        400 0.7rem Inter,
-        "Segoe UI",
-        sans-serif;
-    color: rgba(214, 204, 198, 0.58);
+    color: var(--pg-ink-3);
 }
+
 .sheet-menu__action--featured small {
-    color: rgba(255, 238, 235, 0.68);
+    color: var(--pg-ink-2);
 }
 
 .sheet-menu__utility-row {
@@ -151,24 +210,29 @@
     flex-wrap: wrap;
     gap: 4px;
     padding-top: 16px;
-    border-top: 1px solid rgba(212, 175, 100, 0.13);
+    border-top: 1px solid var(--pg-border-gold);
 }
+
 .sheet-menu__utility-row .mantine-Button-root,
 .sheet-menu__back {
-    color: rgba(214, 204, 198, 0.68);
-    font:
-        500 0.72rem Inter,
-        "Segoe UI",
-        sans-serif;
+    color: var(--pg-ink-3);
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
 }
+
 .sheet-menu__utility-row .sheet-menu__support-project {
-    color: #e03131;
+    color: var(--pg-blood-bright);
 }
-.sheet-menu__utility-row .mantine-Button-root:hover,
-.sheet-menu__back:hover {
-    background: rgba(212, 175, 100, 0.08);
-    color: #d4af64;
+
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__utility-row .mantine-Button-root:hover,
+    .sheet-menu__back:hover {
+        background: color-mix(in srgb, var(--pg-gold) 8%, transparent);
+        color: var(--pg-gold);
+    }
 }
+
 .sheet-menu__back {
     align-self: flex-start;
 }
@@ -191,32 +255,25 @@
         grid-column: span 3;
     }
 }
+
 .sheet-menu__disclaimer {
-    color: rgba(244, 236, 232, 0.86);
-    font-family: Inter, "Segoe UI", sans-serif;
+    color: var(--pg-ink-2);
+    font-family: var(--pg-font-body);
     line-height: 1.65;
 }
+
 .sheet-menu__disclaimer a {
-    color: #d4af64;
+    color: var(--pg-gold);
     text-underline-offset: 3px;
 }
 
 .sheet-menu__view-title {
-    color: #f4ece8;
-    font:
-        600 1.08rem Cinzel,
-        Georgia,
-        serif;
-    letter-spacing: 0.035em;
-}
-
-.sheet-menu__view-intro {
-    margin-top: 6px;
-    color: rgba(214, 204, 198, 0.62);
-    font:
-        400 0.78rem/1.5 Inter,
-        "Segoe UI",
-        sans-serif;
+    color: var(--pg-ink);
+    font-family: var(--pg-font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.03em;
 }
 
 .sheet-menu__export-options {
@@ -231,9 +288,10 @@
     gap: 16px;
     align-items: center;
     padding: 18px;
-    border: 1px solid rgba(125, 91, 72, 0.38);
-    border-radius: 12px;
-    background: rgba(29, 20, 23, 0.78);
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-surface-3) 60%, transparent);
+    box-shadow: var(--pg-shadow-inset-top);
 }
 
 .sheet-menu__export-icon {
@@ -241,36 +299,39 @@
     width: 42px;
     height: 42px;
     place-items: center;
-    border: 1px solid rgba(212, 175, 100, 0.25);
-    border-radius: 10px;
-    background: rgba(212, 175, 100, 0.07);
-    color: #d4af64;
+    border: 1px solid var(--pg-border-gold);
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--pg-gold) 7%, transparent);
+    color: var(--pg-gold);
 }
 
 .sheet-menu__export-copy a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #f4ece8;
-    font:
-        600 0.82rem Cinzel,
-        Georgia,
-        serif;
-    letter-spacing: 0.025em;
+    color: var(--pg-ink);
+    font-family: var(--pg-font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
     text-decoration: none;
+    transition: color var(--pg-dur-fast) var(--ease-out);
 }
 
-.sheet-menu__export-copy a:hover {
-    color: #d4af64;
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__export-copy a:hover {
+        color: var(--pg-gold);
+    }
 }
+
 .sheet-menu__export-copy p {
     margin-top: 5px;
-    color: rgba(214, 204, 198, 0.58);
-    font:
-        400 0.7rem/1.4 Inter,
-        "Segoe UI",
-        sans-serif;
+    color: var(--pg-ink-3);
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    line-height: 1.45;
 }
+
 .sheet-menu__export-heading {
     display: flex;
     align-items: center;
@@ -280,62 +341,59 @@
 .sheet-menu__help-button {
     display: inline-grid;
     flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     place-items: center;
     border: 0;
-    border-radius: 7px;
+    border-radius: var(--pg-radius-md);
     background: transparent;
-    color: rgba(224, 49, 49, 0.9);
+    color: var(--pg-gold-dim);
     cursor: pointer;
     transition:
-        background 160ms ease,
-        color 160ms ease;
+        transform var(--pg-dur-press) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out);
 }
 
-.sheet-menu__help-button:hover,
+.sheet-menu__help-button:active {
+    transform: scale(var(--pg-press-scale));
+}
+
 .sheet-menu__help-button[aria-expanded="true"] {
-    background: rgba(224, 49, 49, 0.12);
-    color: #f05a67;
+    background: color-mix(in srgb, var(--pg-gold) 12%, transparent);
+    color: var(--pg-gold);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .sheet-menu__help-button:hover {
+        background: color-mix(in srgb, var(--pg-gold) 12%, transparent);
+        color: var(--pg-gold);
+    }
 }
 
 .sheet-menu__foundry-help {
     grid-column: 2 / -1;
     padding: 12px 14px;
-    border: 1px solid rgba(125, 91, 72, 0.3);
-    border-radius: 9px;
-    background: rgba(12, 8, 10, 0.62);
-    color: rgba(214, 204, 198, 0.68);
-    font:
-        400 0.7rem/1.65 Inter,
-        "Segoe UI",
-        sans-serif;
+    border: 1px solid var(--pg-border-faint);
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-sunken);
+    color: var(--pg-ink-2);
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    line-height: 1.65;
 }
 
 .sheet-menu__foundry-help-title {
-    color: #d4af64;
+    color: var(--pg-gold);
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.04em;
 }
+
 .sheet-menu__foundry-help ol {
     margin: 7px 0 0;
     padding-left: 18px;
-}
-
-.sheet-menu__export-card .mantine-Button-root {
-    border: 1px solid rgba(224, 49, 49, 0.45);
-    background: rgba(179, 39, 56, 0.16);
-    color: rgba(244, 236, 232, 0.92);
-    font:
-        600 0.68rem Inter,
-        "Segoe UI",
-        sans-serif;
-    letter-spacing: 0.04em;
-}
-
-.sheet-menu__export-card .mantine-Button-root:hover {
-    background: rgba(179, 39, 56, 0.3);
 }
 
 .sheet-menu__export-actions {
@@ -347,43 +405,60 @@
 
 @media (max-width: 36em) {
     .sheet-menu__modal {
-        border-radius: 14px;
+        border-radius: var(--pg-radius-lg);
     }
+
     .sheet-menu__header {
-        min-height: 88px;
-        padding: 20px 20px 16px;
+        min-height: 72px;
+        padding: 18px 18px 14px;
     }
+
     .sheet-menu__body {
-        padding: 20px;
+        padding: 18px 18px calc(18px + var(--pg-safe-bottom));
     }
+
     .sheet-menu__action-grid {
         grid-template-columns: 1fr;
         gap: 8px;
     }
+
     .sheet-menu__action {
         height: 62px;
     }
+
     .sheet-menu__utility-row {
         gap: 0;
         padding-top: 12px;
     }
+
     .sheet-menu__utility-row .mantine-Button-root {
-        height: 32px;
-        padding-inline: 8px;
-        font-size: 0.66rem;
+        height: 36px;
+        padding-inline: 10px;
+        font-size: 0.72rem;
     }
+
     .sheet-menu__export-card {
         grid-template-columns: auto minmax(0, 1fr);
         gap: 12px;
         padding: 14px;
     }
+
     .sheet-menu__export-actions {
         grid-column: 1 / -1;
     }
+
     .sheet-menu__export-actions .mantine-Button-root {
         width: 100%;
     }
+
     .sheet-menu__foundry-help {
         grid-column: 1 / -1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sheet-menu__action,
+    .sheet-menu__action:hover {
+        transform: none;
     }
 }

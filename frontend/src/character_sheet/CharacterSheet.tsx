@@ -1,15 +1,4 @@
-import {
-    ActionIcon,
-    Box,
-    Container,
-    createTheme,
-    Divider,
-    MantineProvider,
-    Paper,
-    SegmentedControl,
-    Stack,
-    Tooltip
-} from "@mantine/core"
+import { ActionIcon, createTheme, MantineProvider, SegmentedControl, Tooltip } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 import { useCallback, useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
@@ -38,7 +27,8 @@ import { useAuth } from "~/hooks/useAuth"
 import { useVampireDiceFeatureFlag } from "~/hooks/useVampireDiceFeatureFlag"
 import QuickRollHotkeys from "./components/diceRollModal/threeDice/QuickRollHotkeys"
 import { useCharacter, useCharacters } from "~/hooks/useCharacters"
-import OrnamentalDivider from "~/components/OrnamentalDivider"
+import SheetSection from "./components/SheetSection"
+import classes from "./sheet.module.css"
 
 export type CharacterSheetMode = "play" | "xp" | "free"
 
@@ -158,239 +148,158 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         [setCharacter, sheetOptions]
     )
 
+    const openDiceRoller = () => {
+        openDiceModal()
+        try {
+            posthog.capture("dice-modal-opened", {
+                mode
+            })
+        } catch (error) {
+            console.warn("PostHog dice-modal-opened tracking failed:", error)
+        }
+    }
+    const hasDisciplineContent =
+        character.disciplines.length > 0 ||
+        Object.values(character.disciplineLevels).some((level) => level > 0) ||
+        character.rituals.length > 0 ||
+        character.ceremonies.length > 0
+
     return (
         <MantineProvider theme={sheetTheme} forceColorScheme="dark">
-            <Box
+            <div
+                className={classes.backdrop}
                 style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundImage: `url(${getBackgroundSrc(preferences.backgroundImage) ?? defaultBackgroundImage})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundAttachment: "fixed",
-                    zIndex: -1
+                    backgroundImage: `url(${getBackgroundSrc(preferences.backgroundImage) ?? defaultBackgroundImage})`
                 }}
+                aria-hidden="true"
             />
-            <Box
-                style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "rgba(0, 0, 0, 0.4)",
-                    zIndex: -1
-                }}
-            />
-            <Box
-                style={{
-                    minHeight: "100vh",
-                    width: "100%",
-                    boxSizing: "border-box",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "center",
-                    padding: "calc(2rem + 52px) 0 2rem",
-                    position: "relative"
-                }}
-            >
-                <Container
-                    size="xl"
-                    style={{
-                        width: "100%",
-                        position: "relative"
-                    }}
-                >
-                    <Box
-                        style={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
-                            backdropFilter: "blur(7px)",
-                            borderRadius: "8px",
-                            padding: "1.5rem",
-                            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                            position: "relative"
-                        }}
-                    >
-                        <Box
-                            style={{
-                                position: "absolute",
-                                top: "1rem",
-                                right: "1rem",
-                                zIndex: 10,
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "0.5rem",
-                                alignItems: "flex-end"
-                            }}
-                        >
-                            <ActionIcon
-                                size="xl"
-                                variant="light"
-                                color={primaryColor}
-                                radius="xl"
-                                aria-label="Open dice roller"
-                                onClick={() => {
-                                    openDiceModal()
-                                    try {
-                                        posthog.capture("dice-modal-opened", {
-                                            mode
-                                        })
-                                    } catch (error) {
-                                        console.warn(
-                                            "PostHog dice-modal-opened tracking failed:",
-                                            error
-                                        )
-                                    }
-                                }}
-                                style={{
-                                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)"
-                                }}
-                            >
-                                <IconDice size={24} />
-                            </ActionIcon>
-                            <CharacterNotesControl
-                                characterId={character.id}
-                                isAuthenticated={isAuthenticated}
-                                authLoading={authLoading}
-                                characterAccessLoading={ownershipLoading}
-                                hasCharacterAccess={!!loadedCharacter}
-                                primaryColor={primaryColor}
-                            />
-                            <Tooltip label={editDisabledReason} disabled={canEdit} withArrow>
-                                <span>
-                                    <SegmentedControl
-                                        value={effectiveMode}
-                                        onChange={(value) => {
-                                            const nextMode = value as CharacterSheetMode
-                                            try {
-                                                posthog.capture("sheet-mode-switch", {
-                                                    from: effectiveMode,
-                                                    to: nextMode
-                                                })
-                                            } catch (error) {
-                                                console.warn(
-                                                    "PostHog sheet-mode-switch tracking failed:",
-                                                    error
-                                                )
-                                            }
-                                            setMode(nextMode)
-                                        }}
-                                        data={[
-                                            {
-                                                label: (
-                                                    <Tooltip
-                                                        label="Lock editing, except for hunger, health etc."
-                                                        position="left"
-                                                    >
-                                                        <span>Play</span>
-                                                    </Tooltip>
-                                                ),
-                                                value: "play"
-                                            },
-                                            {
-                                                label: (
-                                                    <Tooltip
-                                                        label="Spend XP to upgrade your character"
-                                                        position="left"
-                                                    >
-                                                        <span>XP</span>
-                                                    </Tooltip>
-                                                ),
-                                                value: "xp"
-                                            },
-                                            {
-                                                label: (
-                                                    <Tooltip
-                                                        label="Free edit, no XP costs"
-                                                        position="left"
-                                                    >
-                                                        <span>Free</span>
-                                                    </Tooltip>
-                                                ),
-                                                value: "free"
-                                            }
-                                        ]}
+            <div className={classes.page}>
+                <article className={classes.sheet}>
+                    <div className={classes.sheetContent}>
+                        <div className={classes.toolbar}>
+                            <div className={classes.toolbarPill}>
+                                <Tooltip label={editDisabledReason} disabled={canEdit} withArrow>
+                                    <span className={classes.modeControl}>
+                                        <SegmentedControl
+                                            value={effectiveMode}
+                                            onChange={(value) => {
+                                                const nextMode = value as CharacterSheetMode
+                                                try {
+                                                    posthog.capture("sheet-mode-switch", {
+                                                        from: effectiveMode,
+                                                        to: nextMode
+                                                    })
+                                                } catch (error) {
+                                                    console.warn(
+                                                        "PostHog sheet-mode-switch tracking failed:",
+                                                        error
+                                                    )
+                                                }
+                                                setMode(nextMode)
+                                            }}
+                                            data={[
+                                                {
+                                                    label: (
+                                                        <Tooltip
+                                                            label="Lock editing, except for hunger, health etc."
+                                                            position="bottom"
+                                                        >
+                                                            <span>Play</span>
+                                                        </Tooltip>
+                                                    ),
+                                                    value: "play"
+                                                },
+                                                {
+                                                    label: (
+                                                        <Tooltip
+                                                            label="Spend XP to upgrade your character"
+                                                            position="bottom"
+                                                        >
+                                                            <span>XP</span>
+                                                        </Tooltip>
+                                                    ),
+                                                    value: "xp"
+                                                },
+                                                {
+                                                    label: (
+                                                        <Tooltip
+                                                            label="Free edit, no XP costs"
+                                                            position="bottom"
+                                                        >
+                                                            <span>Free</span>
+                                                        </Tooltip>
+                                                    ),
+                                                    value: "free"
+                                                }
+                                            ]}
+                                            color={primaryColor}
+                                            size="sm"
+                                            disabled={!canEdit}
+                                        />
+                                    </span>
+                                </Tooltip>
+                                <span className={classes.toolbarDivider} aria-hidden="true" />
+                                <CharacterNotesControl
+                                    characterId={character.id}
+                                    isAuthenticated={isAuthenticated}
+                                    authLoading={authLoading}
+                                    characterAccessLoading={ownershipLoading}
+                                    hasCharacterAccess={!!loadedCharacter}
+                                    primaryColor={primaryColor}
+                                />
+                                <Tooltip label="Roll dice" withArrow>
+                                    <ActionIcon
+                                        className={classes.toolbarButton}
+                                        size="lg"
+                                        variant="filled"
                                         color={primaryColor}
-                                        orientation="vertical"
-                                        disabled={!canEdit}
-                                    />
-                                </span>
-                            </Tooltip>
-                        </Box>
+                                        aria-label="Open dice roller"
+                                        onClick={openDiceRoller}
+                                    >
+                                        <IconDice size={20} stroke={1.7} />
+                                    </ActionIcon>
+                                </Tooltip>
+                            </div>
+                        </div>
 
-                        <Paper p="lg" radius="md" style={{ backgroundColor: "transparent" }}>
-                            <Stack gap="lg">
-                                <TopData options={sheetOptions} />
+                        <TopData options={sheetOptions} />
 
-                                <OrnamentalDivider
-                                    label="Attributes"
-                                    color={`var(--mantine-color-${primaryColor}-6)`}
-                                    size="large"
-                                />
-                                <Attributes options={sheetOptions} />
+                        <SheetSection>
+                            <BottomData options={sheetOptions} />
+                        </SheetSection>
 
-                                <OrnamentalDivider
-                                    label="Skills"
-                                    color={`var(--mantine-color-${primaryColor}-6)`}
-                                    size="large"
-                                />
-                                <Skills options={sheetOptions} />
+                        <SheetSection title="Attributes">
+                            <Attributes options={sheetOptions} />
+                        </SheetSection>
 
-                                {character.disciplines.length > 0 ||
-                                Object.values(character.disciplineLevels).some(
-                                    (level) => level > 0
-                                ) ||
-                                character.rituals.length > 0 ||
-                                character.ceremonies.length > 0 ||
-                                mode !== "play" ? (
-                                    <OrnamentalDivider
-                                        label="Disciplines"
-                                        color={`var(--mantine-color-${primaryColor}-6)`}
-                                        size="large"
-                                    />
-                                ) : null}
+                        <SheetSection title="Skills">
+                            <Skills options={sheetOptions} />
+                        </SheetSection>
 
+                        {hasDisciplineContent || effectiveMode !== "play" ? (
+                            <SheetSection title="Disciplines">
                                 <Disciplines options={sheetOptions} />
+                            </SheetSection>
+                        ) : null}
 
-                                <Divider />
+                        <SheetSection title="The Blood">
+                            <TheBlood options={sheetOptions} />
+                        </SheetSection>
 
-                                <BottomData options={sheetOptions} />
-
-                                <OrnamentalDivider
-                                    label="The Blood"
-                                    color={`var(--mantine-color-${primaryColor}-6)`}
-                                    size="large"
-                                />
-
-                                <TheBlood options={sheetOptions} />
-
-                                {character.touchstones.length > 0 || mode === "free" ? (
-                                    <OrnamentalDivider
-                                        label="Touchstones"
-                                        color={`var(--mantine-color-${primaryColor}-6)`}
-                                        size="large"
-                                    />
-                                ) : null}
-
+                        {character.touchstones.length > 0 || effectiveMode === "free" ? (
+                            <SheetSection title="Touchstones">
                                 <Touchstones options={sheetOptions} />
+                            </SheetSection>
+                        ) : null}
 
-                                {hasSheetMeritsAndFlaws(character) || mode !== "play" ? (
-                                    <OrnamentalDivider
-                                        label="Merits & Flaws"
-                                        color={`var(--mantine-color-${primaryColor}-6)`}
-                                        size="large"
-                                    />
-                                ) : null}
-
+                        {hasSheetMeritsAndFlaws(character) || effectiveMode !== "play" ? (
+                            <SheetSection title="Merits & Flaws">
                                 <MeritsAndFlaws options={sheetOptions} />
-                            </Stack>
-                        </Paper>
-                    </Box>
-                </Container>
-            </Box>
+                            </SheetSection>
+                        ) : null}
+                    </div>
+                </article>
+            </div>
             <CharacterSheetMenu options={characterMenuOptions} />
             <ChatWindow options={sheetOptions} />
             {use3dDice ? <QuickRollHotkeys /> : null}

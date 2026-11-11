@@ -1,0 +1,278 @@
+/* Homebrew "scriptorium" building blocks. Tokens: src/index.css. */
+
+/* ---- Dot pips ---------------------------------------------------------------- */
+
+.hb-pips {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    --hb-pip: var(--pg-accent-bright);
+}
+
+.hb-pips[data-tone="gold"] {
+    --hb-pip: var(--pg-gold);
+}
+
+.hb-pips[data-tone="blood"] {
+    --hb-pip: var(--pg-blood-bright);
+}
+
+.hb-pip {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--hb-pip) 55%, transparent);
+}
+
+.hb-pip[data-filled] {
+    background: var(--hb-pip);
+    border-color: var(--hb-pip);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--hb-pip) 45%, transparent);
+}
+
+.hb-cost-range,
+.hb-cost-range__part {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.hb-cost-range__dash {
+    color: var(--pg-ink-4);
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+/* ---- Blood rating ------------------------------------------------------------ */
+
+.hb-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.hb-rating__drop {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 24px;
+    border-radius: var(--pg-radius-sm);
+    color: var(--pg-ink-4);
+    transition:
+        color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.hb-rating__drop[data-filled] {
+    color: var(--pg-blood-bright);
+    filter: drop-shadow(0 0 4px rgba(220, 52, 70, 0.45));
+}
+
+.hb-rating[data-interactive] .hb-rating__drop {
+    cursor: pointer;
+}
+
+.hb-rating[data-interactive] .hb-rating__drop:active {
+    transform: scale(0.88);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    /* Light every drop up to the hovered one. */
+    .hb-rating[data-interactive]:hover .hb-rating__drop {
+        color: var(--pg-blood-bright);
+    }
+
+    .hb-rating[data-interactive] .hb-rating__drop:hover ~ .hb-rating__drop {
+        color: var(--pg-ink-4);
+        filter: none;
+    }
+}
+
+/* ---- Kind sections ----------------------------------------------------------- */
+
+.hb-kind {
+    scroll-margin-top: calc(var(--pg-topbar-h) + var(--pg-space-4));
+}
+
+.hb-kind + .hb-kind {
+    margin-top: var(--pg-space-8);
+}
+
+.hb-kind__header {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-3);
+    margin-bottom: var(--pg-space-3);
+    min-height: 36px;
+}
+
+.hb-kind__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    min-height: 36px;
+    padding: 0 var(--pg-space-2) 0 0;
+    border-radius: var(--pg-radius-md);
+    color: var(--pg-ink);
+    transition: transform var(--pg-dur-press) var(--ease-out);
+}
+
+.hb-kind__toggle:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+.hb-kind__glyph {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    color: var(--pg-gold);
+    border: 1px solid var(--pg-border-gold);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(120, 18, 32, 0.32), transparent 72%);
+}
+
+.hb-kind__title {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hb-kind__count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--pg-ink-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.hb-kind__chevron {
+    color: var(--pg-ink-3);
+}
+
+.hb-kind__chevron[data-collapsed] {
+    transform: rotate(-90deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .hb-kind__toggle:hover .hb-kind__chevron {
+        color: var(--pg-ink);
+    }
+}
+
+.hb-kind__rule {
+    flex: 1;
+    min-width: var(--pg-space-4);
+    height: 1px;
+    background: linear-gradient(90deg, var(--pg-border-gold), transparent);
+}
+
+.hb-kind__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-1);
+    flex: none;
+}
+
+/* ---- Contents index ---------------------------------------------------------- */
+
+.hb-index {
+    position: sticky;
+    top: calc(var(--pg-topbar-h) + var(--pg-space-6));
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-2);
+}
+
+.hb-index__title {
+    padding-left: var(--pg-space-3);
+}
+
+.hb-index__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 1px solid var(--pg-border);
+}
+
+.hb-index__link {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    width: 100%;
+    min-height: 34px;
+    margin-left: -1px;
+    padding: 0 var(--pg-space-3);
+    border-left: 1px solid transparent;
+    color: var(--pg-ink-3);
+    font-size: 0.875rem;
+    transition:
+        color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.hb-index__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hb-index__count {
+    font-size: 0.75rem;
+    color: var(--pg-ink-4);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .hb-index__link:hover {
+        color: var(--pg-ink);
+        border-left-color: var(--pg-blood-bright);
+        background: linear-gradient(90deg, rgba(220, 52, 70, 0.08), transparent);
+    }
+}
+
+.hb-index__link:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+/* ---- Kind counts ------------------------------------------------------------- */
+
+.hb-counts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--pg-space-1) var(--pg-space-3);
+    color: var(--pg-ink-3);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.hb-counts--empty {
+    display: inline;
+    font-style: italic;
+    color: var(--pg-ink-4);
+}
+
+.hb-counts__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.hb-counts__item svg {
+    color: var(--pg-gold-dim);
+}
+
+.hb-counts__more {
+    color: var(--pg-ink-4);
+}

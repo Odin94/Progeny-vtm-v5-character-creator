@@ -1,0 +1,278 @@
+/* Shared visual language for every generator step ("the rite of Embrace").
+   See frontend/DESIGN.md for the tokens used here. */
+
+/* ---- Step hero ------------------------------------------------------------- */
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    margin-inline: auto;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--pg-font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Small screens show the step in the progress strip under the top bar instead. */
+@media (max-width: 1400px) {
+    .eyebrow {
+        display: none;
+    }
+}
+
+.eyebrow::before,
+.eyebrow::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    transform: rotate(45deg);
+    background: currentColor;
+    opacity: 0.7;
+}
+
+.heroTitle {
+    margin: 0;
+    text-shadow: 0 2px 18px rgba(5, 4, 4, 0.85);
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.15rem);
+    line-height: 1.12;
+    letter-spacing: var(--pg-tracking-display);
+    color: var(--pg-ink);
+    text-wrap: balance;
+}
+
+.heroAccent {
+    color: var(--pg-blood-bright);
+    text-shadow: 0 0 22px rgba(220, 52, 70, 0.35);
+}
+
+.heroOrnament {
+    width: 168px;
+    height: 14px;
+    color: var(--pg-blood);
+    opacity: 0.9;
+}
+
+.heroDescription {
+    margin: 0;
+    text-shadow: 0 1px 12px rgba(5, 4, 4, 0.9);
+    font-family: var(--pg-font-lore);
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.12rem);
+    line-height: 1.4;
+    color: var(--pg-ink-3);
+    text-wrap: balance;
+}
+
+.heroSecondary {
+    margin: 0;
+    font-family: var(--pg-font-body);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--pg-ink-4);
+}
+
+/* ---- Section divider ------------------------------------------------------- */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dividerRule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--pg-border-gold) 100%);
+}
+
+.dividerRule[data-side="end"] {
+    background: linear-gradient(90deg, var(--pg-border-gold) 0%, transparent 100%);
+}
+
+.dividerRule[data-weight="2"] {
+    height: 2px;
+}
+
+.dividerLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--pg-gold);
+    white-space: nowrap;
+}
+
+.dividerLabel::before,
+.dividerLabel::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    transform: rotate(45deg);
+    background: var(--pg-blood-bright);
+    flex-shrink: 0;
+}
+
+/* ---- Phase prompt ---------------------------------------------------------- */
+
+.promptCaption {
+    font-family: var(--pg-font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+}
+
+.promptLine {
+    font-family: var(--pg-font-lore);
+    line-height: 1.1;
+    color: var(--pg-ink-3);
+    text-shadow: 0 1px 14px rgba(5, 4, 4, 0.9);
+    transition: color var(--pg-dur-fast) var(--ease-out);
+}
+
+.promptLine[data-active] {
+    color: var(--pg-ink);
+}
+
+.promptChevron {
+    font-family: var(--pg-font-display);
+    color: var(--pg-blood-bright);
+    margin-right: 0.45rem;
+}
+
+.promptBold {
+    font-family: var(--pg-font-display);
+    letter-spacing: 0.05em;
+}
+
+.promptLine[data-active] .promptBold {
+    color: var(--pg-blood-bright);
+}
+
+.promptLine[data-past] .promptBold {
+    text-decoration: line-through;
+    text-decoration-color: var(--pg-blood);
+}
+
+.promptLevel {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 0.6rem;
+    vertical-align: middle;
+    transform: translateY(-1px);
+}
+
+.promptPip {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
+}
+
+.promptPip[data-empty] {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px currentColor;
+    opacity: 0.35;
+}
+
+.promptLine[data-active] .promptLevel {
+    color: var(--pg-blood-bright);
+}
+
+.promptFooter {
+    text-shadow: 0 1px 10px rgba(5, 4, 4, 0.9);
+    font-family: var(--pg-font-body);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--pg-ink-3);
+}
+
+/* ---- Confirm / step footer ------------------------------------------------- */
+
+.stepFooter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--pg-space-3);
+    padding-top: var(--pg-space-3);
+}
+
+.confirmButton {
+    min-width: 188px;
+}
+
+.confirmButton:not(:disabled, [data-disabled]) {
+    background: linear-gradient(135deg, var(--pg-blood) 0%, var(--pg-violet) 140%);
+    border-color: rgba(255, 220, 220, 0.1);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 12px 28px -10px rgba(176, 30, 47, 0.7);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .confirmButton:not(:disabled, [data-disabled]):hover {
+        background: linear-gradient(135deg, var(--pg-blood-bright) 0%, var(--pg-violet) 140%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            var(--pg-glow-blood),
+            0 12px 28px -10px rgba(176, 30, 47, 0.8);
+    }
+}
+
+.confirmLabel {
+    font-family: var(--pg-font-display);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.confirmIcon {
+    transition: transform var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .confirmButton:not(:disabled, [data-disabled]):hover .confirmIcon {
+        transform: translateX(3px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .confirmButton .confirmIcon {
+        transform: none !important;
+    }
+}
+
+/* ---- Step enter fade (opacity only: a transform here would become the containing
+   block of the absolutely positioned scroll shells) ---------------------------- */
+
+.stepEnter {
+    animation: pgStepEnter var(--pg-dur-slow) var(--ease-out) both;
+}
+
+@keyframes pgStepEnter {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

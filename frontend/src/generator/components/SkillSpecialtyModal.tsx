@@ -1,7 +1,8 @@
 import { replacePredatorSkillBonuses } from "~/data/predatorTypeOptions"
 import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
-import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { IconSparkles } from "@tabler/icons-react"
+import { IconChevronLeft } from "@tabler/icons-react"
+import { Ornament } from "~/components/ui"
+import { GeneratorConfirmButton } from "./sharedGeneratorUi"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { Character } from "../../data/Character"
@@ -34,8 +35,6 @@ export const SpecialtyModal = ({
     skills
 }: SpecialtyModalProps) => {
     const phoneScreen = globals.isPhoneScreen
-
-    const RED = rgba(RAW_RED, 1)
 
     const bonusSkills = useMemo(
         () => BONUS_SPECIALTY_SKILLS.filter((s) => pickedSkillNames.includes(s as SkillsKey)),
@@ -168,64 +167,41 @@ export const SpecialtyModal = ({
             onClose={handleDismiss}
             closeOnClickOutside={false}
             centered
-            styles={{
-                header: { display: "none" },
-                content: {
-                    background: "rgba(18, 15, 14, 0.97)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 12
-                },
-                body: { padding: phoneScreen ? "16px" : "24px" }
-            }}
-            overlayProps={{ backgroundOpacity: 0.7 }}
         >
             <Stack gap="lg">
-                {/* Header */}
-                <div>
-                    <Group gap={8} mb={8}>
-                        <IconSparkles size={18} color={RED} />
-                        <Text
-                            style={{
-                                fontFamily: "Cinzel, Georgia, serif",
-                                fontSize: "1.15rem",
-                                fontWeight: 600,
-                                letterSpacing: "0.06em"
-                            }}
-                        >
-                            Skill Specialties
-                        </Text>
-                    </Group>
+                <Stack gap={8} align="center">
+                    <Ornament style={{ width: 150, height: 14, color: "var(--pg-blood)" }} />
                     <Text
+                        ta="center"
                         style={{
-                            fontFamily: "Crimson Text, Georgia, serif",
-                            fontSize: "0.95rem",
-                            color: rgba(RAW_GREY, 0.55),
-                            lineHeight: 1.55
+                            fontFamily: "var(--pg-font-lore)",
+                            fontSize: "1.05rem",
+                            color: "var(--pg-ink-3)",
+                            lineHeight: 1.45
                         }}
                     >
                         Specialties represent focused expertise within a skill —{" "}
-                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
-                            Performance: Dancing
-                        </span>{" "}
-                        or{" "}
-                        <span style={{ color: "rgba(244, 236, 232, 0.8)" }}>
-                            Academics: History
-                        </span>
-                        .
+                        <span style={{ color: "var(--pg-ink)" }}>Performance: Dancing</span> or{" "}
+                        <span style={{ color: "var(--pg-ink)" }}>Academics: History</span>.
                     </Text>
-                </div>
-
-                <div
-                    style={{
-                        height: 1,
-                        background: `linear-gradient(90deg, transparent, ${rgba(RAW_RED, 0.25)}, transparent)`
-                    }}
-                />
+                </Stack>
 
                 {/* Free specialty */}
-                <Stack gap={8}>
+                <Stack gap={6}>
+                    <Text
+                        style={{
+                            fontFamily: "var(--pg-font-body)",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: "var(--pg-tracking-caps)",
+                            textTransform: "uppercase",
+                            color: "var(--pg-gold)"
+                        }}
+                    >
+                        Free specialty
+                    </Text>
                     {freeEntries.map((entry, i) => (
-                        <Group key={i} gap={8} wrap="nowrap">
+                        <Group key={i} gap={8} wrap={phoneScreen ? "wrap" : "nowrap"}>
                             <Select
                                 placeholder="Choose a skill…"
                                 value={entry.skill || null}
@@ -236,18 +212,20 @@ export const SpecialtyModal = ({
                                             s && (s === entry.skill || !usedFreeSkills.includes(s))
                                     )
                                     .map((s) => ({ value: s, label: upcase(s) }))}
-                                color={RED}
-                                style={{ flex: 1 }}
-                                styles={{ input: { textTransform: "capitalize" } }}
+                                color="red"
+                                style={{ flex: 1, minWidth: phoneScreen ? "100%" : 0 }}
+                                styles={{
+                                    input: { textTransform: entry.skill ? "capitalize" : undefined }
+                                }}
                                 aria-label="Free specialty skill"
-                            />{" "}
+                            />
                             <TextInput
                                 value={entry.text}
                                 onChange={(e) => updateFreeEntry(i, "text", e.target.value)}
                                 placeholder="e.g. Dancing"
                                 maxLength={40}
-                                color={RED}
-                                style={{ flex: 1 }}
+                                color="red"
+                                style={{ flex: 1, minWidth: phoneScreen ? "100%" : 0 }}
                                 aria-label="Free specialty name"
                             />
                         </Group>
@@ -256,62 +234,68 @@ export const SpecialtyModal = ({
 
                 {/* Bonus specialties (academics, craft, performance, science) */}
                 {bonusSkills.length > 0 && (
-                    <>
-                        <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
-                        <Stack gap={8}>
-                            {bonusSkills.map((s) => (
-                                <Group key={s} gap={8} align="center" wrap="nowrap">
-                                    <Text
-                                        style={{
-                                            fontFamily: "Cinzel, Georgia, serif",
-                                            fontSize: "0.82rem",
-                                            letterSpacing: "0.04em",
-                                            color: rgba(RAW_GOLD, 0.85),
-                                            minWidth: phoneScreen ? 90 : 110,
-                                            textTransform: "capitalize"
-                                        }}
-                                    >
-                                        {upcase(s)}
-                                    </Text>
-                                    <TextInput
-                                        value={bonusTexts[s]}
-                                        onChange={(e) => {
-                                            const value = e.currentTarget.value
-                                            setBonusTexts((prev) => ({
-                                                ...prev,
-                                                [s]: value
-                                            }))
-                                        }}
-                                        placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
-                                        maxLength={40}
-                                        color={RED}
-                                        style={{ flex: 1 }}
-                                        aria-label={`${upcase(s)} specialty`}
-                                    />
-                                </Group>
-                            ))}
-                        </Stack>
-                    </>
+                    <Stack gap={8}>
+                        <Text
+                            style={{
+                                fontFamily: "var(--pg-font-body)",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                letterSpacing: "var(--pg-tracking-caps)",
+                                textTransform: "uppercase",
+                                color: "var(--pg-gold)"
+                            }}
+                        >
+                            Required for your skills
+                        </Text>
+                        {bonusSkills.map((s) => (
+                            <Group key={s} gap={8} align="center" wrap="nowrap">
+                                <Text
+                                    style={{
+                                        fontFamily: "var(--pg-font-display)",
+                                        fontSize: "0.86rem",
+                                        fontWeight: 600,
+                                        letterSpacing: "0.04em",
+                                        color: "var(--pg-ink-2)",
+                                        minWidth: phoneScreen ? 96 : 116,
+                                        textTransform: "capitalize"
+                                    }}
+                                >
+                                    {upcase(s)}
+                                </Text>
+                                <TextInput
+                                    value={bonusTexts[s]}
+                                    onChange={(e) => {
+                                        const value = e.currentTarget.value
+                                        setBonusTexts((prev) => ({
+                                            ...prev,
+                                            [s]: value
+                                        }))
+                                    }}
+                                    placeholder={`e.g. ${s === "academics" ? "History" : s === "craft" ? "Sculpture" : s === "performance" ? "Violin" : "Biology"}`}
+                                    maxLength={40}
+                                    color="red"
+                                    style={{ flex: 1 }}
+                                    aria-label={`${upcase(s)} specialty`}
+                                />
+                            </Group>
+                        ))}
+                    </Stack>
                 )}
 
                 {/* Footer */}
                 <Group justify="space-between" mt={4}>
-                    <Button variant="subtle" color="gray" onClick={handleDismiss}>
+                    <Button
+                        variant="subtle"
+                        color="gray"
+                        leftSection={<IconChevronLeft size={16} />}
+                        onClick={handleDismiss}
+                    >
                         Back
                     </Button>
-                    <Button
+                    <GeneratorConfirmButton
                         data-testid="skill-specialty-confirm-button"
                         onClick={handleConfirm}
-                        color="red"
-                        styles={{
-                            root: {
-                                letterSpacing: "0.06em",
-                                textTransform: "uppercase"
-                            }
-                        }}
-                    >
-                        Confirm
-                    </Button>
+                    />
                 </Group>
             </Stack>
         </Modal>

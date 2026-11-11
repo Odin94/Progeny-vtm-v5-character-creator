@@ -17,6 +17,35 @@ import { swapCrystalColors } from "./crystal-colors"
 import { layoutDieTargets } from "./overlay-layout"
 import { sortedSlots } from "./sorted-layout"
 
+/** Caption colors per outcome: Hunger results in blood, criticals in candle-gold. */
+const captionTones: Record<string, { color: string; background: string; border: string }> = {
+    "Bestial failure": {
+        color: "#ffd3d8",
+        background: "rgba(110, 17, 28, 0.9)",
+        border: "rgba(220, 52, 70, 0.75)"
+    },
+    Messy: {
+        color: "#ffd3d8",
+        background: "rgba(110, 17, 28, 0.9)",
+        border: "rgba(220, 52, 70, 0.75)"
+    },
+    Critical: {
+        color: "#e8d29e",
+        background: "rgba(20, 15, 8, 0.82)",
+        border: "rgba(212, 175, 100, 0.55)"
+    },
+    Success: {
+        color: "#f2eae6",
+        background: "rgba(10, 8, 9, 0.74)",
+        border: "rgba(242, 234, 230, 0.18)"
+    },
+    Failure: {
+        color: "rgba(242, 234, 230, 0.6)",
+        background: "rgba(10, 8, 9, 0.6)",
+        border: "rgba(242, 234, 230, 0.08)"
+    }
+}
+
 const downloads = new Map<string, Promise<ArrayBuffer>>()
 const loadBytes = (name: string) => {
     if (!downloads.has(name)) {
@@ -219,14 +248,21 @@ export class PageDiceRenderer {
                     left: "50%",
                     transform: "translateX(-50%)",
                     width: "max-content",
+                    marginTop: "2px",
                     padding: "2px 6px",
                     boxSizing: "border-box",
-                    background: "rgba(0, 0, 0, 0.5)",
-                    borderRadius: "4px",
+                    background: "rgba(10, 8, 9, 0.74)",
+                    border: "1px solid rgba(242, 234, 230, 0.12)",
+                    borderRadius: "3px",
                     pointerEvents: "none",
                     textAlign: "center",
-                    lineHeight: "1.1",
-                    whiteSpace: "normal"
+                    lineHeight: "1.15",
+                    whiteSpace: "normal",
+                    fontFamily: "var(--pg-font-body, Inter, sans-serif)",
+                    fontWeight: "600",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    textShadow: "none"
                 })
                 button.append(caption)
                 button.addEventListener("click", () => {
@@ -441,11 +477,15 @@ export class PageDiceRenderer {
             button.style.pointerEvents = "auto"
             button.style.cursor = selectionDisabled ? "default" : "pointer"
             const selected = this.selected.has(die.id) && !die.isBloodDie
+            const tone = captionTones[outcome] ?? captionTones.Failure
             button.style.borderRadius = "12px"
+            // Willpower selection reads as candle-gold, matching the reroll strip.
             button.style.boxShadow = selected
-                ? "0 0 12px 3px rgba(207, 34, 59, 0.65), inset 0 0 12px rgba(207, 34, 59, 0.25)"
+                ? "0 0 0 1px rgba(212, 175, 100, 0.85), 0 0 18px 2px rgba(212, 175, 100, 0.45), inset 0 0 14px rgba(212, 175, 100, 0.22)"
                 : "none"
-            caption.style.color = selected ? "#f2b7c0" : "white"
+            caption.style.color = selected ? "#f3e7c8" : tone.color
+            caption.style.background = tone.background
+            caption.style.borderColor = selected ? "rgba(212, 175, 100, 0.7)" : tone.border
             button.setAttribute("aria-pressed", String(this.selected.has(die.id)))
         })
     }

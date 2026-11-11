@@ -1,46 +1,48 @@
-import {
-    ActionIcon,
-    Alert,
-    AppShell,
-    Badge,
-    Box,
-    Button,
-    Card,
-    Container,
-    Divider,
-    Group,
-    Loader,
-    Paper,
-    SimpleGrid,
-    Stack,
-    Text,
-    Textarea,
-    Title,
-    Tooltip
-} from "@mantine/core"
+import { Alert, Button, Skeleton, Textarea } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import {
     IconArrowLeft,
-    IconChevronDown,
+    IconBooks,
     IconCopy,
-    IconDropletFilled,
     IconEdit,
+    IconExternalLink,
+    IconGitFork,
     IconMessageCircle,
     IconSend,
     IconTrash
 } from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
-import { memo, useCallback, useMemo, useState } from "react"
-import AnimatedCollapse from "~/components/AnimatedCollapse"
-import AppTopbar from "~/components/AppTopbar"
+import { memo, useCallback, useMemo, useState, type ReactNode } from "react"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
 import ContentWarning from "~/components/ContentWarning"
+import {
+    BloodRating,
+    countHomebrewItems,
+    groupHomebrewItems,
+    HomebrewKindCounts,
+    HomebrewKindIndex,
+    HomebrewKindSection
+} from "~/components/HomebrewCodex"
 import HomebrewItemPreview from "~/components/HomebrewItemPreview"
+import {
+    DeleteIconButton,
+    DisabledReason,
+    EmptyState,
+    IconButton,
+    PageHeader,
+    PageShell,
+    Panel,
+    SectionHeader,
+    SkeletonCard,
+    SkeletonLines,
+    useContextMenu
+} from "~/components/ui"
 import type { HomebrewItem, HomebrewItemKind, HomebrewLibraryDetail } from "~/data/Homebrew"
-import { homebrewItemKinds, homebrewKindLabel } from "~/data/Homebrew"
+import { homebrewItemKinds } from "~/data/Homebrew"
 import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
+import "./HomebrewPage.css"
 import "./HomebrewLibraryDetailsPage.css"
 
 const storageLimitMessage =
@@ -48,35 +50,24 @@ const storageLimitMessage =
 
 type Props = { collectionId: string }
 
-const BloodRating = ({
-    value,
-    interactive = false,
-    onChange
-}: {
-    value: number
-    interactive?: boolean
-    onChange?: (rating: number) => void
-}) => (
-    <Group gap={2} wrap="nowrap" aria-label={`${value.toFixed(1)} out of 5 blood rating`}>
-        {[1, 2, 3, 4, 5].map((rating) => {
-            const filled = rating <= Math.round(value)
+const formatDate = (value: string) =>
+    new Date(value).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+    })
 
-            return (
-                <ActionIcon
-                    key={rating}
-                    variant="transparent"
-                    color={filled ? "red" : "gray"}
-                    size="sm"
-                    disabled={!interactive}
-                    styles={{ root: { opacity: 1 } }}
-                    aria-label={interactive ? `Rate ${rating} blood` : undefined}
-                    onClick={() => onChange?.(rating)}
-                >
-                    <IconDropletFilled size={15} color={filled ? "#c74650" : "#908990"} />
-                </ActionIcon>
-            )
-        })}
-    </Group>
+const backLink = (
+    <Button
+        component={Link}
+        to="/homebrew/library"
+        variant="subtle"
+        color="gray"
+        className="hb-back"
+        leftSection={<IconArrowLeft size={16} />}
+    >
+        Community Library
+    </Button>
 )
 
 const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
@@ -171,29 +162,45 @@ const HomebrewLibraryDetailsPage = ({ collectionId }: Props) => {
     })
 
     if (detailQuery.isLoading) {
-        return <Loader color="grape" />
+        return (
+            <PageShell size="xl">
+                {backLink}
+                <div aria-busy="true" aria-label="Loading collection">
+                    <Skeleton height={12} width={180} radius="sm" mb={14} />
+                    <Skeleton height={34} width="40%" radius="sm" mb={18} />
+                    <Skeleton height={14} width="55%" radius="sm" mb={40} />
+                    <Panel p="lg" mb={40}>
+                        <SkeletonLines lines={2} />
+                    </Panel>
+                    <div className="hb-codex">
+                        <SkeletonLines lines={5} height={14} gap={16} />
+                        <div className="hb-library-detail__skeleton-rules">
+                            <SkeletonCard height={180} />
+                            <SkeletonCard height={180} />
+                            <SkeletonCard height={180} />
+                        </div>
+                    </div>
+                </div>
+            </PageShell>
+        )
     }
 
     if (detailQuery.isError || !detailQuery.data) {
         return (
-            <Container size="sm" py={100}>
-                <Card withBorder p="xl">
-                    <Stack align="center">
-                        <Title order={2}>Collection not found</Title>
-                        <Text c="dimmed">
-                            It may have been unpublished or is no longer available.
-                        </Text>
-                        <Button
-                            component={Link}
-                            to="/homebrew/library"
-                            variant="light"
-                            color="grape"
-                        >
-                            Back to the library
-                        </Button>
-                    </Stack>
-                </Card>
-            </Container>
+            <PageShell size="sm">
+                <Panel tone="inset" p={0}>
+                    <EmptyState
+                        icon={<IconBooks size={26} stroke={1.5} />}
+                        title="Collection not found"
+                        description="It may have been unpublished or is no longer available."
+                        actions={
+                            <Button component={Link} to="/homebrew/library" variant="default">
+                                Back to the library
+                            </Button>
+                        }
+                    />
+                </Panel>
+            </PageShell>
         )
     }
 
@@ -304,8 +311,15 @@ type LibraryDetailProps = {
     collapsedItemKinds: Set<HomebrewItemKind>
     motionlessItemKinds: Set<HomebrewItemKind>
     onToggleItemKind: (kind: HomebrewItemKind, motionEnabled?: boolean) => void
-    confirmation: React.ReactNode
+    confirmation: ReactNode
 }
+
+const Colophon = ({ label, children }: { label: string; children: ReactNode }) => (
+    <div className="hb-colophon__cell">
+        <span className="hb-colophon__label">{label}</span>
+        <div className="hb-colophon__value">{children}</div>
+    </div>
+)
 
 const LibraryDetail = ({
     detail,
@@ -335,280 +349,328 @@ const LibraryDetail = ({
     onToggleItemKind,
     confirmation
 }: LibraryDetailProps) => {
+    const isAuthor = detail.authorId === currentUserId
+    const contextMenu = useContextMenu()
+    const showDescription =
+        !!detail.snapshot.description &&
+        detail.snapshot.description !== detail.snapshot.shortDescription
+
     return (
-        <AppShell header={{ height: 52 }} padding={0}>
-            <AppShell.Header>
-                <AppTopbar />
-            </AppShell.Header>
-            <AppShell.Main className="homebrew-page" bg="#100d12" mih="100vh">
-                <Box pt="lg" pb="2rem">
-                    <Container size="xl">
-                        <Stack gap="xl">
+        <PageShell size="xl">
+            {backLink}
+            <PageHeader
+                eyebrow={`Community collection · Version ${detail.version}`}
+                title={detail.snapshot.name}
+                description={detail.snapshot.shortDescription || undefined}
+                actions={
+                    <>
+                        {isAuthor ? (
                             <Button
-                                component={Link}
-                                to="/homebrew/library"
+                                color="red"
                                 variant="subtle"
-                                color="gray"
-                                px={0}
-                                w="fit-content"
-                                leftSection={<IconArrowLeft size={16} />}
+                                loading={unpublishPending}
+                                onClick={onUnpublish}
                             >
-                                Community Library
+                                Unpublish
                             </Button>
+                        ) : null}
+                        <Button
+                            leftSection={<IconCopy size={16} />}
+                            loading={copyPending}
+                            onClick={isAuthenticated ? onCopy : signIn}
+                        >
+                            Copy to my account
+                        </Button>
+                    </>
+                }
+            />
 
-                            <Paper withBorder p="xl" bg="rgba(0,0,0,.28)">
-                                <Stack gap="lg">
-                                    <Group
-                                        justify="space-between"
-                                        align="flex-start"
-                                        className="homebrew-page__header"
-                                    >
-                                        <div>
-                                            <Text size="sm" c="dimmed">
-                                                Community collection · Version {detail.version}
-                                            </Text>
-                                            <Title mt={4}>{detail.snapshot.name}</Title>
-                                            <Text c="dimmed" mt="xs">
-                                                by {detail.authorNickname}
-                                            </Text>
-                                        </div>
-                                        <Group className="homebrew-page__header-actions">
-                                            <Button
-                                                color="grape"
-                                                variant="outline"
-                                                leftSection={<IconCopy size={16} />}
-                                                loading={copyPending}
-                                                onClick={isAuthenticated ? onCopy : signIn}
-                                            >
-                                                Copy to my account
-                                            </Button>
-                                            {detail.authorId === currentUserId ? (
-                                                <Button
-                                                    color="red"
-                                                    variant="subtle"
-                                                    loading={unpublishPending}
-                                                    onClick={onUnpublish}
-                                                >
-                                                    Unpublish
-                                                </Button>
-                                            ) : null}
-                                        </Group>
-                                    </Group>
-                                    {detail.snapshot.shortDescription ? (
-                                        <Text size="lg">{detail.snapshot.shortDescription}</Text>
-                                    ) : null}
-                                    {detail.snapshot.description &&
-                                    detail.snapshot.description !==
-                                        detail.snapshot.shortDescription ? (
-                                        <Text c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
-                                            {detail.snapshot.description}
-                                        </Text>
-                                    ) : null}
-                                    {detail.snapshot.tags.length ? (
-                                        <Group gap="xs">
-                                            {detail.snapshot.tags.map((tag) => (
-                                                <Badge key={tag} color="gray" variant="outline">
-                                                    {tag}
-                                                </Badge>
-                                            ))}
-                                        </Group>
-                                    ) : null}
-                                </Stack>
-                            </Paper>
-
-                            {detail.source ? (
-                                <Alert color="blue" title="Derived collection">
-                                    <Group justify="space-between" align="center">
-                                        <Text size="sm">
-                                            Based on {detail.source.name}, version{" "}
-                                            {detail.source.version}, by{" "}
-                                            {detail.source.authorNickname}.
-                                        </Text>
-                                        {detail.source.available ? (
-                                            <Button
-                                                size="compact-xs"
-                                                variant="light"
-                                                onClick={() => onOpenSource(detail.source!.entryId)}
-                                            >
-                                                Open source
-                                            </Button>
-                                        ) : (
-                                            <Badge color="gray">Source unpublished</Badge>
-                                        )}
-                                    </Group>
-                                </Alert>
-                            ) : null}
-
-                            {detail.snapshot.contentWarning ? (
-                                <ContentWarning>{detail.snapshot.contentWarning}</ContentWarning>
-                            ) : null}
-
-                            <LibraryRules
-                                items={detail.snapshot.items}
-                                collapsedItemKinds={collapsedItemKinds}
-                                motionlessItemKinds={motionlessItemKinds}
-                                onToggleItemKind={onToggleItemKind}
+            <Panel tone="ornate" grain className="hb-colophon" p={0}>
+                <Colophon label="Author">
+                    <span className="hb-colophon__author">{detail.authorNickname}</span>
+                </Colophon>
+                <Colophon label="Published">{formatDate(detail.publishedAt)}</Colophon>
+                <Colophon label="Community rating">
+                    <div className="hb-colophon__rating">
+                        {isAuthor ? (
+                            <DisabledReason reason="You cannot rate your own collection">
+                                <BloodRating value={detail.averageRating} size={17} />
+                            </DisabledReason>
+                        ) : (
+                            <BloodRating
+                                value={detail.averageRating}
+                                size={17}
+                                interactive={isAuthenticated}
+                                onChange={isAuthenticated ? onRate : signIn}
                             />
+                        )}
+                        <span className="hb-colophon__muted">
+                            {detail.averageRating.toFixed(1)} from {detail.ratingCount} ratings
+                        </span>
+                    </div>
+                    {!isAuthenticated && !isAuthor ? (
+                        <Button
+                            size="compact-xs"
+                            variant="subtle"
+                            color="gray"
+                            onClick={signIn}
+                            className="hb-colophon__signin"
+                        >
+                            Sign in to rate
+                        </Button>
+                    ) : null}
+                </Colophon>
+                <Colophon label="Contents">
+                    <HomebrewKindCounts
+                        counts={countHomebrewItems(detail.snapshot.items)}
+                        max={10}
+                    />
+                </Colophon>
+            </Panel>
 
-                            <Divider />
-                            <Group justify="space-between">
-                                <div>
-                                    <Text fw={600}>Community rating</Text>
-                                    <Text size="sm" c="dimmed">
-                                        {detail.averageRating.toFixed(1)} from {detail.ratingCount}{" "}
-                                        ratings
-                                    </Text>
-                                </div>
-                                {detail.authorId === currentUserId ? (
-                                    <Tooltip label="You cannot rate your own collection">
-                                        <div>
-                                            <BloodRating value={detail.averageRating} />
+            {showDescription || detail.snapshot.tags.length ? (
+                <div className="hb-library-detail__about">
+                    {showDescription ? (
+                        <p className="hb-library-detail__description">
+                            {detail.snapshot.description}
+                        </p>
+                    ) : null}
+                    {detail.snapshot.tags.length ? (
+                        <div className="hb-tags">
+                            {detail.snapshot.tags.map((tag) => (
+                                <span key={tag} className="hb-tag">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    ) : null}
+                </div>
+            ) : null}
+
+            {detail.source ? (
+                <Alert
+                    color="blue"
+                    title="Derived collection"
+                    icon={<IconGitFork size={18} />}
+                    className="hb-library-detail__notice"
+                >
+                    <div className="hb-library-detail__source">
+                        <span>
+                            Based on {detail.source.name}, version {detail.source.version}, by{" "}
+                            {detail.source.authorNickname}.
+                        </span>
+                        {detail.source.available ? (
+                            <Button
+                                size="compact-sm"
+                                variant="light"
+                                color="blue"
+                                rightSection={<IconExternalLink size={14} />}
+                                onClick={() => onOpenSource(detail.source!.entryId)}
+                            >
+                                Open source
+                            </Button>
+                        ) : (
+                            <span className="hb-colophon__muted">Source unpublished</span>
+                        )}
+                    </div>
+                </Alert>
+            ) : null}
+
+            {detail.snapshot.contentWarning ? (
+                <div className="hb-library-detail__notice">
+                    <ContentWarning>{detail.snapshot.contentWarning}</ContentWarning>
+                </div>
+            ) : null}
+
+            <SectionHeader
+                title="Rules"
+                description="Read-only details for this published snapshot."
+            />
+            <LibraryRules
+                items={detail.snapshot.items}
+                collapsedItemKinds={collapsedItemKinds}
+                motionlessItemKinds={motionlessItemKinds}
+                onToggleItemKind={onToggleItemKind}
+            />
+
+            <section className="hb-comments" aria-labelledby="hb-comments-title">
+                <SectionHeader
+                    id="hb-comments-title"
+                    title={
+                        <>
+                            Comments
+                            <span className="hb-comments__count">{detail.comments.length}</span>
+                        </>
+                    }
+                />
+                {isAuthenticated ? (
+                    <div className="hb-comments__composer">
+                        <Textarea
+                            minRows={2}
+                            value={comment}
+                            onChange={(event) => setComment(event.currentTarget.value)}
+                            placeholder="Add to the discussion"
+                            aria-label="Comment"
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                                    event.preventDefault()
+                                    onComment()
+                                }
+                            }}
+                        />
+                        <IconButton
+                            className="hb-comments__send"
+                            label="Post comment"
+                            variant="filled"
+                            color="grape"
+                            size="lg"
+                            icon={<IconSend size={17} />}
+                            disabledReason={!comment.trim() ? "Write a comment first" : undefined}
+                            loading={commentPending}
+                            onClick={onComment}
+                        />
+                    </div>
+                ) : (
+                    <Button variant="default" onClick={signIn} className="hb-comments__signin">
+                        Sign in to comment
+                    </Button>
+                )}
+                {detail.comments.length === 0 ? (
+                    <EmptyState
+                        compact
+                        icon={<IconMessageCircle size={20} stroke={1.5} />}
+                        title="No comments yet."
+                    />
+                ) : (
+                    <ol className="hb-comments__list">
+                        {detail.comments.map((entryComment) => {
+                            const isOwn = entryComment.userId === currentUserId
+                            const canDelete = isOwn || isSuperadmin
+                            const isEditing = editingComment?.id === entryComment.id
+                            return (
+                                <li
+                                    key={entryComment.id}
+                                    className="hb-comment"
+                                    data-own={isOwn || undefined}
+                                    onContextMenu={(event) =>
+                                        !isEditing &&
+                                        contextMenu.open(event, [
+                                            ...(isOwn
+                                                ? [
+                                                      {
+                                                          key: "edit",
+                                                          label: "Edit",
+                                                          icon: <IconEdit size={14} />,
+                                                          onClick: () =>
+                                                              onStartEditingComment(
+                                                                  entryComment.id,
+                                                                  entryComment.body
+                                                              )
+                                                      }
+                                                  ]
+                                                : []),
+                                            ...(canDelete
+                                                ? [
+                                                      {
+                                                          key: "delete",
+                                                          label: "Delete…",
+                                                          color: "red",
+                                                          icon: <IconTrash size={14} />,
+                                                          onClick: () =>
+                                                              onDeleteComment(entryComment.id)
+                                                      }
+                                                  ]
+                                                : [])
+                                        ])
+                                    }
+                                >
+                                    <div className="hb-comment__head">
+                                        <span className="hb-comment__author">
+                                            {entryComment.authorNickname}
+                                        </span>
+                                        <span className="hb-comment__date">
+                                            {formatDate(entryComment.createdAt)}
+                                            {entryComment.updatedAt !== entryComment.createdAt
+                                                ? " · edited"
+                                                : ""}
+                                        </span>
+                                        <div className="hb-comment__actions">
+                                            {isOwn && !isEditing ? (
+                                                <IconButton
+                                                    size="sm"
+                                                    label="Edit comment"
+                                                    icon={<IconEdit size={15} />}
+                                                    onClick={() =>
+                                                        onStartEditingComment(
+                                                            entryComment.id,
+                                                            entryComment.body
+                                                        )
+                                                    }
+                                                />
+                                            ) : null}
+                                            {canDelete ? (
+                                                <DeleteIconButton
+                                                    size="sm"
+                                                    label="Delete comment"
+                                                    onClick={() => onDeleteComment(entryComment.id)}
+                                                />
+                                            ) : null}
                                         </div>
-                                    </Tooltip>
-                                ) : (
-                                    <BloodRating
-                                        value={detail.averageRating}
-                                        interactive={isAuthenticated}
-                                        onChange={isAuthenticated ? onRate : signIn}
-                                    />
-                                )}
-                            </Group>
-
-                            <Stack gap="sm">
-                                <Group gap="xs">
-                                    <IconMessageCircle size={18} />
-                                    <Title order={2}>Comments</Title>
-                                </Group>
-                                {isAuthenticated ? (
-                                    <Box className="homebrew-library-detail__comment-composer">
-                                        <Textarea
-                                            minRows={2}
-                                            value={comment}
-                                            onChange={(event) =>
-                                                setComment(event.currentTarget.value)
-                                            }
-                                            placeholder="Add to the discussion"
-                                            classNames={{
-                                                input: "homebrew-library-detail__comment-composer-input"
-                                            }}
-                                        />
-                                        <ActionIcon
-                                            className="homebrew-library-detail__comment-send"
-                                            color="grape"
-                                            variant="filled"
-                                            size="lg"
-                                            disabled={!comment.trim()}
-                                            loading={commentPending}
-                                            onClick={onComment}
-                                            aria-label="Post comment"
-                                        >
-                                            <IconSend size={18} />
-                                        </ActionIcon>
-                                    </Box>
-                                ) : (
-                                    <Button variant="light" onClick={signIn} w="fit-content">
-                                        Sign in to comment
-                                    </Button>
-                                )}
-                                {detail.comments.length === 0 ? (
-                                    <Text c="dimmed">No comments yet.</Text>
-                                ) : (
-                                    detail.comments.map((entryComment) => (
-                                        <Paper
-                                            key={entryComment.id}
-                                            withBorder
-                                            p="md"
-                                            className="homebrew-library-detail__comment"
-                                        >
-                                            <Group justify="space-between" align="flex-start">
-                                                <div style={{ flex: 1 }}>
-                                                    <Text
-                                                        size="sm"
-                                                        fw={600}
-                                                        className="homebrew-library-detail__comment-author"
+                                    </div>
+                                    {isEditing && editingComment ? (
+                                        <div className="hb-comment__edit">
+                                            <Textarea
+                                                value={editingComment.body}
+                                                onChange={(event) =>
+                                                    onChangeEditingComment(
+                                                        event.currentTarget.value
+                                                    )
+                                                }
+                                                aria-label="Edit comment text"
+                                                // eslint-disable-next-line jsx-a11y/no-autofocus
+                                                autoFocus
+                                                autosize
+                                                minRows={2}
+                                            />
+                                            <div className="hb-comment__edit-actions">
+                                                <Button
+                                                    size="compact-sm"
+                                                    variant="subtle"
+                                                    color="gray"
+                                                    onClick={onCancelEditingComment}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <DisabledReason
+                                                    reason={
+                                                        !editingComment.body.trim()
+                                                            ? "A comment cannot be empty"
+                                                            : undefined
+                                                    }
+                                                >
+                                                    <Button
+                                                        size="compact-sm"
+                                                        disabled={!editingComment.body.trim()}
+                                                        loading={updateCommentPending}
+                                                        onClick={onSaveEditingComment}
                                                     >
-                                                        {entryComment.authorNickname}
-                                                    </Text>
-                                                    {editingComment?.id === entryComment.id ? (
-                                                        <Stack gap="xs" mt="xs">
-                                                            <Textarea
-                                                                value={editingComment.body}
-                                                                onChange={(event) =>
-                                                                    onChangeEditingComment(
-                                                                        event.currentTarget.value
-                                                                    )
-                                                                }
-                                                                autosize
-                                                                minRows={2}
-                                                            />
-                                                            <Group justify="flex-end" gap="xs">
-                                                                <Button
-                                                                    size="compact-xs"
-                                                                    variant="subtle"
-                                                                    onClick={onCancelEditingComment}
-                                                                >
-                                                                    Cancel
-                                                                </Button>
-                                                                <Button
-                                                                    size="compact-xs"
-                                                                    color="grape"
-                                                                    disabled={
-                                                                        !editingComment.body.trim()
-                                                                    }
-                                                                    loading={updateCommentPending}
-                                                                    onClick={onSaveEditingComment}
-                                                                >
-                                                                    Save
-                                                                </Button>
-                                                            </Group>
-                                                        </Stack>
-                                                    ) : (
-                                                        <Text className="homebrew-library-detail__comment-body">
-                                                            {entryComment.body}
-                                                        </Text>
-                                                    )}
-                                                </div>
-                                                <Group gap={2}>
-                                                    {entryComment.userId === currentUserId ? (
-                                                        <ActionIcon
-                                                            color="grape"
-                                                            variant="subtle"
-                                                            aria-label="Edit comment"
-                                                            onClick={() =>
-                                                                onStartEditingComment(
-                                                                    entryComment.id,
-                                                                    entryComment.body
-                                                                )
-                                                            }
-                                                        >
-                                                            <IconEdit size={15} />
-                                                        </ActionIcon>
-                                                    ) : null}
-                                                    {entryComment.userId === currentUserId ||
-                                                    isSuperadmin ? (
-                                                        <ActionIcon
-                                                            color="red"
-                                                            variant="subtle"
-                                                            aria-label="Delete comment"
-                                                            onClick={() =>
-                                                                onDeleteComment(entryComment.id)
-                                                            }
-                                                        >
-                                                            <IconTrash size={15} />
-                                                        </ActionIcon>
-                                                    ) : null}
-                                                </Group>
-                                            </Group>
-                                        </Paper>
-                                    ))
-                                )}
-                            </Stack>
-                        </Stack>
-                    </Container>
-                </Box>
-            </AppShell.Main>
+                                                        Save
+                                                    </Button>
+                                                </DisabledReason>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="hb-comment__body">{entryComment.body}</p>
+                                    )}
+                                </li>
+                            )
+                        })}
+                    </ol>
+                )}
+            </section>
+            {contextMenu.menu}
             {confirmation}
-        </AppShell>
+        </PageShell>
     )
 }
 
@@ -626,88 +688,51 @@ const LibraryRules = memo(
         motionlessItemKinds: Set<HomebrewItemKind>
         onToggleItemKind: LibraryDetailProps["onToggleItemKind"]
     }) => {
-        const itemsByKind = useMemo(
-            () =>
-                homebrewItemKinds
-                    .map((kind) => ({ kind, items: items.filter((item) => item.kind === kind) }))
-                    .filter((group) => group.items.length),
-            [items]
-        )
-        return (
-            <Stack gap="lg">
-                <div>
-                    <Title order={2}>Rules</Title>
-                    <Text size="sm" c="dimmed">
-                        Read-only details for this published snapshot.
-                    </Text>
-                </div>
-                {itemsByKind.length ? (
-                    itemsByKind.map(({ kind, items }) => {
-                        const isCollapsed = collapsedItemKinds.has(kind)
+        const itemsByKind = useMemo(() => groupHomebrewItems(items, homebrewItemKinds), [items])
 
-                        return (
-                            <Stack key={kind} gap="sm">
-                                <Group gap="xs">
-                                    <Badge color="grape" variant="light">
-                                        {homebrewKindLabel(kind)}
-                                    </Badge>
-                                    <Text size="sm" c="dimmed">
-                                        {items.length} {items.length === 1 ? "entry" : "entries"}
-                                    </Text>
-                                    <ActionIcon
-                                        variant="subtle"
-                                        color="gray"
-                                        size="sm"
-                                        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${homebrewKindLabel(kind)}`}
-                                        aria-expanded={!isCollapsed}
-                                        onClick={(event) =>
-                                            onToggleItemKind(kind, event.detail !== 0)
-                                        }
-                                    >
-                                        <IconChevronDown
-                                            size={16}
-                                            className={`animated-collapse-toggle__chevron${motionlessItemKinds.has(kind) ? " animated-collapse-toggle__chevron--instant" : ""}`}
-                                            style={{
-                                                transform: isCollapsed
-                                                    ? "rotate(-90deg)"
-                                                    : undefined
-                                            }}
-                                        />
-                                    </ActionIcon>
-                                </Group>
-                                <AnimatedCollapse
-                                    opened={!isCollapsed}
-                                    motionEnabled={!motionlessItemKinds.has(kind)}
-                                >
-                                    {kind === "merit" || kind === "flaw" ? (
-                                        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
-                                            {items.map((item) => (
-                                                <HomebrewItemPreview
-                                                    key={item.id ?? `${item.kind}-${item.name}`}
-                                                    item={item}
-                                                />
-                                            ))}
-                                        </SimpleGrid>
-                                    ) : (
-                                        <Stack gap="md">
-                                            {items.map((item) => (
-                                                <HomebrewItemPreview
-                                                    key={item.id ?? `${item.kind}-${item.name}`}
-                                                    item={item}
-                                                />
-                                            ))}
-                                        </Stack>
-                                    )}
-                                </AnimatedCollapse>
-                            </Stack>
-                        )
-                    })
-                ) : (
-                    <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
-                        <Text c="dimmed">This collection has no rules yet.</Text>
-                    </Paper>
-                )}
-            </Stack>
+        if (!itemsByKind.length) {
+            return (
+                <Panel tone="inset" p={0}>
+                    <EmptyState compact title="This collection has no rules yet." />
+                </Panel>
+            )
+        }
+
+        return (
+            <div className="hb-codex">
+                <HomebrewKindIndex groups={itemsByKind} idPrefix="hb-library" />
+                <div>
+                    {itemsByKind.map(({ kind, items }) => (
+                        <HomebrewKindSection
+                            key={kind}
+                            kind={kind}
+                            count={items.length}
+                            idPrefix="hb-library"
+                            collapsed={collapsedItemKinds.has(kind)}
+                            motionEnabled={!motionlessItemKinds.has(kind)}
+                            onToggle={(motionEnabled) => onToggleItemKind(kind, motionEnabled)}
+                        >
+                            <div
+                                className="hb-library-detail__entries"
+                                data-layout={
+                                    kind === "loresheet" || kind === "predatorType"
+                                        ? "sheet"
+                                        : kind === "merit" || kind === "flaw"
+                                          ? "compact"
+                                          : "grid"
+                                }
+                            >
+                                {items.map((item) => (
+                                    <HomebrewItemPreview
+                                        key={item.id ?? `${item.kind}-${item.name}`}
+                                        item={item}
+                                    />
+                                ))}
+                            </div>
+                        </HomebrewKindSection>
+                    ))}
+                </div>
+            </div>
         )
     }
 )

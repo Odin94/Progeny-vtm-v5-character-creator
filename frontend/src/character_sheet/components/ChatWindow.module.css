@@ -1,0 +1,654 @@
+/* ==========================================================================
+   Session chat. Tokens from src/index.css; --pg-accent follows the clan color.
+   ========================================================================== */
+
+/* ---- Launcher --------------------------------------------------------------- */
+
+.launcher {
+    position: fixed;
+    right: 1.5rem;
+    bottom: calc(1.5rem + var(--pg-safe-bottom));
+    /* Above the sheet, below modals (z 200) and the dice roller. */
+    z-index: 190;
+}
+
+.launcherButton {
+    box-shadow:
+        var(--pg-shadow-3),
+        0 0 0 1px var(--pg-border-accent);
+    backdrop-filter: blur(10px);
+}
+
+@media (max-width: 48em) {
+    .launcher {
+        right: 1rem;
+        bottom: calc(1rem + var(--pg-safe-bottom));
+    }
+}
+
+/* ---- Panel ----------------------------------------------------------------- */
+
+.panel {
+    position: fixed;
+    z-index: 190;
+    right: 1.5rem;
+    bottom: calc(1.5rem + var(--pg-safe-bottom));
+    width: 400px;
+    height: min(560px, calc(100dvh - var(--pg-topbar-h) - 3rem));
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: var(--pg-space-4);
+    border-radius: var(--pg-radius-lg);
+    border: 1px solid var(--pg-border-gold);
+    background:
+        radial-gradient(
+            120% 50% at 50% 0%,
+            color-mix(in srgb, var(--pg-accent) 9%, transparent),
+            transparent 70%
+        ),
+        var(--pg-surface-overlay);
+    box-shadow:
+        var(--pg-shadow-4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    transform-origin: bottom right;
+    animation: chat-in var(--pg-dur-slow) var(--ease-out) both;
+}
+
+.panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 18%;
+    right: 18%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--pg-accent), transparent);
+    pointer-events: none;
+}
+
+.panel[data-docked] {
+    right: 1.25rem;
+    bottom: calc(1.25rem + var(--pg-safe-bottom));
+    width: 430px;
+    height: min(760px, calc(100dvh - 6.5rem));
+}
+
+.panel[data-inline] {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    width: 100%;
+    height: min(72dvh, 620px);
+    animation: none;
+    backdrop-filter: none;
+}
+
+@media (max-width: 48em) {
+    .panel:not([data-inline]) {
+        left: 8px;
+        right: 8px;
+        bottom: calc(8px + var(--pg-safe-bottom));
+        width: auto;
+        height: min(640px, calc(100dvh - var(--pg-topbar-h) - 16px - var(--pg-safe-bottom)));
+        padding: var(--pg-space-3);
+        transform-origin: bottom center;
+    }
+}
+
+/* ---- Header ------------------------------------------------------------------- */
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    padding-bottom: var(--pg-space-3);
+    margin-bottom: var(--pg-space-3);
+    border-bottom: 1px solid var(--pg-border-faint);
+    flex-shrink: 0;
+}
+
+.heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.title {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--pg-ink);
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--pg-ink-3);
+}
+
+.statusDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--pg-ink-4);
+    flex-shrink: 0;
+}
+
+.statusDot[data-status="connected"] {
+    background: var(--pg-success);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--pg-success) 70%, transparent);
+}
+
+.statusDot[data-status="connecting"] {
+    background: var(--pg-warning);
+    animation: chat-pulse 1s var(--ease-in-out) infinite alternate;
+}
+
+.statusDot[data-status="error"] {
+    background: var(--pg-danger);
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+/* ---- Views ------------------------------------------------------------------------ */
+
+.view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-4);
+}
+
+.viewHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+}
+
+.viewTitle {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.viewCopy {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--pg-ink-3);
+}
+
+.viewFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--pg-space-2);
+    margin-top: auto;
+}
+
+.lobby {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-4);
+}
+
+.lobbyIntro {
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--pg-space-2);
+    text-align: center;
+}
+
+.lobbySigil {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid var(--pg-border-gold);
+    background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--pg-accent) 20%, transparent),
+        transparent 70%
+    );
+    color: var(--pg-accent-bright);
+}
+
+.lobbyTitle {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.lobbyCopy {
+    max-width: 30ch;
+    font-family: var(--pg-font-lore);
+    font-size: 1rem;
+    line-height: 1.45;
+    color: var(--pg-ink-3);
+}
+
+.lobbyActions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-2);
+}
+
+/* ---- Participants ----------------------------------------------------------------- */
+
+.participants {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin-bottom: var(--pg-space-2);
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+    flex-shrink: 0;
+}
+
+.participant {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.participantDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: hsl(var(--hue) 62% 62%);
+}
+
+/* ---- Messages ------------------------------------------------------------------------ */
+
+.messages {
+    flex: 1;
+    min-height: 0;
+    margin: 0 calc(var(--pg-space-2) * -1);
+}
+
+.messagesInner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+    padding: var(--pg-space-1) var(--pg-space-2) var(--pg-space-2);
+}
+
+.empty {
+    margin: auto;
+    padding: var(--pg-space-8) var(--pg-space-4);
+    text-align: center;
+    font-family: var(--pg-font-lore);
+    font-size: 1rem;
+    color: var(--pg-ink-4);
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    max-width: 88%;
+}
+
+.group[data-own] {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.groupHeader {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 0 2px;
+    min-width: 0;
+}
+
+.sender {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: hsl(var(--hue) 62% 72%);
+    min-width: 0;
+}
+
+.senderPlayer {
+    font-weight: 500;
+    color: var(--pg-ink-3);
+}
+
+.time {
+    font-size: 0.68rem;
+    color: var(--pg-ink-4);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.bubble {
+    padding: 7px 11px;
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border);
+    background: var(--pg-surface-3);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    box-shadow: inset 2px 0 0 hsl(var(--hue) 55% 55% / 0.85);
+    animation: chat-rise var(--pg-dur-base) var(--ease-out) both;
+}
+
+.group[data-own] .bubble {
+    background: var(--pg-accent-soft);
+    border-color: var(--pg-border-accent);
+    box-shadow: none;
+}
+
+/* Consecutive bubbles from one sender read as one block. */
+.group:not([data-own]) .bubble + .bubble,
+.group:not([data-own]) .card + .bubble,
+.group:not([data-own]) .bubble + .card {
+    border-top-left-radius: var(--pg-radius-xs);
+}
+
+.group[data-own] .bubble + .bubble,
+.group[data-own] .card + .bubble,
+.group[data-own] .bubble + .card {
+    border-top-right-radius: var(--pg-radius-xs);
+}
+
+/* Roll / rouse / remorse cards */
+.card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    min-width: min(100%, 230px);
+    padding: 9px 12px 10px;
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 70%), var(--pg-surface-2);
+    box-shadow: inset 2px 0 0 hsl(var(--hue) 55% 55% / 0.85);
+    animation: chat-rise var(--pg-dur-base) var(--ease-out) both;
+}
+
+.group[data-own] .card {
+    box-shadow: inset -2px 0 0 var(--pg-accent);
+}
+
+.card[data-outcome="critical"] {
+    border-color: color-mix(in srgb, var(--pg-gold) 40%, transparent);
+}
+
+.card[data-outcome="messy"],
+.card[data-outcome="bestial"],
+.card[data-tone="fail"] {
+    border-color: var(--pg-border-blood);
+}
+
+.card[data-outcome="messy"]::after,
+.card[data-outcome="bestial"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+        80% 90% at 100% 0%,
+        color-mix(in srgb, var(--pg-blood) 26%, transparent),
+        transparent 70%
+    );
+}
+
+.card[data-outcome="critical"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+        80% 90% at 100% 0%,
+        color-mix(in srgb, var(--pg-gold) 16%, transparent),
+        transparent 70%
+    );
+}
+
+.cardKicker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.cardMain {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.cardNumber {
+    font-family: var(--pg-font-display);
+    font-weight: 700;
+    font-size: 1.75rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--pg-ink);
+}
+
+.card[data-outcome="critical"] .cardNumber {
+    color: var(--pg-gold);
+}
+
+.card[data-outcome="messy"] .cardNumber {
+    color: var(--pg-blood-bright);
+}
+
+.card[data-outcome="bestial"] .cardNumber,
+.card[data-outcome="total-failure"] .cardNumber {
+    color: var(--pg-ink-3);
+}
+
+.cardUnit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.cardOutcome {
+    margin-left: auto;
+    font-family: var(--pg-font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: right;
+    color: var(--pg-ink-2);
+}
+
+.card[data-outcome="critical"] .cardOutcome {
+    color: var(--pg-gold);
+}
+
+.card[data-outcome="messy"] .cardOutcome,
+.card[data-outcome="bestial"] .cardOutcome,
+.card[data-outcome="bestial-risk"] .cardOutcome,
+.card[data-tone="fail"] .cardOutcome {
+    color: var(--pg-blood-bright);
+}
+
+.card[data-tone="pass"] .cardOutcome {
+    color: var(--pg-success);
+}
+
+.cardDice {
+    margin-top: 8px;
+}
+
+.cardPool {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--pg-ink-3);
+}
+
+.rerollTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--pg-gold);
+}
+
+.hungerMeter {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.hungerDrop {
+    width: 8px;
+    height: 8px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 1px solid color-mix(in srgb, var(--pg-blood-bright) 60%, transparent);
+}
+
+.hungerDrop[data-filled] {
+    background: var(--pg-blood-bright);
+    border-color: var(--pg-blood-bright);
+}
+
+.errorRow {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 8px 10px;
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border-blood);
+    background: color-mix(in srgb, var(--pg-blood) 12%, transparent);
+    font-size: 0.82rem;
+    color: #f4a3ad;
+    animation: chat-rise var(--pg-dur-base) var(--ease-out) both;
+}
+
+/* ---- Composer ------------------------------------------------------------------------ */
+
+.composer {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--pg-space-2);
+    padding-top: var(--pg-space-3);
+    border-top: 1px solid var(--pg-border-faint);
+    flex-shrink: 0;
+}
+
+.composer > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.composerFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-2);
+    margin-top: var(--pg-space-2);
+    flex-shrink: 0;
+}
+
+.composerHint {
+    font-size: 0.68rem;
+    color: var(--pg-ink-4);
+}
+
+.sessionId {
+    font-family: var(--pg-font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+}
+
+.coterieList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-2);
+}
+
+@keyframes chat-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+}
+
+@keyframes chat-rise {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+}
+
+@keyframes chat-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes chat-pulse {
+    from {
+        opacity: 0.45;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .panel,
+    .bubble,
+    .card,
+    .errorRow {
+        animation-name: chat-fade;
+    }
+
+    .statusDot[data-status="connecting"] {
+        animation: none;
+    }
+}

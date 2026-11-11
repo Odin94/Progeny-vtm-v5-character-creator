@@ -1,10 +1,11 @@
 import { downloadFile } from "~/utils/fileDownload"
 import { notifications } from "@mantine/notifications"
-import { RAW_RED, RAW_GOLD, RAW_GREY, rgba } from "~/theme/colors"
 import { useDisclosure } from "@mantine/hooks"
 import {
     IconAlertCircle,
     IconBook,
+    IconCheck,
+    IconChevronRight,
     IconCloud,
     IconCoffee,
     IconCookie,
@@ -13,18 +14,19 @@ import {
     IconHeart,
     IconHelpHexagon,
     IconMessageCircle,
-    IconShare,
+    IconQuestionMark,
     IconTrash,
-    IconUserPlus,
-    IconX
+    IconUserPlus
 } from "@tabler/icons-react"
 import { useAuth } from "../../hooks/useAuth"
-import { Alert } from "@mantine/core"
-import { useEffect, useState } from "react"
+import { Alert, Button, Popover, ScrollArea } from "@mantine/core"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import ErrorDetails from "~/components/ErrorDetails"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import ResetModal from "../../components/ResetModal"
 import { Character } from "../../data/Character"
+import { clans } from "../../data/Clans"
+import type { ClanName } from "../../data/NameSchemas"
 import {
     openSupportConversation,
     showSupportUnavailableNotification
@@ -38,6 +40,16 @@ import { openCookiePreferences } from "~/utils/cookiePreferences"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import { useAnalyticsConsent } from "~/hooks/useAnalyticsConsent"
 import { motion, useReducedMotion } from "framer-motion"
+import { BrandMark, IconButton, Ornament, Panel, SectionHeader } from "~/components/ui"
+import { motion as motionTokens } from "~/theme/tokens"
+import {
+    generatorScrollableAreaStyle,
+    generatorScrollableContentStyle,
+    generatorScrollableShellStyle
+} from "./sharedGeneratorScrollableLayout"
+import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
+import { Dots } from "./generatorCardParts"
+import classes from "./Final.module.css"
 
 type FinalProps = {
     character: Character
@@ -46,40 +58,59 @@ type FinalProps = {
     onCharacterReset: () => void
 }
 
-const COLORS = {
-    foreground: "rgba(244, 236, 232, 0.95)",
-    mutedForeground: rgba(RAW_GREY, 0.7),
-    mutedForegroundSoft: rgba(RAW_GREY, 0.6),
-    smoke: rgba(RAW_GREY, 0.4),
-    smokeSoft: rgba(RAW_GREY, 0.25),
-    primary: rgba(RAW_RED, 1),
-    primarySoft: rgba(RAW_RED, 0.5),
-    primaryMuted: rgba(RAW_RED, 0.1),
-    gold: rgba(RAW_GOLD, 1),
-    goldSoft: rgba(RAW_GOLD, 0.5),
-    border: "rgba(125, 91, 72, 0.4)",
-    borderSoft: "rgba(125, 91, 72, 0.3)",
-    cardBg: "rgba(30, 21, 24, 0.85)",
-    cardBgHover: "rgba(40, 28, 32, 0.95)",
-    background: "rgba(14, 10, 12, 0.98)"
-}
+type PdfStage = "idle" | "loading" | "filling" | "done"
+type ExportKey = "foundry" | "inconnu" | "inconnu-commands"
 
-const FONT_DISPLAY = "Cinzel, Georgia, serif"
-const FONT_BODY = "Crimson Text, Georgia, serif"
-const FONT_UI = "Inter, Segoe UI, sans-serif"
+const DONE_FLASH_MS = 2600
+const MAX_LISTED_TRAITS = 6
+
+const titleCase = (value: string) => value.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase())
+
+const ordinal = (value: number) => {
+    const mod100 = value % 100
+    if (mod100 >= 11 && mod100 <= 13) return `${value}th`
+    return `${value}${{ 1: "st", 2: "nd", 3: "rd" }[value % 10] ?? "th"}`
+}
 
 const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: FinalProps) => {
     const [downloadError, setDownloadError] = useState<Error | undefined>()
     const [resetModalOpened, { open: openResetModal, close: closeResetModal }] =
         useDisclosure(false)
-    const [exportModalOpened, { open: openExportModal, close: closeExportModal }] =
-        useDisclosure(false)
+    const [pdfStage, setPdfStage] = useState<PdfStage>("idle")
+    const [jsonDone, setJsonDone] = useState(false)
     const hasAnalyticsConsent = useAnalyticsConsent()
     const { isAuthenticated, signIn, isLoading: authLoading } = useAuth()
     const shouldReduceMotion = useReducedMotion()
+    const timers = useRef<number[]>([])
+
+    useEffect(() => {
+        const pending = timers.current
+        return () => pending.forEach((id) => window.clearTimeout(id))
+    }, [])
+    const later = (fn: () => void) => {
+        timers.current.push(window.setTimeout(fn, DONE_FLASH_MS))
+    }
 
     const charName = character.name?.trim() || ""
     const displayTitle = charName || "Your Kindred Awaits"
+    const clanLogo = character.clan ? clans[character.clan as ClanName]?.logo : undefined
+    const clanName = character.homebrewClan?.name ?? character.clan
+    const lineage = [
+        clanName || null,
+        character.generation ? `${ordinal(character.generation)} generation` : null,
+        character.predatorType.name || null,
+        character.sire?.trim() ? `Childe of ${character.sire.trim()}` : null
+    ].filter((part): part is string => Boolean(part))
+
+    const reveal = (delay: number) => ({
+        initial: { opacity: 0, transform: shouldReduceMotion ? "none" : "translateY(10px)" },
+        animate: { opacity: 1, transform: "none" },
+        transition: {
+            duration: shouldReduceMotion ? 0.14 : 0.26,
+            delay: shouldReduceMotion ? 0 : delay,
+            ease: motionTokens.curve.out
+        }
+    })
 
     const handleCharacterSheet = () => {
         window.history.pushState({}, "", "/sheet")
@@ -93,21 +124,32 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
     }
 
     const handleDownloadPDF = async () => {
+        if (pdfStage === "loading" || pdfStage === "filling") return
+        setPdfStage("loading")
         try {
             const { downloadCharacterSheet } = await import("../pdfCreator")
+            setPdfStage("filling")
             await downloadCharacterSheet(character, "generator")
+            setPdfStage("done")
+            later(() => setPdfStage("idle"))
         } catch (e) {
             console.error(e)
             setDownloadError(e as Error)
+            setPdfStage("idle")
         }
     }
 
     const handleDownloadJSON = () => {
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        downloadJson(character, undefined, "generator").catch((e) => {
-            console.error(e)
-            setDownloadError(e as Error)
-        })
+        downloadJson(character, undefined, "generator")
+            .then(() => {
+                setJsonDone(true)
+                later(() => setJsonDone(false))
+            })
+            .catch((e) => {
+                console.error(e)
+                setDownloadError(e as Error)
+            })
     }
 
     const handleOpenSupport = async () => {
@@ -117,559 +159,253 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
         }
     }
 
+    const pdfBusy = pdfStage === "loading" || pdfStage === "filling"
+    const pdfDescription: ReactNode =
+        pdfStage === "loading" ? (
+            <>
+                <Dots filled={1} total={2} />
+                Loading the sheet…
+            </>
+        ) : pdfStage === "filling" ? (
+            <>
+                <Dots filled={2} total={2} />
+                Filling in {charName || "your character"}…
+            </>
+        ) : pdfStage === "done" ? (
+            "PDF ready"
+        ) : (
+            "Print-ready character sheet"
+        )
+
     return (
-        <div
-            style={{
-                height: "100%",
-                width: "100%",
-                overflowY: "auto",
-                paddingTop: 85,
-                paddingBottom: 40,
-                paddingLeft: 16,
-                paddingRight: 16,
-                boxSizing: "border-box"
-            }}
-        >
-            <style>{`
-                .nf-action-card {
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                    padding: 16px;
-                    border-radius: 10px;
-                    border: 1px solid ${COLORS.border};
-                    background: ${COLORS.cardBg};
-                    cursor: pointer;
-                    text-align: left;
-                    transition: border-color 250ms ease, background 250ms ease, transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
-                    width: 100%;
-                    font-family: inherit;
-                }
-                .nf-action-card:hover {
-                    border-color: ${COLORS.primarySoft};
-                    background: ${COLORS.cardBgHover};
-                }
-                .nf-action-card:active {
-                    transform: scale(0.98);
-                }
-                .nf-action-card .nf-icon-wrap {
-                    flex-shrink: 0;
-                    padding: 10px;
-                    border-radius: 8px;
-                    background: ${rgba(RAW_RED, 0.18)};
-                    color: ${COLORS.primary};
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: background 250ms ease;
-                }
-                .nf-action-card:hover .nf-icon-wrap {
-                    background: ${rgba(RAW_RED, 0.2)};
-                }
-                .nf-reset-btn {
-                    background: none;
-                    border: 1px solid ${rgba(RAW_RED, 0.3)};
-                    border-radius: 8px;
-                    color: ${rgba(RAW_RED, 0.7)};
-                    cursor: pointer;
-                    font-family: ${FONT_UI};
-                    font-size: 12px;
-                    padding: 7px 14px;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
-                }
-                .nf-reset-btn:hover {
-                    color: ${rgba(RAW_RED, 1)};
-                    border-color: ${rgba(RAW_RED, 0.6)};
-                    background: ${rgba(RAW_RED, 0.08)};
-                }
-                .nf-account-card {
-                    border-radius: 14px;
-                    border: 1px solid ${rgba(RAW_GOLD, 0.22)};
-                    background: linear-gradient(180deg, rgba(32, 24, 16, 0.72) 0%, rgba(22, 16, 12, 0.8) 100%);
-                    padding: 18px;
-                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                }
-                .nf-account-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-                .nf-account-icon {
-                    flex-shrink: 0;
-                    width: 38px;
-                    height: 38px;
-                    border-radius: 9px;
-                    background: ${rgba(RAW_GOLD, 0.1)};
-                    color: ${rgba(RAW_GOLD, 0.7)};
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 1px solid ${rgba(RAW_GOLD, 0.18)};
-                }
-                .nf-account-title {
-                    margin: 0;
-                    font-family: ${FONT_DISPLAY};
-                    font-size: 0.95rem;
-                    letter-spacing: 0.06em;
-                    color: ${rgba(RAW_GOLD, 0.85)};
-                }
-                .nf-account-subtitle {
-                    margin: 2px 0 0 0;
-                    font-family: ${FONT_UI};
-                    font-size: 10px;
-                    color: ${rgba(RAW_GREY, 0.4)};
-                }
-                .nf-account-list {
-                    margin: 0;
-                    padding: 0 0 0 4px;
-                    list-style: none;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                    font-family: ${FONT_BODY};
-                    font-size: 0.9rem;
-                    color: rgba(244, 236, 232, 0.6);
-                }
-                .nf-account-list li {
-                    position: relative;
-                    padding-left: 16px;
-                    line-height: 1.4;
-                }
-                .nf-account-list li::before {
-                    content: "";
-                    position: absolute;
-                    left: 0;
-                    top: 0.6em;
-                    width: 5px;
-                    height: 5px;
-                    border-radius: 50%;
-                    background: ${rgba(RAW_GOLD, 0.55)};
-                }
-                .nf-account-btn {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 8px;
-                    padding: 8px 18px;
-                    border-radius: 8px;
-                    border: 1px solid ${rgba(RAW_GOLD, 0.4)};
-                    background: ${rgba(RAW_GOLD, 0.1)};
-                    color: ${rgba(RAW_GOLD, 0.9)};
-                    font-family: ${FONT_DISPLAY};
-                    font-size: 0.8rem;
-                    letter-spacing: 0.12em;
-                    text-transform: uppercase;
-                    cursor: pointer;
-                    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
-                    align-self: center;
-                }
-                .nf-account-btn:hover {
-                    background: ${rgba(RAW_GOLD, 0.2)};
-                    border-color: ${rgba(RAW_GOLD, 0.65)};
-                    color: ${rgba(RAW_GOLD, 1)};
-                }
-                .nf-kofi-link {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 12px 24px;
-                    border-radius: 10px;
-                    border: 1px solid ${rgba(RAW_GOLD, 0.5)};
-                    background: rgba(40, 30, 20, 0.85);
-                    text-decoration: none;
-                    transition: background 300ms ease, border-color 300ms ease;
-                    cursor: pointer;
-                }
-                .nf-kofi-link:hover {
-                    background: rgba(60, 44, 28, 0.95);
-                    border-color: ${rgba(RAW_GOLD, 0.75)};
-                }
-                .nf-kofi-link:hover .nf-kofi-coffee {
-                    transform: scale(1.1);
-                }
-                .nf-kofi-coffee {
-                    color: ${COLORS.gold};
-                    transition: transform 300ms ease;
-                }
-                .nf-kofi-heart {
-                    color: ${COLORS.primarySoft};
-                    transition: color 300ms ease, transform 300ms ease;
-                }
-                .nf-kofi-link:hover .nf-kofi-heart {
-                    color: ${COLORS.primary};
-                    transform: scale(1.25);
-                }
-                .nf-social-link {
-                    color: ${COLORS.mutedForegroundSoft};
-                    text-decoration: underline;
-                    text-underline-offset: 2px;
-                    transition: color 200ms ease;
-                }
-                .nf-social-link:hover {
-                    color: ${COLORS.foreground};
-                }
-                .nf-modal-backdrop {
-                    position: fixed;
-                    inset: 0;
-                    z-index: 50;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .nf-modal-overlay {
-                    position: absolute;
-                    inset: 0;
-                    background: rgba(14, 10, 12, 0.8);
-                    backdrop-filter: blur(4px);
-                }
-                .nf-modal-content {
-                    position: relative;
-                    width: 100%;
-                    max-width: 460px;
-                    margin: 0 16px;
-                    padding: 24px;
-                    border-radius: 14px;
-                    border: 1px solid ${COLORS.border};
-                    background: linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, ${COLORS.background} 100%);
-                    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.5);
-                }
-                .nf-export-option {
-                    width: 100%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 14px;
-                    border-radius: 10px;
-                    border: 1px solid ${COLORS.border};
-                    background: rgba(20, 14, 16, 0.92);
-                    cursor: pointer;
-                    text-align: left;
-                    transition: border-color 200ms ease, background 200ms ease;
-                    font-family: inherit;
-                    gap: 12px;
-                }
-                .nf-export-option:hover {
-                    border-color: ${COLORS.primarySoft};
-                    background: ${COLORS.cardBg};
-                }
-                .nf-export-option:hover .nf-export-action {
-                    color: ${COLORS.primary};
-                }
-                .nf-export-action {
-                    font-family: ${FONT_UI};
-                    font-size: 12px;
-                    color: ${rgba(RAW_RED, 0.7)};
-                    transition: color 200ms ease;
-                    flex-shrink: 0;
-                }
-                .nf-text-glow {
-                    text-shadow: 0 0 20px ${rgba(RAW_RED, 0.25)};
-                }
-                .nf-close-btn {
-                    background: none;
-                    border: none;
-                    color: ${COLORS.mutedForeground};
-                    cursor: pointer;
-                    transition: color 200ms ease;
-                    display: flex;
-                    align-items: center;
-                }
-                .nf-close-btn:hover {
-                    color: ${COLORS.foreground};
-                }
-                .nf-help-icon {
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    margin-left: 6px;
-                }
-                @media (prefers-reduced-motion: reduce) {
-                    .nf-action-card:active {
-                        transform: none;
-                    }
-                }
-            `}</style>
-
-            <div
-                style={{
-                    maxWidth: 640,
-                    margin: "0 auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 40
-                }}
+        <div style={generatorScrollableShellStyle}>
+            <ScrollArea
+                style={generatorScrollableAreaStyle}
+                w="100%"
+                px={20}
+                pt={4}
+                pb={8}
+                type="always"
+                scrollbarSize={nightfallScrollbarSize}
+                styles={nightfallScrollAreaStyles}
             >
-                {/* Header */}
-                <motion.div
-                    initial={{
-                        opacity: 0,
-                        transform: shouldReduceMotion ? "none" : "translateY(8px)"
-                    }}
-                    animate={{ opacity: 1, transform: "none" }}
-                    transition={{
-                        duration: shouldReduceMotion ? 0.12 : 0.22,
-                        ease: [0.23, 1, 0.32, 1]
-                    }}
-                    style={{
-                        textAlign: "center",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 12
-                    }}
-                >
-                    <h2
-                        data-testid="final-character-name"
-                        className="nf-text-glow"
-                        style={{
-                            fontFamily: FONT_DISPLAY,
-                            fontSize: "1.75rem",
-                            letterSpacing: "0.05em",
-                            color: COLORS.foreground,
-                            margin: 0,
-                            fontWeight: 600
-                        }}
-                    >
-                        {displayTitle}
-                    </h2>
-                    <p
-                        style={{
-                            fontFamily: FONT_BODY,
-                            fontSize: "1.22rem",
-                            color: "rgba(244, 236, 232, 0.9)",
-                            maxWidth: 560,
-                            margin: "0 auto",
-                            lineHeight: 1.45,
-                            fontWeight: 600,
-                            textShadow: `0 0 18px ${rgba(RAW_RED, 0.14)}`
-                        }}
-                    >
-                        Character creation complete. Your character is saved in the browser. Export
-                        for your favourite tools, or jump straight into play.
-                    </p>
-                </motion.div>
-
-                {/* Action cards grid */}
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                        gap: 16
-                    }}
-                >
-                    <ActionCard
-                        testId="final-download-pdf-button"
-                        icon={<IconFileText size={20} />}
-                        label="Download PDF"
-                        description="Print-ready character sheet"
-                        onClick={handleDownloadPDF}
-                    />
-                    <ActionCard
-                        icon={<IconDownload size={20} />}
-                        label="Save File"
-                        description="JSON save file to load later"
-                        onClick={handleDownloadJSON}
-                    />
-                    <ActionCard
-                        icon={<IconShare size={20} />}
-                        label="Export"
-                        description="Foundry VTT, Inconnu & more"
-                        onClick={openExportModal}
-                    />
-                    <ActionCard
-                        icon={<IconBook size={20} />}
-                        label="Character Sheet"
-                        description="Use this character right away"
-                        onClick={handleCharacterSheet}
-                    />
-                    <ActionCard
-                        icon={<IconHelpHexagon size={20} />}
-                        label="Feature Guide"
-                        description="Learn what else you can do with Progeny"
-                        onClick={handleOpenFeatures}
-                    />
-                    {hasAnalyticsConsent ? (
-                        <ActionCard
-                            icon={<IconMessageCircle size={20} />}
-                            label="Feedback & support"
-                            description="Questions, complaints, bugs or ideas"
-                            onClick={handleOpenSupport}
-                        />
-                    ) : (
-                        <ActionCard
-                            icon={<IconCookie size={20} />}
-                            label="Cookie preferences"
-                            description="Enable analytics to use support chat"
-                            onClick={openCookiePreferences}
-                        />
-                    )}
-                </div>
-
-                {!authLoading && !isAuthenticated ? (
-                    <motion.div
-                        initial={{
-                            opacity: 0,
-                            transform: shouldReduceMotion ? "none" : "translateY(8px)"
-                        }}
-                        animate={{ opacity: 1, transform: "none" }}
-                        transition={{
-                            duration: shouldReduceMotion ? 0.12 : 0.2,
-                            ease: [0.23, 1, 0.32, 1]
-                        }}
-                    >
-                        <div className="nf-account-card">
-                            <div className="nf-account-header">
-                                <div className="nf-account-icon">
-                                    <IconCloud size={22} />
-                                </div>
-                                <div>
-                                    <p className="nf-account-title">Create a free account</p>
-                                    <p className="nf-account-subtitle">
-                                        Unlock the full companion experience
-                                    </p>
-                                </div>
-                            </div>
-                            <ul className="nf-account-list">
-                                <li>Manage multiple characters in the cloud</li>
-                                <li>Run play sessions online</li>
-                                <li>Share your characters with your friends</li>
-                            </ul>
-                            <button className="nf-account-btn" onClick={signIn}>
-                                <IconUserPlus size={16} />
-                                Create Account
-                            </button>
-                        </div>
-                    </motion.div>
-                ) : null}
-
-                <div style={{ display: "flex", justifyContent: "center" }}>
-                    <button className="nf-reset-btn" onClick={openResetModal}>
-                        <IconTrash size={14} />
-                        Reset character
-                    </button>
-                </div>
-
-                {/* Divider */}
-                <div
-                    style={{
-                        width: 80,
-                        height: 1,
-                        margin: "0 auto",
-                        background:
-                            "linear-gradient(90deg, transparent 0%, rgba(125, 91, 72, 0.4) 50%, transparent 100%)"
-                    }}
-                />
-
-                {/* Ko-fi CTA + socials */}
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 16
-                    }}
-                >
-                    <a
-                        href={CONTACT_LINKS.kofi.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="nf-kofi-link"
-                    >
-                        <IconCoffee size={20} className="nf-kofi-coffee" />
-                        <div style={{ textAlign: "left" }}>
-                            <p
-                                style={{
-                                    margin: 0,
-                                    fontFamily: FONT_DISPLAY,
-                                    fontSize: "0.88rem",
-                                    letterSpacing: "0.06em",
-                                    color: COLORS.gold
-                                }}
-                            >
-                                Support on Ko-Fi
+                <div style={generatorScrollableContentStyle}>
+                    <div className={classes.page}>
+                        <motion.header className={classes.hero} {...reveal(0)}>
+                            <span className="pg-eyebrow">Character complete</span>
+                            <span className={classes.sigil} aria-hidden="true">
+                                {clanLogo ? (
+                                    <span
+                                        className={classes.sigilMark}
+                                        style={{ ["--sigil" as string]: `url("${clanLogo}")` }}
+                                    />
+                                ) : (
+                                    <BrandMark size={40} />
+                                )}
+                            </span>
+                            <h2 data-testid="final-character-name" className={classes.name}>
+                                {displayTitle}
+                            </h2>
+                            <Ornament className={classes.ornament} />
+                            {lineage.length > 0 ? (
+                                <p className={classes.lineage}>
+                                    {lineage.map((part) => (
+                                        <span key={part}>{part}</span>
+                                    ))}
+                                </p>
+                            ) : null}
+                            <p className={classes.saved}>
+                                <IconCheck size={14} stroke={2.2} />
+                                Saved in this browser. Take it to the table, or export it for your
+                                favourite tools.
                             </p>
-                            <p
-                                style={{
-                                    margin: 0,
-                                    fontFamily: FONT_UI,
-                                    fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.5)
-                                }}
+                        </motion.header>
+
+                        <motion.div {...reveal(0.06)}>
+                            <Panel tone="ornate" grain p="xl">
+                                <Dossier character={character} />
+                            </Panel>
+                        </motion.div>
+
+                        <motion.div className={classes.groups} {...reveal(0.12)}>
+                            <section className={classes.group}>
+                                <SectionHeader title="Take it to the table" />
+                                <ActionCard
+                                    primary
+                                    icon={<IconBook size={20} stroke={1.7} />}
+                                    label="Character Sheet"
+                                    description="Play this character right away"
+                                    onClick={handleCharacterSheet}
+                                />
+                                <ActionCard
+                                    testId="final-download-pdf-button"
+                                    icon={
+                                        pdfStage === "done" ? (
+                                            <IconCheck size={20} stroke={2} />
+                                        ) : (
+                                            <IconFileText size={20} stroke={1.7} />
+                                        )
+                                    }
+                                    label="Download PDF"
+                                    description={pdfDescription}
+                                    state={pdfStage === "done" ? "done" : undefined}
+                                    busy={pdfBusy}
+                                    onClick={handleDownloadPDF}
+                                />
+                                <ActionCard
+                                    icon={
+                                        jsonDone ? (
+                                            <IconCheck size={20} stroke={2} />
+                                        ) : (
+                                            <IconDownload size={20} stroke={1.7} />
+                                        )
+                                    }
+                                    label="Save File"
+                                    description={
+                                        jsonDone
+                                            ? "Save file ready"
+                                            : "JSON save file to load later"
+                                    }
+                                    state={jsonDone ? "done" : undefined}
+                                    onClick={handleDownloadJSON}
+                                />
+                            </section>
+
+                            <section className={classes.group}>
+                                <SectionHeader title="Export to other tools" />
+                                <ExportList
+                                    character={character}
+                                    setDownloadError={setDownloadError}
+                                />
+                            </section>
+                        </motion.div>
+
+                        {downloadError ? (
+                            <Alert
+                                icon={<IconAlertCircle size="1rem" />}
+                                color="red"
+                                title="The download didn't work"
+                                withCloseButton
+                                onClose={() => setDownloadError(undefined)}
                             >
-                                Help keep Progeny growing
-                            </p>
+                                <ErrorDetails error={downloadError} />
+                            </Alert>
+                        ) : null}
+
+                        {!authLoading && !isAuthenticated ? (
+                            <motion.div {...reveal(0.18)}>
+                                <Panel tone="raised" p="lg">
+                                    <div className={classes.account}>
+                                        <span className={classes.accountIcon} aria-hidden="true">
+                                            <IconCloud size={22} stroke={1.6} />
+                                        </span>
+                                        <div>
+                                            <p className={classes.accountTitle}>
+                                                Create a free account
+                                            </p>
+                                            <ul className={classes.accountList}>
+                                                <li>Manage multiple characters in the cloud</li>
+                                                <li>Run play sessions online</li>
+                                                <li>Share your characters with your friends</li>
+                                            </ul>
+                                        </div>
+                                        <Button
+                                            variant="light"
+                                            color="gold"
+                                            leftSection={<IconUserPlus size={16} stroke={1.8} />}
+                                            onClick={signIn}
+                                        >
+                                            Create Account
+                                        </Button>
+                                    </div>
+                                </Panel>
+                            </motion.div>
+                        ) : null}
+
+                        <div className={classes.secondaryRow}>
+                            <Button
+                                variant="default"
+                                leftSection={<IconHelpHexagon size={16} stroke={1.7} />}
+                                onClick={handleOpenFeatures}
+                            >
+                                Feature Guide
+                            </Button>
+                            {hasAnalyticsConsent ? (
+                                <Button
+                                    variant="default"
+                                    leftSection={<IconMessageCircle size={16} stroke={1.7} />}
+                                    onClick={handleOpenSupport}
+                                >
+                                    Feedback & support
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="default"
+                                    leftSection={<IconCookie size={16} stroke={1.7} />}
+                                    onClick={openCookiePreferences}
+                                >
+                                    Cookie preferences
+                                </Button>
+                            )}
+                            <Button
+                                variant="subtle"
+                                color="red"
+                                leftSection={<IconTrash size={15} stroke={1.7} />}
+                                onClick={openResetModal}
+                            >
+                                Reset character
+                            </Button>
                         </div>
-                        <IconHeart size={16} className="nf-kofi-heart" />
-                    </a>
 
-                    <p
-                        style={{
-                            fontFamily: FONT_UI,
-                            fontSize: 12,
-                            color: rgba(RAW_GREY, 0.4),
-                            textAlign: "center",
-                            margin: 0
-                        }}
-                    >
-                        Feedback or ideas? Find Odin on{" "}
-                        <a
-                            href={CONTACT_LINKS.reddit.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="nf-social-link"
-                        >
-                            Reddit
-                        </a>
-                        {", "}
-                        <a
-                            href={CONTACT_LINKS.bluesky.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="nf-social-link"
-                        >
-                            Bluesky
-                        </a>
-                        {" or "}
-                        <a
-                            href={CONTACT_LINKS.github.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="nf-social-link"
-                        >
-                            GitHub
-                        </a>
-                    </p>
+                        <footer className={classes.footer}>
+                            <a
+                                href={CONTACT_LINKS.kofi.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classes.kofi}
+                            >
+                                <IconCoffee size={20} className={classes.kofiCoffee} />
+                                <span>
+                                    <span className={classes.kofiTitle}>Support on Ko-Fi</span>
+                                    <span className={classes.kofiSub}>
+                                        Help keep Progeny growing
+                                    </span>
+                                </span>
+                                <IconHeart size={16} className={classes.kofiHeart} />
+                            </a>
+                            <p className={classes.social}>
+                                Feedback or ideas? Find Odin on{" "}
+                                <a
+                                    href={CONTACT_LINKS.reddit.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Reddit
+                                </a>
+                                {", "}
+                                <a
+                                    href={CONTACT_LINKS.bluesky.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Bluesky
+                                </a>
+                                {" or "}
+                                <a
+                                    href={CONTACT_LINKS.github.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    GitHub
+                                </a>
+                            </p>
+                            <p className={classes.note}>
+                                You may need to refresh your browser to trigger multiple downloads.
+                            </p>
+                        </footer>
+                    </div>
                 </div>
-
-                {downloadError ? (
-                    <Alert
-                        icon={<IconAlertCircle size="1rem" />}
-                        color="red"
-                        variant="outline"
-                        bg="rgba(0, 0, 0, 0.6)"
-                    >
-                        <ErrorDetails error={downloadError} />
-                    </Alert>
-                ) : null}
-
-                <p
-                    style={{
-                        fontFamily: FONT_UI,
-                        fontSize: 11,
-                        color: rgba(RAW_GREY, 0.35),
-                        textAlign: "center",
-                        margin: 0,
-                        letterSpacing: "0.02em"
-                    }}
-                >
-                    You may need to refresh your browser to trigger multiple downloads.
-                </p>
-            </div>
+            </ScrollArea>
 
             <ResetModal
                 onCharacterReset={onCharacterReset}
@@ -678,14 +414,114 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
                 resetModalOpened={resetModalOpened}
                 closeResetModal={closeResetModal}
             />
+        </div>
+    )
+}
 
-            {exportModalOpened && (
-                <ExportModal
-                    character={character}
-                    onClose={closeExportModal}
-                    setDownloadError={setDownloadError}
-                />
-            )}
+function Dossier({ character }: { character: Character }) {
+    const disciplineCounts = character.disciplines.reduce((counts, power) => {
+        counts.set(power.discipline, (counts.get(power.discipline) ?? 0) + 1)
+        return counts
+    }, new Map<string, number>())
+    const traits = [
+        ...character.merits.map((item) => ({ ...item, type: "merit" as const })),
+        ...character.flaws.map((item) => ({ ...item, type: "flaw" as const }))
+    ]
+    const vitals = [
+        { label: "Health", value: character.maxHealth, total: Math.max(character.maxHealth, 5) },
+        { label: "Willpower", value: character.willpower, total: Math.max(character.willpower, 5) },
+        { label: "Humanity", value: character.humanity, total: 10 },
+        { label: "Blood Potency", value: character.bloodPotency, total: 5 }
+    ]
+    const extraPowers = [
+        ...character.rituals.map((ritual) => ({ ...ritual, kind: "Ritual" })),
+        ...character.ceremonies.map((ceremony) => ({ ...ceremony, kind: "Ceremony" }))
+    ]
+
+    return (
+        <div className={classes.dossier}>
+            <div className={classes.dossierBlock}>
+                <p className={classes.dossierTitle}>Disciplines</p>
+                {disciplineCounts.size === 0 ? (
+                    <p className={classes.muted}>Gained through blood resonance</p>
+                ) : (
+                    [...disciplineCounts.entries()].map(([name, count]) => (
+                        <span key={name} className={classes.trait}>
+                            <span className={classes.traitName}>{titleCase(name)}</span>
+                            <Dots filled={count} />
+                        </span>
+                    ))
+                )}
+                {extraPowers.map((power) => (
+                    <span key={`${power.kind}-${power.name}`} className={classes.trait}>
+                        <span className={classes.traitName}>
+                            {power.name}
+                            <small>{power.kind}</small>
+                        </span>
+                        <Dots filled={power.level} />
+                    </span>
+                ))}
+            </div>
+
+            <div className={classes.dossierBlock}>
+                <p className={classes.dossierTitle}>Vitals</p>
+                {vitals.map((vital) => (
+                    <span key={vital.label} className={classes.trait}>
+                        <span className={classes.traitName}>
+                            {vital.label} <small>{vital.value}</small>
+                        </span>
+                        <Dots filled={vital.value} total={vital.total} />
+                    </span>
+                ))}
+            </div>
+
+            <div className={classes.dossierBlock}>
+                <p className={classes.dossierTitle}>Touchstones & Convictions</p>
+                {character.touchstones.length === 0 ? (
+                    <p className={classes.muted}>None yet</p>
+                ) : (
+                    character.touchstones.map((touchstone, index) => (
+                        <span key={index} className={classes.touchstone}>
+                            <span className={classes.touchstoneName}>
+                                {touchstone.name || "Unnamed touchstone"}
+                            </span>
+                            {touchstone.conviction ? (
+                                <span className={classes.conviction}>
+                                    “{touchstone.conviction}”
+                                </span>
+                            ) : null}
+                        </span>
+                    ))
+                )}
+            </div>
+
+            <div className={classes.dossierBlock}>
+                <p className={classes.dossierTitle}>Merits & Flaws</p>
+                {traits.length === 0 ? (
+                    <p className={classes.muted}>None taken</p>
+                ) : (
+                    <>
+                        {traits.slice(0, MAX_LISTED_TRAITS).map((trait) => (
+                            <span
+                                key={`${trait.type}-${trait.name}`}
+                                className={classes.trait}
+                                data-tone={trait.type}
+                            >
+                                <span className={classes.traitName}>
+                                    {trait.name}
+                                    {trait.type === "flaw" ? <small>Flaw</small> : null}
+                                </span>
+                                <Dots filled={trait.level} />
+                            </span>
+                        ))}
+                        {traits.length > MAX_LISTED_TRAITS ? (
+                            <span className={classes.more}>
+                                +{traits.length - MAX_LISTED_TRAITS} more on your sheet
+                            </span>
+                        ) : null}
+                    </>
+                )}
+            </div>
         </div>
     )
 }
@@ -695,58 +531,76 @@ function ActionCard({
     label,
     description,
     onClick,
-    testId
+    testId,
+    primary,
+    busy,
+    state
 }: {
-    icon: React.ReactNode
+    icon: ReactNode
     label: string
-    description: string
+    description: ReactNode
     onClick?: () => void
     testId?: string
+    primary?: boolean
+    busy?: boolean
+    state?: "done"
 }) {
     return (
-        <button className="nf-action-card" data-testid={testId} onClick={onClick}>
-            <div className="nf-icon-wrap">{icon}</div>
-            <div>
-                <p
-                    style={{
-                        margin: 0,
-                        fontFamily: FONT_DISPLAY,
-                        fontSize: "0.88rem",
-                        letterSpacing: "0.06em",
-                        color: COLORS.foreground
-                    }}
-                >
-                    {label}
-                </p>
-                <p
-                    style={{
-                        margin: "2px 0 0 0",
-                        fontFamily: FONT_UI,
-                        fontSize: 11,
-                        color: rgba(RAW_GREY, 0.55)
-                    }}
-                >
+        <button
+            type="button"
+            className={classes.action}
+            data-testid={testId}
+            data-primary={primary || undefined}
+            data-state={state}
+            aria-busy={busy || undefined}
+            disabled={busy}
+            onClick={onClick}
+        >
+            <span className={classes.actionIcon} aria-hidden="true">
+                {icon}
+            </span>
+            <span className={classes.actionText}>
+                <span className={classes.actionLabel}>{label}</span>
+                <span className={classes.actionDescription} aria-live="polite">
                     {description}
-                </p>
-            </div>
+                </span>
+            </span>
+            <IconChevronRight className={classes.actionArrow} size={18} stroke={1.8} />
         </button>
     )
 }
 
-function ExportModal({
+function ExportList({
     character,
-    onClose,
     setDownloadError
 }: {
     character: Character
-    onClose: () => void
     setDownloadError: (e: Error | undefined) => void
 }) {
-    const [popoverOpen, setPopoverOpen] = useState(false)
+    const [busy, setBusy] = useState<ExportKey | null>(null)
+    const [done, setDone] = useState<ExportKey | null>(null)
+    const doneTimer = useRef<number | undefined>(undefined)
 
-    const exportFoundry = async () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+    useEffect(() => () => window.clearTimeout(doneTimer.current), [])
+
+    const run = async (key: ExportKey, task: () => Promise<void>) => {
+        setBusy(key)
         try {
+            await task()
+            setDone(key)
+            window.clearTimeout(doneTimer.current)
+            doneTimer.current = window.setTimeout(() => setDone(null), DONE_FLASH_MS)
+        } catch (e) {
+            console.error(e)
+            setDownloadError(e as Error)
+        } finally {
+            setBusy(null)
+        }
+    }
+
+    const exportFoundry = () =>
+        run("foundry", async () => {
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
             let validationErrors: string[] = []
             await downloadFile(
                 {
@@ -777,16 +631,11 @@ function ExportModal({
                     autoClose: 10000
                 })
             }
-            onClose()
-        } catch (e) {
-            console.error(e)
-            setDownloadError(e as Error)
-        }
-    }
+        })
 
-    const exportInconnu = async () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        try {
+    const exportInconnu = () =>
+        run("inconnu", async () => {
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
             await downloadFile(
                 {
                     filename: `inconnu_${character.name}.json`,
@@ -798,16 +647,11 @@ function ExportModal({
                         type: "application/json"
                     })
             )
-            onClose()
-        } catch (e) {
-            console.error(e)
-            setDownloadError(e as Error)
-        }
-    }
+        })
 
-    const exportInconnuCommands = async () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        try {
+    const exportInconnuCommands = () =>
+        run("inconnu-commands", async () => {
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
             await downloadFile(
                 {
                     filename: `inconnu_${character.name}_discord_commands_progeny.txt`,
@@ -819,195 +663,92 @@ function ExportModal({
                         type: "text/plain"
                     })
             )
-            onClose()
-        } catch (e) {
-            console.error(e)
-            setDownloadError(e as Error)
-        }
-    }
+        })
+
+    const downloadButton = (key: ExportKey, name: string, onClick: () => void) => (
+        <Button
+            size="xs"
+            variant={done === key ? "light" : "default"}
+            color={done === key ? "green" : undefined}
+            loading={busy === key}
+            disabled={busy !== null && busy !== key}
+            leftSection={
+                done === key ? <IconCheck size={14} stroke={2} /> : <IconDownload size={14} />
+            }
+            aria-label={`Download ${name}`}
+            onClick={onClick}
+        >
+            {done === key ? "Done" : "Download"}
+        </Button>
+    )
 
     return (
-        <div className="nf-modal-backdrop">
-            <div className="nf-modal-overlay" onClick={onClose} />
-            <div className="nf-modal-content">
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 16
-                    }}
-                >
-                    <h3
-                        style={{
-                            margin: 0,
-                            fontFamily: FONT_DISPLAY,
-                            fontSize: "1.1rem",
-                            letterSpacing: "0.05em",
-                            color: COLORS.foreground,
-                            fontWeight: 600
-                        }}
-                    >
-                        Export Character
-                    </h3>
-                    <button className="nf-close-btn" onClick={onClose}>
-                        <IconX size={20} />
-                    </button>
+        <div className={classes.exportList}>
+            <div className={classes.exportRow}>
+                <div className={classes.exportText}>
+                    <span className={classes.exportName}>
+                        <a
+                            href="https://foundryvtt.com/packages/vtm5e"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Foundry VTT (WoD5E)
+                        </a>
+                        <Popover position="bottom" width={260} withArrow shadow="md">
+                            <Popover.Target>
+                                <IconButton
+                                    size="sm"
+                                    label="How to import into Foundry"
+                                    icon={<IconQuestionMark size={14} stroke={2} />}
+                                />
+                            </Popover.Target>
+                            <Popover.Dropdown>
+                                <ol className={classes.steps}>
+                                    <li>Export to JSON</li>
+                                    <li>Create Vampire character in Foundry</li>
+                                    <li>Right click that character in &quot;Actors&quot;</li>
+                                    <li>Select &quot;Import Data&quot; and upload JSON</li>
+                                </ol>
+                            </Popover.Dropdown>
+                        </Popover>
+                    </span>
+                    <span className={classes.exportDescription}>
+                        JSON file for the WoD5E Foundry module
+                    </span>
                 </div>
+                {downloadButton("foundry", "Foundry VTT JSON", exportFoundry)}
+            </div>
 
-                <p
-                    style={{
-                        fontFamily: FONT_BODY,
-                        fontSize: 12,
-                        color: rgba(RAW_GREY, 0.6),
-                        margin: "0 0 20px 0"
-                    }}
-                >
-                    Export your character for use in other VtM platforms and tools.
-                </p>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <button className="nf-export-option" onClick={exportFoundry}>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                                <p
-                                    style={{
-                                        margin: 0,
-                                        fontFamily: FONT_DISPLAY,
-                                        fontSize: "0.88rem",
-                                        letterSpacing: "0.05em",
-                                        color: COLORS.foreground
-                                    }}
-                                >
-                                    <a
-                                        href="https://foundryvtt.com/packages/vtm5e"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        style={{ color: COLORS.gold, textDecoration: "underline" }}
-                                    >
-                                        Foundry VTT (WoD5E)
-                                    </a>
-                                </p>
-                                <span
-                                    className="nf-help-icon"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setPopoverOpen(!popoverOpen)
-                                    }}
-                                >
-                                    <IconHelpHexagon size={18} color={COLORS.primary} />
-                                </span>
-                            </div>
-                            <p
-                                style={{
-                                    margin: "2px 0 0 0",
-                                    fontFamily: FONT_UI,
-                                    fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.4)
-                                }}
-                            >
-                                Download a JSON file compatible with the WoD5E Foundry module
-                            </p>
-                            {popoverOpen && (
-                                <div
-                                    style={{
-                                        marginTop: 10,
-                                        padding: 12,
-                                        borderRadius: 8,
-                                        border: `1px solid ${COLORS.borderSoft}`,
-                                        background: "rgba(14, 10, 12, 0.85)",
-                                        fontFamily: FONT_UI,
-                                        fontSize: 11,
-                                        color: COLORS.mutedForeground,
-                                        lineHeight: 1.7
-                                    }}
-                                >
-                                    <div>1. Export to JSON</div>
-                                    <div>2. Create Vampire character in Foundry</div>
-                                    <div>3. Right click that character in &quot;Actors&quot;</div>
-                                    <div>4. Select &quot;Import Data&quot; and upload JSON</div>
-                                </div>
-                            )}
-                        </div>
-                        <span className="nf-export-action">Download →</span>
-                    </button>
-
-                    <button className="nf-export-option" onClick={exportInconnu}>
-                        <div style={{ flex: 1 }}>
-                            <p
-                                style={{
-                                    margin: 0,
-                                    fontFamily: FONT_DISPLAY,
-                                    fontSize: "0.88rem",
-                                    letterSpacing: "0.05em",
-                                    color: COLORS.foreground
-                                }}
-                            >
-                                <a
-                                    href="https://docs.inconnu.app"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ color: COLORS.gold, textDecoration: "underline" }}
-                                >
-                                    Inconnu (Discord Bot)
-                                </a>
-                            </p>
-                            <p
-                                style={{
-                                    margin: "2px 0 0 0",
-                                    fontFamily: FONT_UI,
-                                    fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.4)
-                                }}
-                            >
-                                Export for use with the Inconnu Discord character manager
-                            </p>
-                        </div>
-                        <span className="nf-export-action">Download →</span>
-                    </button>
-
-                    <button className="nf-export-option" onClick={exportInconnuCommands}>
-                        <div style={{ flex: 1 }}>
-                            <p
-                                style={{
-                                    margin: 0,
-                                    fontFamily: FONT_DISPLAY,
-                                    fontSize: "0.88rem",
-                                    letterSpacing: "0.05em",
-                                    color: COLORS.gold
-                                }}
-                            >
-                                Inconnu Discord Commands
-                            </p>
-                            <p
-                                style={{
-                                    margin: "2px 0 0 0",
-                                    fontFamily: FONT_UI,
-                                    fontSize: 10,
-                                    color: rgba(RAW_GREY, 0.4)
-                                }}
-                            >
-                                Download setup commands to run after /character wizard
-                            </p>
-                        </div>
-                        <span className="nf-export-action">Download →</span>
-                    </button>
+            <div className={classes.exportRow}>
+                <div className={classes.exportText}>
+                    <span className={classes.exportName}>
+                        <a
+                            href="https://docs.inconnu.app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Inconnu (Discord Bot)
+                        </a>
+                    </span>
+                    <span className={classes.exportDescription}>
+                        For the Inconnu Discord character manager
+                    </span>
                 </div>
+                {downloadButton("inconnu", "Inconnu JSON", exportInconnu)}
+            </div>
 
-                <p
-                    style={{
-                        marginTop: 20,
-                        marginBottom: 0,
-                        fontFamily: FONT_UI,
-                        fontSize: 10,
-                        color: rgba(RAW_GREY, 0.3),
-                        textAlign: "center"
-                    }}
-                >
-                    More export options coming soon
-                </p>
+            <div className={classes.exportRow}>
+                <div className={classes.exportText}>
+                    <span className={classes.exportName}>Inconnu Discord Commands</span>
+                    <span className={classes.exportDescription}>
+                        Setup commands to run after /character wizard
+                    </span>
+                </div>
+                {downloadButton(
+                    "inconnu-commands",
+                    "Inconnu Discord commands",
+                    exportInconnuCommands
+                )}
             </div>
         </div>
     )

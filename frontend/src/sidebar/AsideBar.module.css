@@ -1,0 +1,382 @@
+/* Generator stepper ("the rite"): vertical list in the right aside, compact strip on small screens. */
+
+.root {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    gap: var(--pg-space-4);
+}
+
+/* ---- Header + progress ------------------------------------------------------ */
+
+.head {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 6px 0;
+}
+
+.eyebrow {
+    font-family: var(--pg-font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+}
+
+.progressText {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--pg-font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-display);
+    color: var(--pg-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.progressOf {
+    font-family: var(--pg-font-body);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--pg-ink-3);
+}
+
+.track {
+    position: relative;
+    height: 3px;
+    border-radius: var(--pg-radius-round);
+    background: var(--pg-border);
+    overflow: hidden;
+}
+
+.trackFill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--pg-gold-dim), var(--pg-blood-bright));
+    transform-origin: left center;
+    transition: transform var(--pg-dur-slow) var(--ease-out);
+}
+
+/* ---- Step list -------------------------------------------------------------- */
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.item {
+    position: relative;
+}
+
+/* Connector between nodes. Gold once the step above it is behind you. */
+.item:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 21px;
+    top: 38px;
+    bottom: -8px;
+    width: 1px;
+    background: var(--pg-border);
+    pointer-events: none;
+}
+
+.item[data-state="complete"]:not(:last-child)::after {
+    background: linear-gradient(180deg, var(--pg-gold-dim), rgba(212, 175, 100, 0.25));
+}
+
+.compact .item:not(:last-child)::after {
+    top: 32px;
+    bottom: -6px;
+}
+
+.stepTooltipTarget {
+    display: block;
+}
+
+.step {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    margin-block: 4px;
+    padding: 6px 10px 6px 6px;
+    border-radius: var(--pg-radius-md);
+    border: 1px solid transparent;
+    color: var(--pg-ink-3);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.compact .step {
+    min-height: 38px;
+    margin-block: 2px;
+    padding-block: 3px;
+}
+
+.step:active:not(:disabled) {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .step:hover:not(:disabled):not([data-state="current"]) {
+        background: rgba(242, 220, 210, 0.045);
+        color: var(--pg-ink);
+    }
+
+    .step:hover:not(:disabled):not([data-state="current"]) .node {
+        border-color: var(--pg-border-strong);
+    }
+}
+
+.step[data-state="current"] {
+    background: linear-gradient(90deg, rgba(176, 30, 47, 0.2), rgba(176, 30, 47, 0.04));
+    border-color: var(--pg-border-blood);
+    color: var(--pg-ink);
+    cursor: default;
+}
+
+.step[data-state="current"]::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 9px;
+    bottom: 9px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--pg-blood-bright);
+    box-shadow: var(--pg-glow-blood);
+}
+
+.step[data-state="complete"] {
+    color: var(--pg-ink-2);
+}
+
+.step:disabled:not([data-state="current"]) {
+    color: var(--pg-ink-4);
+    cursor: not-allowed;
+}
+
+/* ---- Node (number / check / lock) -------------------------------------------- */
+
+.node {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--pg-border);
+    background: var(--pg-surface-1);
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: inherit;
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out);
+}
+
+.compact .node {
+    width: 26px;
+    height: 26px;
+}
+
+.step[data-state="complete"] .node {
+    border-color: rgba(212, 175, 100, 0.42);
+    background: rgba(212, 175, 100, 0.12);
+    color: var(--pg-gold);
+}
+
+/* Current step: a blood lozenge instead of a circle. */
+.step[data-state="current"] .node {
+    border: none;
+    background: none;
+    color: var(--pg-ink);
+}
+
+.step[data-state="current"] .node::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    transform: rotate(45deg);
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--pg-blood-bright), var(--pg-blood-deep));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 0 16px -2px rgba(220, 52, 70, 0.6);
+}
+
+.nodeContent {
+    position: relative;
+    display: inline-flex;
+}
+
+.step:disabled:not([data-state="current"]) .node {
+    border-style: dashed;
+    background: transparent;
+}
+
+/* ---- Text --------------------------------------------------------------------- */
+
+.text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+}
+
+.label {
+    font-family: var(--pg-font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.step[data-state="current"] .label {
+    font-weight: 600;
+}
+
+.meta {
+    font-family: var(--pg-font-lore);
+    font-size: 0.86rem;
+    line-height: 1.15;
+    color: var(--pg-ink-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.step[data-state="complete"] .meta {
+    color: var(--pg-gold-dim);
+}
+
+/* ---- Small-screen progress strip ------------------------------------------------ */
+
+.strip {
+    position: absolute;
+    top: var(--pg-topbar-h);
+    left: 0;
+    right: 0;
+    z-index: var(--pg-z-sticky);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 100%;
+    padding: 8px var(--pg-gutter) 9px;
+    background: var(--pg-surface-glass);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    backdrop-filter: blur(14px) saturate(1.1);
+    border-bottom: 1px solid var(--pg-border-gold);
+    color: var(--pg-ink);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .strip:hover {
+        background: rgba(24, 18, 22, 0.86);
+    }
+}
+
+.strip:active .stripRow {
+    transform: scale(0.99);
+}
+
+.stripRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform var(--pg-dur-press) var(--ease-out);
+}
+
+.stripCount {
+    flex-shrink: 0;
+    font-family: var(--pg-font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.stripLabel {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--pg-font-display);
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-display);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stripAction {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--pg-font-body);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--pg-ink-3);
+}
+
+.stripChevron {
+    transition: transform var(--pg-dur-base) var(--ease-out);
+}
+
+.strip[data-open] .stripChevron {
+    transform: rotate(180deg);
+}
+
+.segments {
+    display: flex;
+    gap: 3px;
+}
+
+.segment {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--pg-border);
+    transition: background-color var(--pg-dur-base) var(--ease-out);
+}
+
+.segment[data-state="complete"] {
+    background: var(--pg-gold-dim);
+}
+
+.segment[data-state="current"] {
+    background: var(--pg-blood-bright);
+    box-shadow: 0 0 8px rgba(220, 52, 70, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trackFill,
+    .stripChevron {
+        transition: none;
+    }
+}

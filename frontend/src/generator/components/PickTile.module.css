@@ -1,0 +1,367 @@
+/* Attribute / skill allocation tiles: a name and five pips. Tone = the rank being assigned. */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px clamp(8px, 2vw, 18px);
+}
+
+.column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 4px;
+    font-family: var(--pg-font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--pg-gold);
+}
+
+.column::before,
+.column::after {
+    content: "";
+    flex: 1;
+    max-width: 48px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--pg-border-gold));
+}
+
+.column::after {
+    background: linear-gradient(90deg, var(--pg-border-gold), transparent);
+}
+
+.tile {
+    --tone: var(--pg-accent-bright);
+    --tone-bg: transparent;
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border-strong);
+    background: rgba(23, 18, 22, 0.72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--pg-shadow-inset-top);
+    color: var(--pg-ink-2);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out),
+        opacity var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.tile[data-tone="blood"] {
+    --tone: var(--pg-blood-bright);
+    --tone-bg: rgba(176, 30, 47, 0.3);
+}
+
+.tile[data-tone="crimson"] {
+    --tone: #e8606f;
+    --tone-bg: rgba(176, 30, 47, 0.16);
+}
+
+.tile[data-tone="gold"] {
+    --tone: var(--pg-gold);
+    --tone-bg: rgba(212, 175, 100, 0.14);
+}
+
+.tile[data-tone="ash"] {
+    --tone: #bcaea9;
+    --tone-bg: rgba(188, 174, 169, 0.08);
+}
+
+.tile[data-picked] {
+    border-color: color-mix(in srgb, var(--tone) 62%, transparent);
+    background: linear-gradient(180deg, var(--tone-bg), transparent 140%), rgba(23, 18, 22, 0.8);
+    color: var(--pg-ink);
+    box-shadow:
+        var(--pg-shadow-inset-top),
+        0 0 0 1px color-mix(in srgb, var(--tone) 18%, transparent) inset;
+}
+
+.tile[data-picked][data-tone="blood"] {
+    box-shadow:
+        var(--pg-shadow-inset-top),
+        0 0 22px -8px rgba(220, 52, 70, 0.7);
+}
+
+.tile:active:not(:disabled) {
+    transform: scale(var(--pg-press-scale));
+}
+
+.tile:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .tile:hover:not(:disabled):not([data-picked]) {
+        border-color: color-mix(in srgb, var(--preview, var(--pg-accent-bright)) 55%, transparent);
+        background: rgba(36, 28, 33, 0.82);
+        color: var(--pg-ink);
+    }
+
+    .tile:hover:not(:disabled):not([data-picked]) .pip[data-ghost] {
+        background: var(--preview, var(--pg-accent-bright));
+        box-shadow: none;
+        opacity: 0.55;
+    }
+
+    .tile:hover:not(:disabled)[data-picked] {
+        border-color: color-mix(in srgb, var(--tone) 85%, transparent);
+    }
+}
+
+/* First-pick nudge on the attributes step (the step's biggest drop-off point). The glow lives on
+   a pseudo-element so only its opacity animates. */
+.nudge:not(:disabled):not([data-picked])::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow:
+        0 0 0 1px rgba(212, 175, 100, 0.4) inset,
+        0 0 16px -2px rgba(212, 175, 100, 0.4);
+    opacity: 0;
+    animation: pgTileNudge 2.4s var(--ease-in-out) infinite;
+}
+
+@keyframes pgTileNudge {
+    0%,
+    100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+.inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
+
+.name {
+    min-width: 0;
+    font-family: var(--pg-font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tile[data-picked] .name {
+    font-weight: 600;
+}
+
+.pips {
+    display: inline-flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.pip {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(242, 220, 210, 0.22);
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        opacity var(--pg-dur-fast) var(--ease-out);
+}
+
+.pip[data-filled] {
+    background: var(--tone);
+    box-shadow: 0 0 6px -1px color-mix(in srgb, var(--tone) 70%, transparent);
+}
+
+/* Narrow tiles (phones, three columns): stack the name above the pips. */
+@container (max-width: 150px) {
+    .inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .name {
+        font-size: 0.8rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .pips {
+        gap: 3px;
+    }
+
+    .pip {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+@media (max-width: 600px) {
+    .grid {
+        gap: 7px;
+    }
+
+    .tile {
+        min-height: 50px;
+        padding: 7px 8px;
+    }
+
+    .column {
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+    }
+
+    .column::before,
+    .column::after {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nudge:not(:disabled):not([data-picked])::after {
+        animation: none;
+        opacity: 0.6;
+    }
+}
+
+/* ---- Choice cards (skill distribution) ----------------------------------------- */
+
+.choices {
+    --pick-tone-blood: var(--pg-blood-bright);
+    --pick-tone-crimson: #e8606f;
+    --pick-tone-gold: var(--pg-gold);
+    --pick-tone-ash: #bcaea9;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(10px, 2vw, 16px);
+}
+
+@media (max-width: 640px) {
+    .choices {
+        grid-template-columns: 1fr;
+    }
+}
+
+.choice {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 18px 16px;
+    border-radius: var(--pg-radius-lg);
+    border: 1px solid var(--pg-border-strong);
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(176, 30, 47, 0.12), transparent 60%),
+        rgba(23, 18, 22, 0.78);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--pg-shadow-inset-top), var(--pg-shadow-2);
+    color: var(--pg-ink);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-base) var(--ease-out);
+}
+
+.choice[data-recommended] {
+    border-color: var(--pg-border-gold);
+}
+
+.choice:active:not(:disabled) {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .choice:hover:not(:disabled) {
+        transform: translateY(-2px);
+        border-color: var(--pg-border-blood);
+        box-shadow: var(--pg-shadow-inset-top), var(--pg-shadow-3), var(--pg-glow-blood);
+    }
+
+    .choice:active:not(:disabled) {
+        transform: translateY(-2px) scale(var(--pg-press-scale));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .choice:hover:not(:disabled) {
+        transform: none;
+    }
+}
+
+.choiceHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.choiceTitle {
+    font-family: var(--pg-font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-display);
+    line-height: 1.2;
+}
+
+.choiceText {
+    font-family: var(--pg-font-lore);
+    font-size: 1rem;
+    line-height: 1.35;
+    color: var(--pg-ink-3);
+}
+
+.choiceRows {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--pg-border);
+}
+
+.choiceRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--pg-font-body);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--pg-ink-2);
+}
+
+.choiceCount {
+    min-width: 2.2em;
+    text-align: right;
+    font-weight: 600;
+}
+
+.choiceRow .pips {
+    gap: 3px;
+}
+
+.choiceRow .pip {
+    width: 7px;
+    height: 7px;
+}

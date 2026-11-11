@@ -1,12 +1,12 @@
-import { ActionIcon, Tooltip, useMantineTheme } from "@mantine/core"
-import { useReducedMotion } from "framer-motion"
-import { memo } from "react"
+import { ActionIcon, Tooltip } from "@mantine/core"
+import { memo, type CSSProperties } from "react"
 import { SheetOptions } from "../CharacterSheet"
+import classes from "./pips.module.css"
 
 type PipButtonProps = {
     filled?: boolean
     onClick?: () => void
-    style?: React.CSSProperties
+    style?: CSSProperties
     index?: number
     firstChangingIndex?: number | null
     isFilling?: boolean
@@ -18,90 +18,65 @@ type PipButtonProps = {
     hardDisabled?: boolean
     xpCost?: number
     instant?: boolean
+    /** Ends a group of five, so long tracks read as 5 + 5. */
+    groupEnd?: boolean
+    label?: string
+}
+
+// Neighbouring pips that change in the same click fill one after another.
+const STAGGER_MS = 35
+const MAX_STAGGER_STEPS = 6
+
+export const getPipStagger = (
+    index: number,
+    firstChangingIndex: number | null | undefined,
+    isFilling: boolean | undefined
+): { delay: number; changed: boolean } => {
+    if (firstChangingIndex === null || firstChangingIndex === undefined) {
+        return { delay: 0, changed: false }
+    }
+    const steps = isFilling ? index - firstChangingIndex : firstChangingIndex - index
+    if (steps < 0) return { delay: 0, changed: false }
+    return { delay: Math.min(steps, MAX_STAGGER_STEPS) * STAGGER_MS, changed: true }
 }
 
 const PipButton = ({
     filled = false,
     onClick,
     style,
-    options,
+    index = 0,
+    firstChangingIndex,
+    isFilling,
     disabledReason,
     hardDisabled = false,
     xpCost,
-    instant = false
+    instant = false,
+    groupEnd = false,
+    label
 }: PipButtonProps) => {
-    const theme = useMantineTheme()
-    const shouldReduceMotion = useReducedMotion()
-    const color = options?.primaryColor || "grape"
-    const isDisabled = !!disabledReason
+    const isInteractive = !!onClick && !hardDisabled && !disabledReason
+    const { delay, changed } = getPipStagger(index, firstChangingIndex, isFilling)
 
-    const baseColor = theme.colors[color][6]
-    const isInteractive = !!onClick && !hardDisabled
-
-    const buttonStyle: React.CSSProperties = {
-        padding: 0,
-        border: `2px solid ${baseColor}`,
-        borderRadius: "50%",
-        backgroundColor: "transparent",
-        cursor: isInteractive ? "pointer" : "default",
-        opacity: isDisabled ? 0.55 : 1,
-        transform: "scale(1)",
-        transition:
-            instant || shouldReduceMotion
-                ? "none"
-                : "transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
-        position: "relative",
-        overflow: "visible",
-        ...style
-    }
-
-    const actionIcon = (
+    const button = (
         <ActionIcon
-            variant="subtle"
-            color={color}
+            variant="transparent"
+            className={classes.pip}
             onClick={hardDisabled ? undefined : onClick}
-            size="xs"
-            style={buttonStyle}
             disabled={hardDisabled}
-            onPointerDown={(event) => {
-                if (isInteractive && !instant && !shouldReduceMotion) {
-                    event.currentTarget.style.transform = "scale(0.97)"
-                }
-            }}
-            onPointerUp={(event) => {
-                event.currentTarget.style.transform = "scale(1)"
-            }}
-            onPointerCancel={(event) => {
-                event.currentTarget.style.transform = "scale(1)"
-            }}
-            onPointerLeave={(event) => {
-                event.currentTarget.style.transform = "scale(1)"
-            }}
+            aria-label={label ? `${label} ${index + 1}` : undefined}
+            aria-pressed={filled}
+            data-filled={filled || undefined}
+            data-interactive={isInteractive || undefined}
+            data-just-changed={changed || undefined}
+            data-instant={instant || undefined}
+            data-group-end={groupEnd || undefined}
+            style={{ "--pip-delay": `${delay}ms`, ...style } as CSSProperties}
         >
-            <span
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: baseColor,
-                    borderRadius: "50%",
-                    opacity: filled ? 1 : 0,
-                    transform:
-                        instant || shouldReduceMotion
-                            ? "scale(1)"
-                            : filled
-                              ? "scale(1)"
-                              : "scale(0.95)",
-                    transition:
-                        instant || shouldReduceMotion
-                            ? "none"
-                            : "opacity 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1)",
-                    pointerEvents: "none"
-                }}
-            />
+            <span className={classes.bead}>
+                <span className={classes.fill} />
+            </span>
         </ActionIcon>
     )
-
-    const button = actionIcon
 
     const tooltipLabel = disabledReason || (xpCost !== undefined ? `${xpCost} XP` : undefined)
 

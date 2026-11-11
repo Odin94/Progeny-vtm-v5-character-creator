@@ -1,0 +1,433 @@
+/* ==========================================================================
+   Character sheet tracks: dots (ratings), boxes (humanity), damage boxes
+   (health / willpower / stains) and blood drops (hunger).
+   Colors follow the active Mantine primary (the clan color inside the sheet).
+   Only transform + opacity animate.
+   ========================================================================== */
+
+.track {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+}
+
+.track[data-columns] {
+    display: grid;
+    grid-template-columns: repeat(var(--track-columns), max-content);
+    row-gap: 4px;
+}
+
+.track[data-align="end"] {
+    justify-content: flex-end;
+}
+
+.wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+}
+
+/* ---- Shared button shell ---------------------------------------------------- */
+
+.pip.pip {
+    --pip-size: var(--pip-size-override, 22px);
+    --pip-color: var(--mantine-primary-color-6);
+    --pip-bright: var(--mantine-primary-color-3);
+    --pip-deep: var(--mantine-primary-color-9);
+    --pip-rim: color-mix(in srgb, var(--mantine-primary-color-4) 62%, transparent);
+    position: relative;
+    width: var(--pip-size);
+    height: var(--pip-size);
+    min-width: var(--pip-size);
+    min-height: var(--pip-size);
+    padding: 0;
+    border: 0;
+    border-radius: var(--pg-radius-sm);
+    background: transparent;
+    color: inherit;
+    cursor: default;
+    overflow: visible;
+}
+
+.pip.pip:where(:disabled, [data-disabled]) {
+    background: transparent;
+    border: 0;
+    cursor: default;
+    opacity: 1;
+}
+
+.pip.pip[data-interactive] {
+    cursor: pointer;
+}
+
+.pip.pip[data-group-end] {
+    margin-right: 6px;
+}
+
+@media (pointer: coarse) {
+    .pip.pip {
+        --pip-size: var(--pip-size-override, 26px);
+    }
+}
+
+/* ---- Dot (rating) ----------------------------------------------------------- */
+
+.bead {
+    position: relative;
+    display: block;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid var(--pip-rim);
+    background: radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.65),
+        0 1px 0 rgba(255, 238, 228, 0.05);
+    transition:
+        transform var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.fill {
+    position: absolute;
+    inset: -1.5px;
+    border-radius: inherit;
+    background: radial-gradient(
+        circle at 34% 28%,
+        var(--pip-bright) 0%,
+        var(--pip-color) 46%,
+        var(--pip-deep) 100%
+    );
+    box-shadow:
+        0 0 9px -1px color-mix(in srgb, var(--pip-color) 75%, transparent),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: scale(0.35);
+    transition:
+        transform 240ms var(--ease-out) var(--pip-delay, 0ms),
+        opacity 160ms var(--ease-out) var(--pip-delay, 0ms);
+    pointer-events: none;
+}
+
+/* Specular glint on a filled bead. */
+.fill::after {
+    content: "";
+    position: absolute;
+    top: 18%;
+    left: 22%;
+    width: 30%;
+    height: 22%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    filter: blur(0.4px);
+}
+
+.pip[data-filled] .fill {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Emptying runs a little faster than filling (ease-in for things leaving). */
+.pip:not([data-filled]) .fill {
+    transition:
+        transform 160ms var(--ease-in) var(--pip-delay, 0ms),
+        opacity 140ms var(--ease-in) var(--pip-delay, 0ms);
+}
+
+/* A ring that ripples out of a pip the moment it fills. */
+.pip[data-filled][data-just-changed] .bead::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    border: 1.5px solid var(--pip-bright);
+    opacity: 0;
+    animation: pipRipple 420ms var(--ease-out) var(--pip-delay, 0ms) both;
+    pointer-events: none;
+}
+
+@keyframes pipRipple {
+    0% {
+        opacity: 0.85;
+        transform: scale(0.7);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.6);
+    }
+}
+
+.pip[data-instant] .fill,
+.pip[data-instant] .bead,
+.pip[data-instant] .boxFill,
+.pip[data-instant] .slash {
+    transition: none;
+}
+
+.pip[data-instant] .bead::after {
+    animation: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .pip[data-interactive]:hover .bead,
+    .pip[data-interactive]:hover .box {
+        border-color: var(--pip-bright);
+        transform: scale(1.12);
+    }
+
+    .pip[data-interactive]:hover .drop {
+        transform: scale(1.08);
+    }
+}
+
+.pip[data-interactive]:active .bead,
+.pip[data-interactive]:active .box,
+.pip[data-interactive]:active .drop {
+    transform: scale(var(--pg-press-scale));
+}
+
+/* ---- Box (humanity) + damage box -------------------------------------------- */
+
+.box {
+    position: relative;
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1.5px solid var(--pip-rim);
+    background: rgba(0, 0, 0, 0.42);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+    transition:
+        transform var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.boxFill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        160deg,
+        var(--pip-bright) -20%,
+        var(--pip-color) 45%,
+        var(--pip-deep)
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    opacity: 0;
+    transform: scale(0.4);
+    transition:
+        transform 220ms var(--ease-out) var(--pip-delay, 0ms),
+        opacity 150ms var(--ease-out) var(--pip-delay, 0ms);
+}
+
+.pip[data-filled] .boxFill {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Damage: superficial = one slash, aggravated = a filled box with a cross. */
+.slash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 140%;
+    height: 2px;
+    margin: -1px 0 0 -70%;
+    border-radius: 1px;
+    background: var(--pip-bright);
+    box-shadow: 0 0 4px color-mix(in srgb, var(--pip-color) 80%, transparent);
+    opacity: 0;
+    transform: rotate(-45deg) scaleX(0);
+    transition:
+        transform 200ms var(--ease-out),
+        opacity 120ms var(--ease-out);
+}
+
+.slash[data-second] {
+    transform: rotate(45deg) scaleX(0);
+}
+
+.box[data-state="superficial"] .slash:not([data-second]),
+.box[data-state="aggravated"] .slash {
+    opacity: 1;
+    transform: rotate(-45deg) scaleX(1);
+}
+
+.box[data-state="aggravated"] .slash[data-second] {
+    transform: rotate(45deg) scaleX(1);
+}
+
+.box[data-state="aggravated"] .boxFill {
+    opacity: 1;
+    transform: scale(1);
+    background: linear-gradient(160deg, var(--pip-color), var(--pip-deep));
+}
+
+.box[data-state="aggravated"] .slash {
+    background: var(--pg-ink);
+    box-shadow: none;
+}
+
+/* ---- Blood drop (hunger) ---------------------------------------------------- */
+
+.pip.pip[data-shape="drop"] {
+    --pip-size: 28px;
+    --pip-color: var(--pg-blood);
+    --pip-bright: var(--pg-blood-bright);
+    --pip-deep: var(--pg-blood-deep);
+    --pip-rim: color-mix(in srgb, var(--pg-blood-bright) 70%, transparent);
+}
+
+@media (pointer: coarse) {
+    .pip.pip[data-shape="drop"] {
+        --pip-size: 32px;
+    }
+}
+
+.drop {
+    position: relative;
+    display: block;
+    width: 18px;
+    height: 23px;
+    transition: transform var(--pg-dur-fast) var(--ease-out);
+}
+
+.drop svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.dropOutline {
+    fill: rgba(0, 0, 0, 0.45);
+    stroke: var(--pip-rim);
+    stroke-width: 1.6;
+}
+
+.dropFill {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: scale(0.3) translateY(-30%);
+    transform-origin: 50% 85%;
+    transition:
+        transform 280ms var(--ease-out) var(--pip-delay, 0ms),
+        opacity 160ms var(--ease-out) var(--pip-delay, 0ms);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--pg-blood-bright) 60%, transparent));
+}
+
+.pip[data-filled] .dropFill {
+    opacity: 1;
+    transform: none;
+}
+
+.pip:not([data-filled]) .dropFill {
+    transition:
+        transform 160ms var(--ease-in) var(--pip-delay, 0ms),
+        opacity 140ms var(--ease-in) var(--pip-delay, 0ms);
+}
+
+/* ---- Inline blocked-click feedback -------------------------------------------- */
+
+.blockedWarning {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0;
+    z-index: 1;
+    width: max-content;
+    max-width: 260px;
+    margin: 0;
+    padding: 3px 8px;
+    border-radius: var(--pg-radius-sm);
+    border: 1px solid var(--pg-border-blood);
+    background: var(--pg-surface-overlay);
+    box-shadow: var(--pg-shadow-2);
+    color: var(--mantine-color-red-3);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    pointer-events: none;
+    animation: pipBlockedWarning 2.5s var(--ease-out) forwards;
+}
+
+@keyframes pipBlockedWarning {
+    0% {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    80% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fill,
+    .boxFill,
+    .dropFill,
+    .pip:not([data-filled]) .fill,
+    .pip:not([data-filled]) .dropFill {
+        transform: none;
+        transition: opacity 140ms linear;
+    }
+
+    .pip[data-filled][data-just-changed] .bead::after {
+        animation: none;
+    }
+
+    .slash,
+    .slash[data-second] {
+        transition: opacity 140ms linear;
+    }
+
+    .box:not([data-state="none"]) .slash:not([data-second]),
+    .box[data-state="none"] .slash:not([data-second]) {
+        transform: rotate(-45deg);
+    }
+
+    .slash[data-second] {
+        transform: rotate(45deg);
+    }
+
+    .bead,
+    .box,
+    .drop {
+        transition: border-color var(--pg-dur-fast) linear;
+    }
+
+    .pip[data-interactive]:hover .bead,
+    .pip[data-interactive]:hover .box,
+    .pip[data-interactive]:hover .drop,
+    .pip[data-interactive]:active .bead,
+    .pip[data-interactive]:active .box,
+    .pip[data-interactive]:active .drop {
+        transform: none;
+    }
+
+    .blockedWarning {
+        animation: pipBlockedWarningFade 2.5s linear forwards;
+    }
+}
+
+@keyframes pipBlockedWarningFade {
+    0%,
+    100% {
+        opacity: 0;
+    }
+    8%,
+    85% {
+        opacity: 1;
+    }
+}

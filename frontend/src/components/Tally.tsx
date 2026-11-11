@@ -33,7 +33,7 @@ const Tally = ({ n, style, size }: TallyProps) => {
         case 5:
             return <IconTallymarks style={tallyStyle} size={size} />
         default:
-            return <Text color="red">{`Invalid tally number: ${n}`}</Text>
+            return <Text c="red">{`Invalid tally number: ${n}`}</Text>
     }
 }
 

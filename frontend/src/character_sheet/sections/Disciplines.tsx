@@ -1,18 +1,4 @@
-import {
-    Badge,
-    Box,
-    Divider,
-    Grid,
-    Group,
-    Stack,
-    Text,
-    Title,
-    Paper,
-    Center,
-    ActionIcon,
-    Button,
-    Tooltip
-} from "@mantine/core"
+import { Button, Text, Tooltip } from "@mantine/core"
 import { memo, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import { DisciplineName } from "~/data/NameSchemas"
@@ -29,7 +15,7 @@ import {
 } from "~/data/Ceremonies"
 import { SheetOptions } from "../CharacterSheet"
 import DisciplineSelectModal from "../components/DisciplineSelectModal"
-import DisciplinePowerCard from "../components/DisciplinePowerCard"
+import DisciplinePowerCard, { RouseCost } from "../components/DisciplinePowerCard"
 import Pips from "../components/Pips"
 import HomebrewBadge from "~/components/HomebrewBadge"
 import CustomDisciplineModal from "../components/CustomDisciplineModal"
@@ -38,9 +24,8 @@ import RitualSelectModal from "../components/RitualSelectModal"
 import CustomRitualModal from "../components/CustomRitualModal"
 import CeremonySelectModal from "../components/CeremonySelectModal"
 import CustomCeremonyModal from "../components/CustomCeremonyModal"
-import { IconPlus, IconX, IconEdit } from "@tabler/icons-react"
+import { IconDice5, IconEdit, IconNote, IconPlus, IconTrash } from "@tabler/icons-react"
 import { getDisciplineCost, getAvailableXP, canAffordUpgrade, getRitualCost } from "../utils/xp"
-import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
@@ -51,8 +36,14 @@ import {
     getPowerIdentity
 } from "~/utils/homebrewOptions"
 import { getDisciplinePowerCustomTextKey, updateCustomText } from "~/utils/customText"
-import OrnamentalDivider from "~/components/OrnamentalDivider"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import {
+    DeleteIconButton,
+    IconButton,
+    useContextMenu,
+    type ContextMenuEntry
+} from "~/components/ui"
+import classes from "../sheet.module.css"
 
 type DisciplinesProps = {
     options: SheetOptions
@@ -115,27 +106,30 @@ const XpAddButton = ({
     }
 
     return (
-        <Stack gap={4} align="center">
+        <div
+            className={classes.fieldInline}
+            style={{ flexDirection: "column", alignItems: "stretch" }}
+        >
             <Tooltip label={canAfford ? `${cost} XP` : blockedReason} withArrow>
                 <Button
                     size={large ? "md" : "sm"}
-                    radius="md"
                     variant="light"
                     color={primaryColor}
                     leftSection={<IconPlus size={large ? 18 : 16} />}
                     onClick={handleClick}
                     aria-label={label}
+                    fullWidth={!large}
                     style={{ opacity: canAfford ? 1 : 0.55 }}
                 >
                     {label}
                 </Button>
             </Tooltip>
             {warning ? (
-                <Text role="status" aria-live="polite" size="xs" c="red.4" ta="center">
+                <Text role="status" aria-live="polite" size="xs" c="red.3" ta="center">
                     {warning}
                 </Text>
             ) : null}
-        </Stack>
+        </div>
     )
 }
 
@@ -146,6 +140,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             updateSelectedDicePool: state.updateSelectedDicePool
         }))
     )
+    const contextMenu = useContextMenu()
     const [modalOpened, setModalOpened] = useState(false)
     const [initialDiscipline, setInitialDiscipline] = useState<DisciplineName | null>(null)
     const [customDisciplineModalOpened, setCustomDisciplineModalOpened] = useState(false)
@@ -353,735 +348,711 @@ const Disciplines = ({ options }: DisciplinesProps) => {
         setItemToDelete(null)
     }
 
+    const rollWithEntry = (disciplineName: DisciplineName): ContextMenuEntry => ({
+        key: "roll",
+        label: `Roll with ${upcase(disciplineName)}`,
+        icon: <IconDice5 size={14} />,
+        onClick: () => handleDisciplineClick(disciplineName)
+    })
+
+    const addPowerButton = (
+        disciplineName: DisciplineName,
+        identity: string,
+        catalogKey: string,
+        isCustom: boolean,
+        customDiscipline?: (typeof character.customDisciplines)[string]
+    ) => {
+        const openCatalog = () => {
+            setInitialDiscipline(catalogKey as DisciplineName)
+            setModalOpened(true)
+        }
+        const openCustomPower = () => {
+            setEditingDisciplineName(disciplineName)
+            setEditingDisciplineSource(customDiscipline?.homebrewSource)
+            setEditingPower(null)
+            setCustomPowerModalOpened(true)
+        }
+        const usesCatalog = !!customDiscipline?.homebrewSource || !isCustom
+        if (usesCatalog && mode === "xp") {
+            return (
+                <XpAddButton
+                    cost={getDisciplineCost(character, disciplineName, identity)}
+                    availableXP={getAvailableXP(character)}
+                    onAdd={openCatalog}
+                    blockedEvent="sheet-power-pick-blocked"
+                    eventProperties={{
+                        discipline: disciplineName
+                    }}
+                    primaryColor={primaryColor}
+                    label="Add power"
+                />
+            )
+        }
+        return (
+            <Button
+                size="sm"
+                variant="light"
+                color={primaryColor}
+                fullWidth
+                leftSection={<IconPlus size={16} />}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    if (usesCatalog) {
+                        openCatalog()
+                    } else {
+                        openCustomPower()
+                    }
+                }}
+            >
+                Add power
+            </Button>
+        )
+    }
+
+    const renderRitualLike = (
+        kind: "ritual" | "ceremony",
+        item: Ritual | Ceremony,
+        details: React.ReactNode
+    ) => {
+        const onEdit = () => {
+            if (kind === "ritual") {
+                setEditingRitual(item as Ritual)
+                setCustomRitualModalOpened(true)
+            } else {
+                setEditingCeremony(item as Ceremony)
+                setCustomCeremonyModalOpened(true)
+            }
+        }
+        const onDelete = () =>
+            kind === "ritual"
+                ? handleDeleteRitual(item as Ritual)
+                : handleDeleteCeremony(item as Ceremony)
+        const menuItems: ContextMenuEntry[] = isFreeMode
+            ? [
+                  ...(item.isCustom
+                      ? [
+                            {
+                                key: "edit",
+                                label: `Edit ${kind}`,
+                                icon: <IconEdit size={14} />,
+                                onClick: onEdit
+                            }
+                        ]
+                      : []),
+                  {
+                      key: "delete",
+                      label: `Delete ${kind}…`,
+                      color: "red",
+                      icon: <IconTrash size={14} />,
+                      onClick: onDelete
+                  }
+              ]
+            : []
+
+        return (
+            <div
+                key={item.name}
+                className={classes.card}
+                data-actionable={menuItems.length > 0 || undefined}
+                onContextMenu={
+                    menuItems.length > 0 ? (event) => contextMenu.open(event, menuItems) : undefined
+                }
+            >
+                <div className={classes.cardHead}>
+                    <span className={classes.powerLevel} aria-label={`Level ${item.level}`}>
+                        {item.level}
+                    </span>
+                    <p className={classes.cardTitle}>{item.name}</p>
+                    {item.isCustom ? <span className={classes.tag}>Custom</span> : null}
+                    {item.homebrewSource ? <HomebrewBadge source={item.homebrewSource} /> : null}
+                    {isFreeMode ? (
+                        <div className={classes.cardActions}>
+                            {item.isCustom ? (
+                                <IconButton
+                                    size="sm"
+                                    label={`Edit ${item.name}`}
+                                    icon={<IconEdit size={15} />}
+                                    onClick={onEdit}
+                                />
+                            ) : null}
+                            <DeleteIconButton
+                                size="sm"
+                                label={`Delete ${item.name}`}
+                                onClick={onDelete}
+                            />
+                        </div>
+                    ) : null}
+                </div>
+                {item.summary ? (
+                    <p className={classes.cardBody}>
+                        {item.summary.charAt(0).toUpperCase() + item.summary.slice(1)}
+                    </p>
+                ) : null}
+                {details}
+                <div className={classes.cardFoot}>
+                    {item.dicePool ? (
+                        <span className={classes.dicePool}>{item.dicePool}</span>
+                    ) : (
+                        <span />
+                    )}
+                    <RouseCost count={item.rouseChecks} />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             {character.disciplines.length > 0 ||
             Object.values(character.disciplineLevels).some((level) => level > 0) ||
             isEditable ? (
-                <Box>
-                    <Grid gap="md">
-                        {Array.from(disciplineGroups.values()).map(
-                            ({ identity, disciplineName, powers, customDiscipline }) => {
-                                const isOfficial = identity === `official:${disciplineName}`
-                                const isCustom = !isOfficial
-                                const catalogKey = isOfficial ? disciplineName : identity
-                                const discipline = isOfficial
-                                    ? disciplines[disciplineName]
-                                    : undefined
-                                const logo = customDiscipline?.homebrewSource
-                                    ? ""
-                                    : discipline?.logo ||
-                                      sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
-                                const disciplineLevel = getDisciplineLevel(character, identity)
+                <div className={classes.disciplineGrid}>
+                    {Array.from(disciplineGroups.values()).map(
+                        ({ identity, disciplineName, powers, customDiscipline }) => {
+                            const isOfficial = identity === `official:${disciplineName}`
+                            const isCustom = !isOfficial
+                            const catalogKey = isOfficial ? disciplineName : identity
+                            const discipline = isOfficial ? disciplines[disciplineName] : undefined
+                            const logo = customDiscipline?.homebrewSource
+                                ? ""
+                                : discipline?.logo ||
+                                  sanitizeCustomDisciplineLogoUrl(customDiscipline?.logo)
+                            const disciplineLevel = getDisciplineLevel(character, identity)
+                            const canEditCustomDiscipline =
+                                isCustom && !customDiscipline?.homebrewSource && isFreeMode
+                            const canDeleteDiscipline = isFreeMode && powers.length === 0
+                            const openEditDiscipline = () => {
+                                setEditingDisciplineName(disciplineName)
+                                setCustomDisciplineModalOpened(true)
+                            }
+                            const disciplineMenu: ContextMenuEntry[] = [
+                                rollWithEntry(disciplineName),
+                                ...(canEditCustomDiscipline
+                                    ? [
+                                          {
+                                              key: "edit",
+                                              label: "Edit discipline",
+                                              icon: <IconEdit size={14} />,
+                                              onClick: openEditDiscipline
+                                          }
+                                      ]
+                                    : []),
+                                ...(canDeleteDiscipline
+                                    ? [
+                                          { type: "divider" as const, key: "divider" },
+                                          {
+                                              key: "delete",
+                                              label: "Delete discipline…",
+                                              color: "red",
+                                              icon: <IconTrash size={14} />,
+                                              onClick: () =>
+                                                  handleDeleteDiscipline(identity, disciplineName)
+                                          }
+                                      ]
+                                    : [])
+                            ]
 
-                                return (
-                                    <Grid.Col key={identity} span={{ base: 12, md: 6, lg: 4 }}>
-                                        <Paper
-                                            p="md"
-                                            style={{
-                                                height: "100%",
-                                                ...sheetSurfaceStyle,
-                                                cursor: "default"
-                                            }}
-                                            onClick={() => {
-                                                if (useDiceRollModalStore.getState().opened) {
+                            return (
+                                <div
+                                    key={identity}
+                                    className={classes.discipline}
+                                    onClick={() => {
+                                        if (useDiceRollModalStore.getState().opened) {
+                                            handleDisciplineClick(disciplineName)
+                                        }
+                                    }}
+                                    onContextMenu={(event) =>
+                                        contextMenu.open(event, disciplineMenu)
+                                    }
+                                >
+                                    <div className={classes.disciplineHead}>
+                                        <span className={classes.disciplineLogo} aria-hidden="true">
+                                            {logo ? (
+                                                <img
+                                                    src={logo}
+                                                    alt=""
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                            ) : (
+                                                <span className={classes.sigilEmpty}>
+                                                    {upcase(disciplineName).charAt(0)}
+                                                </span>
+                                            )}
+                                        </span>
+                                        <div className={classes.disciplineTitle}>
+                                            <h3
+                                                className={classes.disciplineName}
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
                                                     handleDisciplineClick(disciplineName)
-                                                }
-                                            }}
-                                        >
-                                            <Group gap="md" mb="md" align="center">
-                                                {logo ? (
-                                                    <img
-                                                        src={logo}
-                                                        alt={upcase(disciplineName)}
-                                                        referrerPolicy="no-referrer"
-                                                        style={{
-                                                            width: "40px",
-                                                            height: "40px",
-                                                            flexShrink: 0
-                                                        }}
-                                                    />
-                                                ) : null}
-                                                <Group
-                                                    justify="space-between"
-                                                    style={{ flex: 1 }}
-                                                    align="center"
-                                                >
-                                                    <Group gap="xs" wrap="nowrap">
-                                                        <Title
-                                                            order={4}
-                                                            style={{ margin: 0, cursor: "pointer" }}
-                                                            onClick={(event) => {
-                                                                event.stopPropagation()
-                                                                handleDisciplineClick(
-                                                                    disciplineName
-                                                                )
-                                                            }}
-                                                        >
-                                                            {upcase(disciplineName)}
-                                                            {isCustom &&
-                                                            !customDiscipline?.homebrewSource ? (
-                                                                <Badge
-                                                                    size="xs"
-                                                                    variant="dot"
-                                                                    color={primaryColor}
-                                                                    ml="xs"
-                                                                >
-                                                                    Custom
-                                                                </Badge>
-                                                            ) : null}
-                                                        </Title>
-                                                        {customDiscipline?.homebrewSource ? (
-                                                            <HomebrewBadge
-                                                                source={
-                                                                    customDiscipline.homebrewSource
-                                                                }
-                                                            />
-                                                        ) : null}
-                                                    </Group>
-                                                    <Group gap="xs" align="center">
-                                                        <Pips
-                                                            level={disciplineLevel}
-                                                            minLevel={1}
-                                                            options={options}
-                                                            readOnly={
-                                                                !isFreeMode || !options.canEdit
-                                                            }
-                                                            instant
-                                                            onLevelChange={
-                                                                isFreeMode && options.canEdit
-                                                                    ? (level) => {
-                                                                          setCharacter(
-                                                                              (current) => {
-                                                                                  const updatedCharacter =
-                                                                                      {
-                                                                                          ...current,
-                                                                                          disciplineLevels:
-                                                                                              {
-                                                                                                  ...current.disciplineLevels,
-                                                                                                  [identity]:
-                                                                                                      level
-                                                                                              }
-                                                                                      }
-                                                                                  if (
-                                                                                      identity ===
-                                                                                          "official:fortitude" &&
-                                                                                      current.disciplines.some(
-                                                                                          (power) =>
-                                                                                              power.name ===
-                                                                                              "Resilience"
-                                                                                      )
-                                                                                  ) {
-                                                                                      updateHealthAndWillpowerAndBloodPotencyAndHumanity(
-                                                                                          updatedCharacter
-                                                                                      )
-                                                                                  }
-                                                                                  return updatedCharacter
-                                                                              }
-                                                                          )
-                                                                      }
-                                                                    : undefined
-                                                            }
-                                                        />
-                                                        {isCustom &&
-                                                        !customDiscipline?.homebrewSource &&
-                                                        isFreeMode ? (
-                                                            <ActionIcon
-                                                                size="sm"
-                                                                variant="subtle"
-                                                                color={primaryColor}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    setEditingDisciplineName(
-                                                                        disciplineName
-                                                                    )
-                                                                    setCustomDisciplineModalOpened(
-                                                                        true
-                                                                    )
-                                                                }}
-                                                            >
-                                                                <IconEdit size={16} />
-                                                            </ActionIcon>
-                                                        ) : null}
-                                                        {isFreeMode && powers.length === 0 ? (
-                                                            <ActionIcon
-                                                                size="sm"
-                                                                variant="subtle"
-                                                                color="red"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    handleDeleteDiscipline(
-                                                                        identity,
-                                                                        disciplineName
-                                                                    )
-                                                                }}
-                                                            >
-                                                                <IconX size={16} />
-                                                            </ActionIcon>
-                                                        ) : null}
-                                                    </Group>
-                                                </Group>
-                                            </Group>
-                                            <Divider mb="sm" />
-                                            <Stack
-                                                gap="sm"
-                                                onClick={(e) => {
-                                                    if (useDiceRollModalStore.getState().opened) {
-                                                        e.stopPropagation()
-                                                    }
                                                 }}
                                             >
-                                                {powers
-                                                    .sort((a, b) => a.level - b.level)
-                                                    .map((power) => {
-                                                        const customTextKey =
-                                                            getDisciplinePowerCustomTextKey(power)
-                                                        const isStaticPower = !power.isCustom
-                                                        return (
-                                                            <DisciplinePowerCard
-                                                                key={getPowerIdentity(power)}
-                                                                power={power}
-                                                                primaryColor={primaryColor}
-                                                                inModal={false}
-                                                                character={character}
-                                                                customText={
-                                                                    isStaticPower
-                                                                        ? (character.customText
-                                                                              .disciplinePowers[
-                                                                              customTextKey
-                                                                          ] ?? "")
-                                                                        : undefined
-                                                                }
-                                                                onCustomTextChange={
-                                                                    isFreeMode && isStaticPower
-                                                                        ? (value) => {
-                                                                              setCharacter(
-                                                                                  (current) => ({
-                                                                                      ...current,
-                                                                                      customText:
-                                                                                          updateCustomText(
-                                                                                              current,
-                                                                                              "disciplinePowers",
-                                                                                              customTextKey,
-                                                                                              value
-                                                                                          )
-                                                                                  })
-                                                                              )
-                                                                          }
-                                                                        : undefined
-                                                                }
-                                                                isEditingCustomText={
-                                                                    editingPowerCustomText ===
-                                                                    customTextKey
-                                                                }
-                                                                onFinishCustomTextEditing={() =>
-                                                                    setEditingPowerCustomText(null)
-                                                                }
-                                                                renderActions={
-                                                                    isFreeMode
-                                                                        ? () => (
-                                                                              <Group gap="xs">
-                                                                                  {isStaticPower ? (
-                                                                                      <ActionIcon
-                                                                                          size="sm"
-                                                                                          variant="subtle"
-                                                                                          color={
-                                                                                              primaryColor
-                                                                                          }
-                                                                                          aria-label={`Edit ${power.name} custom note`}
-                                                                                          onClick={(
-                                                                                              event
-                                                                                          ) => {
-                                                                                              event.stopPropagation()
-                                                                                              setEditingPowerCustomText(
-                                                                                                  (
-                                                                                                      current
-                                                                                                  ) =>
-                                                                                                      current ===
-                                                                                                      customTextKey
-                                                                                                          ? null
-                                                                                                          : customTextKey
-                                                                                              )
-                                                                                          }}
-                                                                                          onMouseDown={(
-                                                                                              event
-                                                                                          ) =>
-                                                                                              event.preventDefault()
-                                                                                          }
-                                                                                      >
-                                                                                          <IconEdit
-                                                                                              size={
-                                                                                                  16
-                                                                                              }
-                                                                                          />
-                                                                                      </ActionIcon>
-                                                                                  ) : null}
-                                                                                  {power.isCustom ? (
-                                                                                      <ActionIcon
-                                                                                          size="sm"
-                                                                                          variant="subtle"
-                                                                                          color={
-                                                                                              primaryColor
-                                                                                          }
-                                                                                          onClick={(
-                                                                                              e
-                                                                                          ) => {
-                                                                                              e.stopPropagation()
-                                                                                              setEditingDisciplineName(
-                                                                                                  disciplineName
-                                                                                              )
-                                                                                              setEditingDisciplineSource(
-                                                                                                  customDiscipline?.homebrewSource
-                                                                                              )
-                                                                                              setEditingPower(
-                                                                                                  power
-                                                                                              )
-                                                                                              setCustomPowerModalOpened(
-                                                                                                  true
-                                                                                              )
-                                                                                          }}
-                                                                                      >
-                                                                                          <IconEdit
-                                                                                              size={
-                                                                                                  16
-                                                                                              }
-                                                                                          />
-                                                                                      </ActionIcon>
-                                                                                  ) : null}
-                                                                                  <ActionIcon
-                                                                                      size="sm"
-                                                                                      variant="subtle"
-                                                                                      color="red"
-                                                                                      onClick={(
-                                                                                          e
-                                                                                      ) => {
-                                                                                          e.stopPropagation()
-                                                                                          handleDeletePower(
-                                                                                              power
-                                                                                          )
-                                                                                      }}
-                                                                                  >
-                                                                                      <IconX
-                                                                                          size={16}
-                                                                                      />
-                                                                                  </ActionIcon>
-                                                                              </Group>
-                                                                          )
-                                                                        : undefined
-                                                                }
-                                                            />
-                                                        )
-                                                    })}
-                                                {isEditable ? (
-                                                    <Center
-                                                        mt="xs"
-                                                        onClick={(e) => {
-                                                            if (
-                                                                useDiceRollModalStore.getState()
-                                                                    .opened
-                                                            ) {
-                                                                e.stopPropagation()
-                                                            }
-                                                        }}
-                                                    >
-                                                        {customDiscipline?.homebrewSource ? (
-                                                            mode === "xp" ? (
-                                                                <XpAddButton
-                                                                    cost={getDisciplineCost(
-                                                                        character,
-                                                                        disciplineName,
-                                                                        identity
-                                                                    )}
-                                                                    availableXP={getAvailableXP(
-                                                                        character
-                                                                    )}
-                                                                    onAdd={() => {
-                                                                        setInitialDiscipline(
-                                                                            catalogKey as DisciplineName
-                                                                        )
-                                                                        setModalOpened(true)
-                                                                    }}
-                                                                    blockedEvent="sheet-power-pick-blocked"
-                                                                    eventProperties={{
-                                                                        discipline: disciplineName
-                                                                    }}
-                                                                    primaryColor={primaryColor}
-                                                                    label="Add power"
-                                                                />
-                                                            ) : (
-                                                                <Button
-                                                                    size="sm"
-                                                                    radius="md"
-                                                                    variant="light"
-                                                                    color={primaryColor}
-                                                                    leftSection={
-                                                                        <IconPlus size={16} />
-                                                                    }
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation()
-                                                                        setInitialDiscipline(
-                                                                            catalogKey as DisciplineName
-                                                                        )
-                                                                        setModalOpened(true)
-                                                                    }}
-                                                                >
-                                                                    Add power
-                                                                </Button>
-                                                            )
-                                                        ) : isCustom ? (
-                                                            <Button
-                                                                size="sm"
-                                                                radius="md"
-                                                                variant="light"
-                                                                color={primaryColor}
-                                                                leftSection={<IconPlus size={16} />}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    setEditingDisciplineName(
-                                                                        disciplineName
-                                                                    )
-                                                                    setEditingDisciplineSource(
-                                                                        customDiscipline?.homebrewSource
-                                                                    )
-                                                                    setEditingPower(null)
-                                                                    setCustomPowerModalOpened(true)
-                                                                }}
-                                                            >
-                                                                Add power
-                                                            </Button>
-                                                        ) : mode === "xp" ? (
-                                                            <XpAddButton
-                                                                cost={getDisciplineCost(
-                                                                    character,
-                                                                    disciplineName,
-                                                                    identity
-                                                                )}
-                                                                availableXP={getAvailableXP(
-                                                                    character
-                                                                )}
-                                                                onAdd={() => {
-                                                                    setInitialDiscipline(catalogKey)
-                                                                    setModalOpened(true)
-                                                                }}
-                                                                blockedEvent="sheet-power-pick-blocked"
-                                                                eventProperties={{
-                                                                    discipline: disciplineName
-                                                                }}
-                                                                primaryColor={primaryColor}
-                                                                label="Add power"
-                                                            />
-                                                        ) : (
-                                                            <Button
-                                                                size="sm"
-                                                                radius="md"
-                                                                variant="light"
-                                                                color={primaryColor}
-                                                                leftSection={<IconPlus size={16} />}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    setInitialDiscipline(catalogKey)
-                                                                    setModalOpened(true)
-                                                                }}
-                                                            >
-                                                                Add power
-                                                            </Button>
-                                                        )}
-                                                    </Center>
+                                                {upcase(disciplineName)}
+                                                {isCustom && !customDiscipline?.homebrewSource ? (
+                                                    <span className={classes.tag}>Custom</span>
                                                 ) : null}
-                                            </Stack>
-                                        </Paper>
-                                    </Grid.Col>
-                                )
-                            }
-                        )}
-                        {isEditable ? (
-                            <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-                                <Paper
-                                    p="md"
-                                    withBorder
-                                    style={{
-                                        height: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        ...sheetAddSurfaceStyle
+                                                {customDiscipline?.homebrewSource ? (
+                                                    <HomebrewBadge
+                                                        source={customDiscipline.homebrewSource}
+                                                    />
+                                                ) : null}
+                                            </h3>
+                                        </div>
+                                        <div
+                                            className={classes.disciplineHeadEnd}
+                                            onClick={(event) => event.stopPropagation()}
+                                        >
+                                            <Pips
+                                                level={disciplineLevel}
+                                                minLevel={1}
+                                                options={options}
+                                                label={upcase(disciplineName)}
+                                                readOnly={!isFreeMode || !options.canEdit}
+                                                instant
+                                                onLevelChange={
+                                                    isFreeMode && options.canEdit
+                                                        ? (level) => {
+                                                              setCharacter((current) => {
+                                                                  const updatedCharacter = {
+                                                                      ...current,
+                                                                      disciplineLevels: {
+                                                                          ...current.disciplineLevels,
+                                                                          [identity]: level
+                                                                      }
+                                                                  }
+                                                                  if (
+                                                                      identity ===
+                                                                          "official:fortitude" &&
+                                                                      current.disciplines.some(
+                                                                          (power) =>
+                                                                              power.name ===
+                                                                              "Resilience"
+                                                                      )
+                                                                  ) {
+                                                                      updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                                                          updatedCharacter
+                                                                      )
+                                                                  }
+                                                                  return updatedCharacter
+                                                              })
+                                                          }
+                                                        : undefined
+                                                }
+                                            />
+                                            {canEditCustomDiscipline ? (
+                                                <IconButton
+                                                    size="sm"
+                                                    label={`Edit ${upcase(disciplineName)}`}
+                                                    icon={<IconEdit size={15} />}
+                                                    onClick={openEditDiscipline}
+                                                />
+                                            ) : null}
+                                            {canDeleteDiscipline ? (
+                                                <DeleteIconButton
+                                                    size="sm"
+                                                    label={`Delete ${upcase(disciplineName)}`}
+                                                    onClick={() =>
+                                                        handleDeleteDiscipline(
+                                                            identity,
+                                                            disciplineName
+                                                        )
+                                                    }
+                                                />
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                    <div
+                                        className={classes.powerList}
+                                        onClick={(e) => {
+                                            if (useDiceRollModalStore.getState().opened) {
+                                                e.stopPropagation()
+                                            }
+                                        }}
+                                    >
+                                        {powers
+                                            .sort((a, b) => a.level - b.level)
+                                            .map((power) => {
+                                                const customTextKey =
+                                                    getDisciplinePowerCustomTextKey(power)
+                                                const isStaticPower = !power.isCustom
+                                                const toggleNote = () =>
+                                                    setEditingPowerCustomText((current) =>
+                                                        current === customTextKey
+                                                            ? null
+                                                            : customTextKey
+                                                    )
+                                                const editCustomPower = () => {
+                                                    setEditingDisciplineName(disciplineName)
+                                                    setEditingDisciplineSource(
+                                                        customDiscipline?.homebrewSource
+                                                    )
+                                                    setEditingPower(power)
+                                                    setCustomPowerModalOpened(true)
+                                                }
+                                                const powerMenu: ContextMenuEntry[] = [
+                                                    rollWithEntry(disciplineName),
+                                                    ...(isFreeMode
+                                                        ? [
+                                                              ...(isStaticPower
+                                                                  ? [
+                                                                        {
+                                                                            key: "note",
+                                                                            label: "Edit note",
+                                                                            icon: (
+                                                                                <IconNote
+                                                                                    size={14}
+                                                                                />
+                                                                            ),
+                                                                            onClick: () =>
+                                                                                setEditingPowerCustomText(
+                                                                                    customTextKey
+                                                                                )
+                                                                        }
+                                                                    ]
+                                                                  : [
+                                                                        {
+                                                                            key: "edit",
+                                                                            label: "Edit power",
+                                                                            icon: (
+                                                                                <IconEdit
+                                                                                    size={14}
+                                                                                />
+                                                                            ),
+                                                                            onClick: editCustomPower
+                                                                        }
+                                                                    ]),
+                                                              {
+                                                                  type: "divider" as const,
+                                                                  key: "divider"
+                                                              },
+                                                              {
+                                                                  key: "delete",
+                                                                  label: "Delete power…",
+                                                                  color: "red",
+                                                                  icon: <IconTrash size={14} />,
+                                                                  onClick: () =>
+                                                                      handleDeletePower(power)
+                                                              }
+                                                          ]
+                                                        : [])
+                                                ]
+                                                return (
+                                                    <DisciplinePowerCard
+                                                        key={getPowerIdentity(power)}
+                                                        power={power}
+                                                        primaryColor={primaryColor}
+                                                        inModal={false}
+                                                        character={character}
+                                                        onContextMenu={(event) => {
+                                                            event.stopPropagation()
+                                                            contextMenu.open(event, powerMenu)
+                                                        }}
+                                                        customText={
+                                                            isStaticPower
+                                                                ? (character.customText
+                                                                      .disciplinePowers[
+                                                                      customTextKey
+                                                                  ] ?? "")
+                                                                : undefined
+                                                        }
+                                                        onCustomTextChange={
+                                                            isFreeMode && isStaticPower
+                                                                ? (value) => {
+                                                                      setCharacter((current) => ({
+                                                                          ...current,
+                                                                          customText:
+                                                                              updateCustomText(
+                                                                                  current,
+                                                                                  "disciplinePowers",
+                                                                                  customTextKey,
+                                                                                  value
+                                                                              )
+                                                                      }))
+                                                                  }
+                                                                : undefined
+                                                        }
+                                                        isEditingCustomText={
+                                                            editingPowerCustomText === customTextKey
+                                                        }
+                                                        onFinishCustomTextEditing={() =>
+                                                            setEditingPowerCustomText(null)
+                                                        }
+                                                        renderActions={
+                                                            isFreeMode
+                                                                ? () => (
+                                                                      <>
+                                                                          {isStaticPower ? (
+                                                                              <span
+                                                                                  className={
+                                                                                      classes.disabledWrap
+                                                                                  }
+                                                                                  onMouseDown={(
+                                                                                      event
+                                                                                  ) =>
+                                                                                      event.preventDefault()
+                                                                                  }
+                                                                              >
+                                                                                  <IconButton
+                                                                                      size="sm"
+                                                                                      label={`Edit ${power.name} custom note`}
+                                                                                      icon={
+                                                                                          <IconNote
+                                                                                              size={
+                                                                                                  15
+                                                                                              }
+                                                                                          />
+                                                                                      }
+                                                                                      onClick={(
+                                                                                          event
+                                                                                      ) => {
+                                                                                          event.stopPropagation()
+                                                                                          toggleNote()
+                                                                                      }}
+                                                                                  />
+                                                                              </span>
+                                                                          ) : (
+                                                                              <IconButton
+                                                                                  size="sm"
+                                                                                  label={`Edit ${power.name}`}
+                                                                                  icon={
+                                                                                      <IconEdit
+                                                                                          size={15}
+                                                                                      />
+                                                                                  }
+                                                                                  onClick={(
+                                                                                      event
+                                                                                  ) => {
+                                                                                      event.stopPropagation()
+                                                                                      editCustomPower()
+                                                                                  }}
+                                                                              />
+                                                                          )}
+                                                                          <DeleteIconButton
+                                                                              size="sm"
+                                                                              label={`Delete ${power.name}`}
+                                                                              onClick={(event) => {
+                                                                                  event.stopPropagation()
+                                                                                  handleDeletePower(
+                                                                                      power
+                                                                                  )
+                                                                              }}
+                                                                          />
+                                                                      </>
+                                                                  )
+                                                                : undefined
+                                                        }
+                                                    />
+                                                )
+                                            })}
+                                        {isEditable
+                                            ? addPowerButton(
+                                                  disciplineName,
+                                                  identity,
+                                                  catalogKey,
+                                                  isCustom,
+                                                  customDiscipline
+                                              )
+                                            : null}
+                                    </div>
+                                </div>
+                            )
+                        }
+                    )}
+                    {isEditable ? (
+                        <div className={classes.addTile}>
+                            {mode === "xp" ? (
+                                (() => {
+                                    const disciplinesAlreadyHave = new Set(
+                                        character.disciplines.map((power) => power.discipline)
+                                    )
+                                    const allDisciplines = Object.keys(
+                                        disciplines
+                                    ) as DisciplineName[]
+                                    const availableDisciplines = allDisciplines.filter(
+                                        (disciplineName) =>
+                                            disciplineName !== "" &&
+                                            !disciplinesAlreadyHave.has(disciplineName)
+                                    )
+
+                                    const costs = availableDisciplines.map((disciplineName) =>
+                                        getDisciplineCost(character, disciplineName)
+                                    )
+                                    const minCost = costs.length > 0 ? Math.min(...costs) : 0
+                                    return (
+                                        <XpAddButton
+                                            cost={minCost}
+                                            availableXP={getAvailableXP(character)}
+                                            onAdd={() => {
+                                                setInitialDiscipline(null)
+                                                setModalOpened(true)
+                                            }}
+                                            blockedEvent="sheet-power-pick-blocked"
+                                            eventProperties={{ discipline: "new" }}
+                                            primaryColor={primaryColor}
+                                            large
+                                            label="Add discipline"
+                                        />
+                                    )
+                                })()
+                            ) : (
+                                <Button
+                                    size="md"
+                                    variant="light"
+                                    color={primaryColor}
+                                    leftSection={<IconPlus size={18} />}
+                                    onClick={() => {
+                                        setInitialDiscipline(null)
+                                        setModalOpened(true)
                                     }}
                                 >
-                                    <Center style={{ height: "100%" }}>
-                                        {mode === "xp" ? (
-                                            (() => {
-                                                const disciplinesAlreadyHave = new Set(
-                                                    character.disciplines.map(
-                                                        (power) => power.discipline
-                                                    )
-                                                )
-                                                const allDisciplines = Object.keys(
-                                                    disciplines
-                                                ) as DisciplineName[]
-                                                const availableDisciplines = allDisciplines.filter(
-                                                    (disciplineName) =>
-                                                        disciplineName !== "" &&
-                                                        !disciplinesAlreadyHave.has(disciplineName)
-                                                )
-
-                                                const costs = availableDisciplines.map(
-                                                    (disciplineName) =>
-                                                        getDisciplineCost(character, disciplineName)
-                                                )
-                                                const minCost =
-                                                    costs.length > 0 ? Math.min(...costs) : 0
-                                                return (
-                                                    <XpAddButton
-                                                        cost={minCost}
-                                                        availableXP={getAvailableXP(character)}
-                                                        onAdd={() => {
-                                                            setInitialDiscipline(null)
-                                                            setModalOpened(true)
-                                                        }}
-                                                        blockedEvent="sheet-power-pick-blocked"
-                                                        eventProperties={{ discipline: "new" }}
-                                                        primaryColor={primaryColor}
-                                                        large
-                                                        label="Add discipline"
-                                                    />
-                                                )
-                                            })()
-                                        ) : (
-                                            <Button
-                                                size="md"
-                                                variant="light"
-                                                color={primaryColor}
-                                                radius="md"
-                                                leftSection={<IconPlus size={18} />}
-                                                onClick={() => {
-                                                    setInitialDiscipline(null)
-                                                    setModalOpened(true)
-                                                }}
-                                            >
-                                                Add discipline
-                                            </Button>
-                                        )}
-                                    </Center>
-                                </Paper>
-                            </Grid.Col>
-                        ) : null}
-                    </Grid>
-                </Box>
+                                    Add discipline
+                                </Button>
+                            )}
+                        </div>
+                    ) : null}
+                </div>
             ) : null}
 
             {character.rituals.length > 0 || canAddRituals ? (
-                <Box mt="xl">
-                    <OrnamentalDivider
-                        label="Rituals"
-                        color={`var(--mantine-color-${primaryColor}-6)`}
-                        size="large"
-                    />
-                    <Group justify="center" gap="sm" mb="lg">
-                        {canAddRituals ? (
-                            mode === "xp" ? (
-                                (() => {
-                                    const ownedRitualNames = new Set(
-                                        character.rituals.map((ritual) => ritual.name)
-                                    )
-                                    const availableCosts = Rituals.filter(
-                                        (ritual) =>
-                                            ritual.level <= bloodSorceryLevel &&
-                                            !ownedRitualNames.has(ritual.name)
-                                    ).map((ritual) => getRitualCost(ritual.level))
-                                    availableCosts.push(getRitualCost(1))
-                                    const minCost =
-                                        availableCosts.length > 0 ? Math.min(...availableCosts) : 0
-                                    return (
-                                        <XpAddButton
-                                            cost={minCost}
-                                            availableXP={getAvailableXP(character)}
-                                            onAdd={() => setRitualModalOpened(true)}
-                                            blockedEvent="sheet-ritual-pick-blocked"
-                                            primaryColor={primaryColor}
-                                            label="Add ritual"
-                                        />
-                                    )
-                                })()
-                            ) : (
-                                <Button
-                                    size="sm"
-                                    radius="md"
-                                    variant="light"
-                                    color={primaryColor}
-                                    leftSection={<IconPlus size={16} />}
-                                    onClick={() => setRitualModalOpened(true)}
-                                >
-                                    Add ritual
-                                </Button>
+                <div className={classes.subsection}>
+                    <h3 className={classes.subsectionTitle}>
+                        Rituals
+                        <span className={classes.subsectionCount}>{character.rituals.length}</span>
+                    </h3>
+                    <div className={classes.ritualGrid}>
+                        {character.rituals.map((ritual) =>
+                            renderRitualLike(
+                                "ritual",
+                                ritual,
+                                ritual.requiredTime || ritual.ingredients ? (
+                                    <div className={classes.cardMeta}>
+                                        {ritual.requiredTime ? (
+                                            <span>
+                                                <strong>Time</strong> {ritual.requiredTime}
+                                            </span>
+                                        ) : null}
+                                        {ritual.ingredients ? (
+                                            <span>
+                                                <strong>Ingredients</strong> {ritual.ingredients}
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                ) : null
                             )
+                        )}
+                        {canAddRituals ? (
+                            <div className={classes.addTile} data-compact>
+                                {mode === "xp" ? (
+                                    (() => {
+                                        const ownedRitualNames = new Set(
+                                            character.rituals.map((ritual) => ritual.name)
+                                        )
+                                        const availableCosts = Rituals.filter(
+                                            (ritual) =>
+                                                ritual.level <= bloodSorceryLevel &&
+                                                !ownedRitualNames.has(ritual.name)
+                                        ).map((ritual) => getRitualCost(ritual.level))
+                                        availableCosts.push(getRitualCost(1))
+                                        const minCost =
+                                            availableCosts.length > 0
+                                                ? Math.min(...availableCosts)
+                                                : 0
+                                        return (
+                                            <XpAddButton
+                                                cost={minCost}
+                                                availableXP={getAvailableXP(character)}
+                                                onAdd={() => setRitualModalOpened(true)}
+                                                blockedEvent="sheet-ritual-pick-blocked"
+                                                primaryColor={primaryColor}
+                                                large
+                                                label="Add ritual"
+                                            />
+                                        )
+                                    })()
+                                ) : (
+                                    <Button
+                                        size="sm"
+                                        variant="light"
+                                        color={primaryColor}
+                                        leftSection={<IconPlus size={16} />}
+                                        onClick={() => setRitualModalOpened(true)}
+                                    >
+                                        Add ritual
+                                    </Button>
+                                )}
+                            </div>
                         ) : null}
-                    </Group>
-                    <Grid gap="md">
-                        {character.rituals.map((ritual) => (
-                            <Grid.Col key={ritual.name} span={{ base: 12, md: 6 }}>
-                                <Paper p="md" style={sheetSurfaceStyle}>
-                                    <Group justify="space-between" align="flex-start" mb="xs">
-                                        <Text fw={700} size="lg">
-                                            {ritual.name}
-                                        </Text>
-                                        <Group gap="xs">
-                                            <Badge variant="light" color={primaryColor}>
-                                                {ritual.isCustom ? "Custom Ritual" : "Ritual"}
-                                            </Badge>
-                                            {ritual.homebrewSource ? (
-                                                <HomebrewBadge source={ritual.homebrewSource} />
-                                            ) : null}
-                                            {ritual.isCustom && isFreeMode ? (
-                                                <ActionIcon
-                                                    size="sm"
-                                                    variant="subtle"
-                                                    color={primaryColor}
-                                                    onClick={() => {
-                                                        setEditingRitual(ritual)
-                                                        setCustomRitualModalOpened(true)
-                                                    }}
-                                                >
-                                                    <IconEdit size={16} />
-                                                </ActionIcon>
-                                            ) : null}
-                                            {isFreeMode ? (
-                                                <ActionIcon
-                                                    size="sm"
-                                                    variant="subtle"
-                                                    color="red"
-                                                    onClick={() => handleDeleteRitual(ritual)}
-                                                >
-                                                    <IconX size={16} />
-                                                </ActionIcon>
-                                            ) : null}
-                                        </Group>
-                                    </Group>
-                                    {ritual.summary ? (
-                                        <Text size="sm" c="dimmed" mt="xs">
-                                            {ritual.summary}
-                                        </Text>
-                                    ) : null}
-                                    {ritual.dicePool ? (
-                                        <Text size="xs" c="dimmed" mt="sm">
-                                            {ritual.dicePool.toUpperCase()}
-                                        </Text>
-                                    ) : null}
-                                </Paper>
-                            </Grid.Col>
-                        ))}
-                    </Grid>
-                </Box>
+                    </div>
+                </div>
             ) : null}
             {character.ceremonies.length > 0 || canAddCeremonies ? (
-                <Box mt="xl">
-                    <OrnamentalDivider
-                        label="Ceremonies"
-                        color={`var(--mantine-color-${primaryColor}-6)`}
-                        size="large"
-                    />
-                    <Group justify="center" gap="sm" mb="lg">
-                        {canAddCeremonies ? (
-                            mode === "xp" ? (
-                                (() => {
-                                    const ownedCeremonyNames = new Set(
-                                        character.ceremonies.map((ceremony) => ceremony.name)
-                                    )
-                                    const availableCosts = Ceremonies.filter(
-                                        (ceremony) =>
-                                            ceremony.level <= oblivionLevel &&
-                                            !ownedCeremonyNames.has(ceremony.name)
-                                    ).map((ceremony) => getRitualCost(ceremony.level))
-                                    availableCosts.push(getRitualCost(1))
-                                    const minCost =
-                                        availableCosts.length > 0 ? Math.min(...availableCosts) : 0
-                                    return (
-                                        <XpAddButton
-                                            cost={minCost}
-                                            availableXP={getAvailableXP(character)}
-                                            onAdd={() => setCeremonyModalOpened(true)}
-                                            blockedEvent="sheet-ceremony-pick-blocked"
-                                            primaryColor={primaryColor}
-                                            label="Add ceremony"
-                                        />
-                                    )
-                                })()
-                            ) : (
-                                <Button
-                                    size="sm"
-                                    radius="md"
-                                    variant="light"
-                                    color={primaryColor}
-                                    leftSection={<IconPlus size={16} />}
-                                    onClick={() => setCeremonyModalOpened(true)}
-                                >
-                                    Add ceremony
-                                </Button>
+                <div className={classes.subsection}>
+                    <h3 className={classes.subsectionTitle}>
+                        Ceremonies
+                        <span className={classes.subsectionCount}>
+                            {character.ceremonies.length}
+                        </span>
+                    </h3>
+                    <div className={classes.ritualGrid}>
+                        {character.ceremonies.map((ceremony) =>
+                            renderRitualLike(
+                                "ceremony",
+                                ceremony,
+                                <div className={classes.cardMeta}>
+                                    <span>
+                                        <strong>Requires</strong>{" "}
+                                        {getCeremonyPrerequisiteLabel(ceremony)}
+                                    </span>
+                                    <span>
+                                        <strong>Time</strong> {ceremony.requiredTime}
+                                    </span>
+                                </div>
                             )
+                        )}
+                        {canAddCeremonies ? (
+                            <div className={classes.addTile} data-compact>
+                                {mode === "xp" ? (
+                                    (() => {
+                                        const ownedCeremonyNames = new Set(
+                                            character.ceremonies.map((ceremony) => ceremony.name)
+                                        )
+                                        const availableCosts = Ceremonies.filter(
+                                            (ceremony) =>
+                                                ceremony.level <= oblivionLevel &&
+                                                !ownedCeremonyNames.has(ceremony.name)
+                                        ).map((ceremony) => getRitualCost(ceremony.level))
+                                        availableCosts.push(getRitualCost(1))
+                                        const minCost =
+                                            availableCosts.length > 0
+                                                ? Math.min(...availableCosts)
+                                                : 0
+                                        return (
+                                            <XpAddButton
+                                                cost={minCost}
+                                                availableXP={getAvailableXP(character)}
+                                                onAdd={() => setCeremonyModalOpened(true)}
+                                                blockedEvent="sheet-ceremony-pick-blocked"
+                                                primaryColor={primaryColor}
+                                                large
+                                                label="Add ceremony"
+                                            />
+                                        )
+                                    })()
+                                ) : (
+                                    <Button
+                                        size="sm"
+                                        variant="light"
+                                        color={primaryColor}
+                                        leftSection={<IconPlus size={16} />}
+                                        onClick={() => setCeremonyModalOpened(true)}
+                                    >
+                                        Add ceremony
+                                    </Button>
+                                )}
+                            </div>
                         ) : null}
-                    </Group>
-                    <Grid gap="md">
-                        {character.ceremonies.map((ceremony) => (
-                            <Grid.Col key={ceremony.name} span={{ base: 12, md: 6 }}>
-                                <Paper p="md" style={sheetSurfaceStyle}>
-                                    <Group justify="space-between" align="flex-start" mb="xs">
-                                        <Text fw={700} size="lg">
-                                            {ceremony.name}
-                                        </Text>
-                                        <Group gap="xs">
-                                            <Badge variant="light" color={primaryColor}>
-                                                {ceremony.isCustom ? "Custom Ceremony" : "Ceremony"}
-                                            </Badge>
-                                            {ceremony.homebrewSource ? (
-                                                <HomebrewBadge source={ceremony.homebrewSource} />
-                                            ) : null}
-                                            {ceremony.isCustom && isFreeMode ? (
-                                                <ActionIcon
-                                                    size="sm"
-                                                    variant="subtle"
-                                                    color={primaryColor}
-                                                    onClick={() => {
-                                                        setEditingCeremony(ceremony)
-                                                        setCustomCeremonyModalOpened(true)
-                                                    }}
-                                                >
-                                                    <IconEdit size={16} />
-                                                </ActionIcon>
-                                            ) : null}
-                                            {isFreeMode ? (
-                                                <ActionIcon
-                                                    size="sm"
-                                                    variant="subtle"
-                                                    color="red"
-                                                    onClick={() => handleDeleteCeremony(ceremony)}
-                                                >
-                                                    <IconX size={16} />
-                                                </ActionIcon>
-                                            ) : null}
-                                        </Group>
-                                    </Group>
-                                    {ceremony.summary ? (
-                                        <Text size="sm" c="dimmed" mt="xs">
-                                            {ceremony.summary}
-                                        </Text>
-                                    ) : null}
-                                    <Stack gap={2} mt="sm">
-                                        {ceremony.dicePool ? (
-                                            <Text size="xs" c="dimmed">
-                                                {ceremony.dicePool.toUpperCase()}
-                                            </Text>
-                                        ) : null}
-                                        <Text size="xs" c="dimmed">
-                                            Requires: {getCeremonyPrerequisiteLabel(ceremony)}
-                                        </Text>
-                                        <Text size="xs" c="dimmed">
-                                            Time: {ceremony.requiredTime}
-                                        </Text>
-                                    </Stack>
-                                </Paper>
-                            </Grid.Col>
-                        ))}
-                    </Grid>
-                </Box>
+                    </div>
+                </div>
             ) : null}
             {modalOpened ? (
                 <DisciplineSelectModal
@@ -1175,6 +1146,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                     confirmLabel="Delete"
                 />
             ) : null}
+            {contextMenu.menu}
         </>
     )
 }

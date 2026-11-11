@@ -1,322 +1,404 @@
-.homebrew-loresheet__modal {
-    background: transparent;
-    box-shadow: none;
-    max-height: calc(100dvh - 2rem);
-    overflow: auto;
-}
+/* Homebrew item editor: modal frame (form + live preview) and shared form helpers. */
 
-.homebrew-loresheet__modal-body {
-    padding: 0;
-}
+/* ---- Modal frame ------------------------------------------------------------- */
 
-.homebrew-rule-modal {
-    --corner: 1.25rem;
-    background: linear-gradient(145deg, rgba(131, 85, 162, 0.68), rgba(82, 51, 104, 0.68) 72%);
-    border: 0;
-    border-radius: 0;
-    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
-    clip-path: polygon(
-        var(--corner) 0,
-        calc(100% - var(--corner)) 0,
-        100% var(--corner),
-        100% calc(100% - var(--corner)),
-        calc(100% - var(--corner)) 100%,
-        var(--corner) 100%,
-        0 calc(100% - var(--corner)),
-        0 var(--corner)
-    );
-    overflow: hidden;
-    padding: 0;
-    position: relative;
-    isolation: isolate;
+.hb-editor-modal {
     display: flex;
     flex-direction: column;
-    max-height: calc(100dvh - 3rem);
 }
 
-.homebrew-rule-modal::before {
-    --inner-corner: 1.15rem;
-    background: linear-gradient(145deg, #1c151f, #100d12 68%);
-    clip-path: polygon(
-        var(--inner-corner) 0,
-        calc(100% - var(--inner-corner)) 0,
-        100% var(--inner-corner),
-        100% calc(100% - var(--inner-corner)),
-        calc(100% - var(--inner-corner)) 100%,
-        var(--inner-corner) 100%,
-        0 calc(100% - var(--inner-corner)),
-        0 var(--inner-corner)
-    );
-    content: "";
-    inset: 2px;
-    position: absolute;
-    z-index: 0;
+.hb-editor-modal__header {
+    border-bottom: 1px solid var(--pg-border-faint);
+    padding-bottom: var(--pg-space-4);
 }
 
-.homebrew-rule-modal__header,
-.homebrew-rule-modal__body {
-    background: transparent;
-    position: relative;
-    z-index: 1;
+.hb-editor-modal__body {
+    padding: 0;
 }
 
-.homebrew-rule-modal__header {
-    padding: 1.25rem 1.5rem 0.5rem;
-}
-
-.homebrew-rule-modal__body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 0.5rem 1.5rem 1.5rem;
-    scrollbar-color: rgba(160, 120, 178, 0.5) transparent;
-    scrollbar-width: thin;
-}
-
-.homebrew-loresheet__shell {
-    --corner: 1.25rem;
-    background: #8b2b35;
-    clip-path: polygon(
-        var(--corner) 0,
-        calc(100% - var(--corner)) 0,
-        100% var(--corner),
-        100% calc(100% - var(--corner)),
-        calc(100% - var(--corner)) 100%,
-        var(--corner) 100%,
-        0 calc(100% - var(--corner)),
-        0 var(--corner)
-    );
-    padding: 2px;
-}
-
-.homebrew-loresheet__preview {
-    margin-inline: auto;
-    max-width: 72rem;
-    width: 100%;
-}
-
-.homebrew-loresheet__sheet {
-    --corner: 1.15rem;
-    background: linear-gradient(145deg, #1c1519, #100d11 68%);
-    clip-path: polygon(
-        var(--corner) 0,
-        calc(100% - var(--corner)) 0,
-        100% var(--corner),
-        100% calc(100% - var(--corner)),
-        calc(100% - var(--corner)) 100%,
-        var(--corner) 100%,
-        0 calc(100% - var(--corner)),
-        0 var(--corner)
-    );
-    color: #e8dfdc;
-    padding: clamp(1.5rem, 4vw, 3.25rem);
-}
-
-.homebrew-loresheet__header {
-    margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
-    text-align: center;
-}
-
-.homebrew-loresheet__title-input {
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    color: #c74650;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: clamp(1.5rem, 4vw, 2.75rem);
-    font-weight: 700;
-    height: auto;
-    letter-spacing: 0.2em;
-    line-height: 1.2;
-    padding: 0 0 0 0.2em;
-    text-align: center;
-    text-transform: uppercase;
-}
-
-.homebrew-loresheet__title-input:focus {
-    border-bottom: 1px solid rgba(199, 70, 80, 0.65);
-    box-shadow: none;
-}
-
-.homebrew-loresheet__title-input::placeholder {
-    color: rgba(199, 70, 80, 0.55);
-}
-
-.homebrew-loresheet__title {
-    color: #c74650;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: clamp(1.5rem, 4vw, 2.75rem);
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-    padding-left: 0.2em;
-    text-transform: uppercase;
-}
-
-.homebrew-loresheet__eyebrow {
-    color: #9e8f91;
-    letter-spacing: 0.12em;
-    margin-top: 0.7rem;
-    text-transform: uppercase;
-}
-
-.homebrew-loresheet__intro {
-    display: grid;
-    gap: clamp(1.25rem, 3vw, 2.5rem);
-    grid-template-columns: minmax(0, 1.25fr) minmax(13rem, 0.75fr);
-}
-
-.homebrew-loresheet__details {
-    border-left: 1px solid rgba(178, 72, 80, 0.42);
-    padding-left: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.homebrew-loresheet__intro-copy {
-    font-family: Georgia, "Times New Roman", serif;
-    line-height: 1.6;
-    white-space: pre-wrap;
-}
-
-.homebrew-loresheet__tiers {
-    display: grid;
-    gap: clamp(1.25rem, 3vw, 2.5rem);
-    grid-auto-flow: column;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: repeat(2, auto);
-}
-
-.homebrew-loresheet__tier:nth-child(3),
-.homebrew-loresheet__tier:nth-child(4),
-.homebrew-loresheet__tier:nth-child(5) {
-    border-left: 1px solid rgba(178, 72, 80, 0.42);
-    padding-left: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.homebrew-loresheet__tier-heading {
+.hb-editor__title {
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: var(--pg-space-3);
+}
+
+.hb-editor__title-glyph {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    color: var(--pg-gold);
+    border: 1px solid var(--pg-border-gold);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(120, 18, 32, 0.32), transparent 72%);
+}
+
+.hb-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+    align-items: start;
+}
+
+.hb-editor__form {
     display: flex;
-    gap: 0.55rem;
-    margin-bottom: 0.65rem;
+    flex-direction: column;
+    gap: var(--pg-space-6);
+    padding: var(--pg-space-6);
     min-width: 0;
 }
 
-.homebrew-loresheet__tier-heading .mantine-TextInput-root {
-    flex: 1 1 auto;
+.hb-editor__form[hidden] {
+    display: none;
+}
+
+.hb-editor__preview {
+    align-self: stretch;
     min-width: 0;
+    border-left: 1px solid var(--pg-border-faint);
+    background:
+        radial-gradient(90% 50% at 50% 0%, rgba(120, 18, 32, 0.08), transparent 70%),
+        rgba(0, 0, 0, 0.18);
 }
 
-.homebrew-loresheet__dots {
-    color: #b9414c;
-    flex: 0 0 auto;
-    font-size: 0.7rem;
-    letter-spacing: 0.16em;
+.hb-editor__preview-inner {
+    position: sticky;
+    top: 0;
+    /* Modal viewport minus header + footer, so tall sheets scroll on their own. */
+    max-height: calc(90dvh - 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+    padding: var(--pg-space-6);
 }
 
-.homebrew-loresheet__tier-name {
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid rgba(178, 72, 80, 0.42);
-    border-radius: 0;
-    color: #e1cbca;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: 1rem;
-    font-weight: 700;
-    height: auto;
-    padding: 0.2rem 0 0.35rem;
+.hb-editor__preview-label {
+    color: var(--pg-ink-4);
 }
 
-.homebrew-loresheet__tier-name:focus {
-    border-bottom-color: #c74650;
-    box-shadow: none;
+.hb-editor__switch {
+    margin: var(--pg-space-4) var(--pg-space-4) 0;
 }
 
-.homebrew-loresheet__tier-title {
-    color: #e1cbca;
-    font-family: "Cinzel, Georgia, serif";
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.35;
-    min-width: 0;
-}
-
-.homebrew-loresheet__tier-text {
-    color: #e8dfdc;
-    font-family: Georgia, "Times New Roman", serif;
-    line-height: 1.6;
-    white-space: pre-wrap;
-}
-
-.homebrew-loresheet__tier-summary {
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    color: #e8dfdc;
-    font-family: Georgia, "Times New Roman", serif;
-    line-height: 1.6;
-    padding: 0.65rem 0.75rem;
-    resize: vertical;
-}
-
-.homebrew-loresheet__tier-summary:focus {
-    box-shadow: inset 0 0 0 1px rgba(199, 70, 80, 0.5);
-}
-
-.homebrew-loresheet__footer {
-    align-items: center;
-    border-top: 1px solid rgba(178, 72, 80, 0.42);
+.hb-editor__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: clamp(1.5rem, 3vw, 2.5rem);
-    padding-top: 1rem;
+    gap: var(--pg-space-3);
+    padding: var(--pg-space-3) var(--pg-space-6);
+    padding-bottom: calc(var(--pg-space-3) + var(--pg-safe-bottom));
+    border-top: 1px solid var(--pg-border);
+    background: var(--pg-surface-overlay);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
-@media (max-width: 40rem) {
-    .homebrew-rule-modal {
-        --corner: 0.85rem;
-        max-height: calc(100dvh - 1rem);
+@media (max-width: 48em) {
+    .hb-editor {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .homebrew-rule-modal::before {
-        --inner-corner: 0.76rem;
+    .hb-editor__form {
+        padding: var(--pg-space-4);
+        gap: var(--pg-space-5);
     }
 
-    .homebrew-rule-modal__header {
-        padding: 1rem 1rem 0.35rem;
-    }
-
-    .homebrew-rule-modal__body {
-        padding: 0.35rem 1rem 1rem;
-    }
-
-    .homebrew-loresheet__sheet {
-        padding: 1.5rem;
-    }
-
-    .homebrew-loresheet__intro,
-    .homebrew-loresheet__tiers {
-        grid-auto-flow: row;
-        grid-template-columns: 1fr;
-        grid-template-rows: none;
-    }
-
-    .homebrew-loresheet__details,
-    .homebrew-loresheet__tier + .homebrew-loresheet__tier,
-    .homebrew-loresheet__tier:nth-child(3),
-    .homebrew-loresheet__tier:nth-child(5) {
+    .hb-editor__preview {
+        position: static;
         border-left: 0;
-        border-top: 1px solid rgba(178, 72, 80, 0.42);
-        padding-left: 0;
-        padding-top: 1.25rem;
+        background: none;
     }
 
-    .homebrew-loresheet__footer {
-        align-items: stretch;
-        flex-direction: column-reverse;
+    .hb-editor__preview-inner {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        padding: var(--pg-space-4);
     }
 
-    .homebrew-loresheet__footer > button {
-        width: 100%;
+    .hb-editor__footer {
+        padding-inline: var(--pg-space-4);
+    }
+
+    .hb-editor__footer > * {
+        flex: 1;
+    }
+}
+
+/* ---- Form sections ----------------------------------------------------------- */
+
+.hb-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+}
+
+.hb-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-3);
+}
+
+.hb-form-section__title {
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-gold-dim);
+    white-space: nowrap;
+}
+
+.hb-form-section__rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--pg-border-gold), transparent);
+}
+
+.hb-form-section__description {
+    margin: calc(var(--pg-space-1) * -1) 0 0;
+    font-size: 0.8125rem;
+    color: var(--pg-ink-3);
+}
+
+.hb-form-section__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-4);
+}
+
+.hb-form-grid {
+    display: grid;
+    gap: var(--pg-space-4);
+    align-items: start;
+}
+
+.hb-form-grid[data-cols="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hb-form-grid[data-cols="power"] {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.hb-form-grid[data-cols="grant"] {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 36em) {
+    .hb-form-grid[data-cols="2"],
+    .hb-form-grid[data-cols="grant"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hb-form-grid[data-cols="power"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hb-form-grid[data-cols="power"] > :first-child {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Repeating sub-forms (specialties, grants, choice groups). */
+.hb-subform {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+    padding: var(--pg-space-3) var(--pg-space-4) var(--pg-space-4);
+    border: 1px solid var(--pg-border-faint);
+    border-radius: var(--pg-radius-lg);
+    background: var(--pg-sunken);
+}
+
+.hb-subform--group {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: var(--pg-border);
+}
+
+.hb-subform--group .hb-subform {
+    background: var(--pg-surface-1);
+}
+
+.hb-subform__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-2);
+    min-height: 30px;
+}
+
+.hb-subform__title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.hb-inline-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+    gap: var(--pg-space-3);
+    align-items: end;
+}
+
+.hb-inline-row__remove {
+    margin-bottom: 4px;
+}
+
+.hb-inline-row--budget {
+    grid-template-columns: minmax(0, 160px) auto;
+    align-items: center;
+}
+
+.hb-inline-row--budget .mantine-Checkbox-root {
+    margin-top: 22px;
+}
+
+.hb-add-button {
+    align-self: flex-start;
+}
+
+.hb-field-error {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--pg-danger);
+}
+
+/* ---- Loresheet level fields ------------------------------------------------- */
+
+.hb-tier-fields {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+}
+
+.hb-tier-field {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: var(--pg-space-3);
+    align-items: start;
+}
+
+.hb-tier-field__level {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 14px;
+}
+
+.hb-tier-field__inputs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-2);
+}
+
+/* ---- Validation summary ------------------------------------------------------ */
+
+.hb-validation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-2);
+    padding: var(--pg-space-3) var(--pg-space-4);
+    border: 1px solid var(--pg-border-blood);
+    border-left-width: 3px;
+    border-radius: var(--pg-radius-md);
+    background: rgba(176, 30, 47, 0.1);
+    scroll-margin: var(--pg-space-16);
+}
+
+.hb-validation__title {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--pg-ink);
+}
+
+.hb-validation__title svg {
+    color: var(--pg-blood-bright);
+}
+
+.hb-validation__count {
+    margin-left: auto;
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+}
+
+.hb-validation__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.hb-validation__item {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    width: 100%;
+    min-height: 30px;
+    padding: 4px var(--pg-space-2);
+    margin-inline: calc(var(--pg-space-2) * -1);
+    width: calc(100% + var(--pg-space-4));
+    border-radius: var(--pg-radius-sm);
+    font-size: 0.8125rem;
+    color: var(--pg-ink-2);
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.hb-validation__item strong {
+    color: var(--pg-ink);
+    font-weight: 600;
+}
+
+.hb-validation__text {
+    flex: 1;
+    min-width: 0;
+}
+
+.hb-validation__go {
+    display: inline-flex;
+    color: var(--pg-blood-bright);
+    opacity: 0.6;
+    transition:
+        opacity var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-fast) var(--ease-out);
+}
+
+.hb-validation__item:active {
+    transform: scale(0.99);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .hb-validation__item:hover {
+        background: rgba(220, 52, 70, 0.1);
+    }
+
+    .hb-validation__item:hover .hb-validation__go {
+        opacity: 1;
+        transform: translateX(2px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hb-validation__item:hover .hb-validation__go {
+        transform: none;
     }
 }

@@ -1,11 +1,12 @@
-import { Box, Grid, Paper, Text, Center, ActionIcon, Group, Button } from "@mantine/core"
+import { Button } from "@mantine/core"
 import { memo, useState } from "react"
 import { SheetOptions } from "../CharacterSheet"
-import { sheetAddSurfaceStyle, sheetSurfaceStyle } from "../utils/style"
 import TouchstoneModal from "../components/TouchstoneModal"
 import { Touchstone } from "~/data/Character"
-import { IconPlus, IconX, IconPencil } from "@tabler/icons-react"
+import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
+import { DeleteIconButton, IconButton, useContextMenu } from "~/components/ui"
+import classes from "../sheet.module.css"
 
 type TouchstonesProps = {
     options: SheetOptions
@@ -17,6 +18,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
     const [initialTouchstone, setInitialTouchstone] = useState<Touchstone | null>(null)
     const [initialIndex, setInitialIndex] = useState<number | null>(null)
     const [touchstoneToDelete, setTouchstoneToDelete] = useState<Touchstone | null>(null)
+    const contextMenu = useContextMenu()
     const isFreeMode = mode === "free"
 
     if (character.touchstones.length === 0 && !isFreeMode) {
@@ -47,101 +49,92 @@ const Touchstones = ({ options }: TouchstonesProps) => {
 
     return (
         <>
-            <Box>
-                <Grid>
-                    {character.touchstones.map((touchstone, index) => (
-                        <Grid.Col key={index} span={{ base: 12, md: 6 }}>
-                            <Paper
-                                p="sm"
-                                style={{
-                                    ...sheetSurfaceStyle,
-                                    position: "relative",
-                                    minHeight: "120px",
-                                    display: "flex",
-                                    flexDirection: "column"
-                                }}
-                            >
-                                {isFreeMode ? (
-                                    <Group
-                                        gap="xs"
-                                        style={{ position: "absolute", top: "8px", right: "8px" }}
-                                    >
-                                        <ActionIcon
-                                            size="sm"
-                                            variant="subtle"
-                                            color={primaryColor}
-                                            onClick={() => {
-                                                setInitialTouchstone(touchstone)
-                                                setInitialIndex(index)
-                                                setModalOpened(true)
-                                            }}
-                                        >
-                                            <IconPencil size={16} />
-                                        </ActionIcon>
-                                        <ActionIcon
-                                            size="sm"
-                                            variant="subtle"
-                                            color="red"
-                                            onClick={() => handleDeleteTouchstone(touchstone)}
-                                        >
-                                            <IconX size={16} />
-                                        </ActionIcon>
-                                    </Group>
-                                ) : null}
-                                <Text fw={700} style={{ paddingRight: isFreeMode ? "60px" : "0" }}>
+            <div className={classes.touchstoneGrid}>
+                {character.touchstones.map((touchstone, index) => {
+                    const editTouchstone = () => {
+                        setInitialTouchstone(touchstone)
+                        setInitialIndex(index)
+                        setModalOpened(true)
+                    }
+                    return (
+                        <div
+                            key={index}
+                            className={`${classes.card} ${classes.touchstone}`}
+                            data-actionable={isFreeMode || undefined}
+                            onContextMenu={
+                                isFreeMode
+                                    ? (event) =>
+                                          contextMenu.open(event, [
+                                              {
+                                                  key: "edit",
+                                                  label: "Edit touchstone",
+                                                  icon: <IconPencil size={14} />,
+                                                  onClick: editTouchstone
+                                              },
+                                              { type: "divider", key: "divider" },
+                                              {
+                                                  key: "delete",
+                                                  label: "Delete touchstone…",
+                                                  color: "red",
+                                                  icon: <IconTrash size={14} />,
+                                                  onClick: () => handleDeleteTouchstone(touchstone)
+                                              }
+                                          ])
+                                    : undefined
+                            }
+                        >
+                            <div className={classes.cardHead}>
+                                <p className={classes.cardTitle} data-display>
                                     {touchstone.name}
-                                </Text>
-                                {touchstone.description ? (
-                                    <Text size="sm" c="dimmed" mt="xs">
-                                        {touchstone.description}
-                                    </Text>
+                                </p>
+                                {isFreeMode ? (
+                                    <div className={classes.cardActions}>
+                                        <IconButton
+                                            size="sm"
+                                            label={`Edit ${touchstone.name || "touchstone"}`}
+                                            icon={<IconPencil size={15} />}
+                                            onClick={editTouchstone}
+                                        />
+                                        <DeleteIconButton
+                                            size="sm"
+                                            label={`Delete ${touchstone.name || "touchstone"}`}
+                                            onClick={() => handleDeleteTouchstone(touchstone)}
+                                        />
+                                    </div>
                                 ) : null}
-                                <Box style={{ flex: 1 }} />
-                                {touchstone.conviction ? (
-                                    <Text size="sm" mt="auto">
-                                        <Text span fw={700}>
-                                            Conviction:
-                                        </Text>{" "}
+                            </div>
+                            {touchstone.description ? (
+                                <p className={classes.cardLore}>{touchstone.description}</p>
+                            ) : null}
+                            {touchstone.conviction ? (
+                                <div className={classes.conviction}>
+                                    <span className={classes.label}>Conviction</span>
+                                    <p className={classes.convictionText}>
                                         {touchstone.conviction}
-                                    </Text>
-                                ) : null}
-                            </Paper>
-                        </Grid.Col>
-                    ))}
-                    {isFreeMode ? (
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper
-                                p="md"
-                                withBorder
-                                style={{
-                                    height: "100%",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    ...sheetAddSurfaceStyle
-                                }}
-                            >
-                                <Center style={{ height: "100%" }}>
-                                    <Button
-                                        size="sm"
-                                        variant="light"
-                                        color={primaryColor}
-                                        radius="md"
-                                        leftSection={<IconPlus size={16} />}
-                                        onClick={() => {
-                                            setInitialTouchstone(null)
-                                            setInitialIndex(null)
-                                            setModalOpened(true)
-                                        }}
-                                    >
-                                        Add touchstone
-                                    </Button>
-                                </Center>
-                            </Paper>
-                        </Grid.Col>
-                    ) : null}
-                </Grid>
-            </Box>
+                                    </p>
+                                </div>
+                            ) : null}
+                        </div>
+                    )
+                })}
+                {isFreeMode ? (
+                    <div className={classes.addTile}>
+                        <Button
+                            size="sm"
+                            variant="light"
+                            color={primaryColor}
+                            leftSection={<IconPlus size={16} />}
+                            onClick={() => {
+                                setInitialTouchstone(null)
+                                setInitialIndex(null)
+                                setModalOpened(true)
+                            }}
+                        >
+                            Add touchstone
+                        </Button>
+                    </div>
+                ) : null}
+            </div>
             {modalOpened ? (
                 <TouchstoneModal
                     opened
@@ -165,6 +158,7 @@ const Touchstones = ({ options }: TouchstonesProps) => {
                     confirmLabel="Delete"
                 />
             ) : null}
+            {contextMenu.menu}
         </>
     )
 }

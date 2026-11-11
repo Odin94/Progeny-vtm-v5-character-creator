@@ -1,67 +1,36 @@
 import { memo } from "react"
-import { Grid, Stack, Text, Title } from "@mantine/core"
 import { upcase } from "../../generator/utils"
-import Tally from "../../components/Tally"
 import { Attributes, attributesKeySchema } from "../../data/Attributes"
+import Dots from "./Dots"
+import classes from "./Dossier.module.css"
 
 export type AttributesProps = {
     attributes: Attributes
 }
 
-const AttributesDisplay = ({ attributes }: AttributesProps) => {
-    const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New"
-    }
+const groups = [
+    { label: "Physical", keys: ["strength", "dexterity", "stamina"] },
+    { label: "Social", keys: ["charisma", "manipulation", "composure"] },
+    { label: "Mental", keys: ["intelligence", "wits", "resolve"] }
+]
 
-    return (
-        <Stack>
-            <Title order={2}>Attributes</Title>
-
-            <Grid>
-                <Grid.Col span={4}>
-                    <Title order={4}>Physical</Title>
-                    {["strength", "dexterity", "stamina"]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map((attribute) => {
-                            return (
-                                <Text style={textStyle} key={attribute}>
-                                    {upcase(attribute).slice(0, 3)}:{" "}
-                                    <Tally n={attributes[attribute]} />
-                                </Text>
-                            )
-                        })}
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                    <Title order={4}>Social</Title>
-                    {["charisma", "manipulation", "composure"]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map((attribute) => {
-                            return (
-                                <Text style={textStyle} key={attribute}>
-                                    {upcase(attribute).slice(0, 3)}:{" "}
-                                    <Tally n={attributes[attribute]} />
-                                </Text>
-                            )
-                        })}
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                    <Title order={4}>Mental</Title>
-                    {["intelligence", "wits", "resolve"]
-                        .map((a) => attributesKeySchema.parse(a))
-                        .map((attribute) => {
-                            return (
-                                <Text style={textStyle} key={attribute}>
-                                    {upcase(attribute).slice(0, 3)}:{" "}
-                                    <Tally n={attributes[attribute]} />
-                                </Text>
-                            )
-                        })}
-                </Grid.Col>
-            </Grid>
-        </Stack>
-    )
-}
+const AttributesDisplay = ({ attributes }: AttributesProps) => (
+    <section className={classes.section}>
+        <h3 className={classes.sectionTitle}>Attributes</h3>
+        {groups.map((group) => (
+            <div key={group.label} className={classes.group}>
+                <span className={classes.groupLabel}>{group.label}</span>
+                {group.keys
+                    .map((a) => attributesKeySchema.parse(a))
+                    .map((attribute) => (
+                        <div key={attribute} className={classes.row}>
+                            <span className={classes.rowName}>{upcase(attribute)}</span>
+                            <Dots n={attributes[attribute]} />
+                        </div>
+                    ))}
+            </div>
+        ))}
+    </section>
+)
 
 export default memo(AttributesDisplay)

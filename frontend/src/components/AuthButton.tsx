@@ -6,7 +6,7 @@ export const AuthButton = () => {
 
     if (isLoading) {
         return (
-            <Button loading color="gray">
+            <Button loading variant="default">
                 Loading...
             </Button>
         )
@@ -20,11 +20,11 @@ export const AuthButton = () => {
                         window.location.href = "/me"
                     }}
                     variant="subtle"
-                    color="red"
+                    color="gray"
                 >
                     {user.firstName || user.email}
                 </Button>
-                <Button onClick={signOut} variant="outline" color="red">
+                <Button onClick={signOut} variant="default">
                     Sign Out
                 </Button>
             </Group>

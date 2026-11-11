@@ -1,4 +1,8 @@
-import { Badge, Box, Divider, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core"
+import { IconUsersGroup } from "@tabler/icons-react"
+import { Fragment, memo, useMemo, type CSSProperties, type MouseEvent, type ReactNode } from "react"
+import { getPrimaryColor } from "~/character_sheet/utils/style"
+import { EmptyState, Panel } from "~/components/ui"
+import NameTag from "~/components/NameTag"
 import { attributesKeySchema } from "~/data/Attributes"
 import { type Character } from "~/data/Character"
 import { clans } from "~/data/Clans"
@@ -7,22 +11,34 @@ import { getMeritFlawDisplayName } from "~/data/meritsAndFlawsResolution"
 import type { DisciplineName } from "~/data/NameSchemas"
 import { skillsKeySchema } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
-import { RAW_GOLD, RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { parseCharacterData } from "~/utils/characterData"
 import type { CoterieMemberResponse } from "~/utils/api"
-import NameTag from "~/components/NameTag"
+import { parseCharacterData } from "~/utils/characterData"
 import { getCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
-import { memo, useMemo, type ReactNode } from "react"
 import {
     getDisciplineDefinitionIdentity,
     getPowerDisciplineIdentity,
     getPowerIdentity
 } from "~/utils/homebrewOptions"
+import classes from "./CoterieCharacterSummaryGrid.module.css"
+
+export type ParsedCoterieMember = { member: CoterieMemberResponse; character: Character }
 
 type CoterieCharacterSummaryGridProps = {
     members: CoterieMemberResponse[]
     vitalsByCharacterId: Record<string, CharacterVitals>
+    /** Right-click (and long-press / Shift+F10) on a dossier. */
+    onMemberContextMenu?: (
+        event: MouseEvent<HTMLElement>,
+        member: CoterieMemberResponse,
+        character: Character
+    ) => void
+    /** Icon actions rendered in the top-right of each dossier. */
+    renderMemberActions?: (member: CoterieMemberResponse, character: Character) => ReactNode
+    /** Briefly emphasised dossier (e.g. after jumping to it from the roster). */
+    highlightedCharacterId?: string | null
+    /** Replaces the default empty state. */
+    emptyState?: ReactNode
 }
 
 const attributeGroups = [
@@ -85,88 +101,56 @@ const skillGroups = [
     }
 ]
 
-const renderPips = (level: number, max = 5) => "●".repeat(level) + "○".repeat(max - level)
+export const coterieMemberElementId = (characterId: string) => `coterie-member-${characterId}`
 
-const SectionTitle = ({ children }: { children: ReactNode }) => (
-    <Text
-        size="xs"
-        style={{
-            fontFamily: "Cinzel, Georgia, serif",
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: rgba(RAW_GOLD, 0.76)
-        }}
-    >
-        {children}
-    </Text>
+/** Mantine color name for a clan, used for sigils/accents across the coterie page. */
+export const getClanColor = (character: Character) => getPrimaryColor(character.clan)
+
+export const clanColorStyle = (clanColor: string) =>
+    ({
+        "--clan": `var(--mantine-color-${clanColor}-6)`,
+        "--clan-bright": `var(--mantine-color-${clanColor}-4)`
+    }) as CSSProperties
+
+export const parseCoterieMembers = (members: CoterieMemberResponse[]): ParsedCoterieMember[] =>
+    members
+        .map((member) => ({
+            member,
+            character: parseCharacterData(member.character?.data)
+        }))
+        .filter((entry): entry is ParsedCoterieMember => !!entry.character)
+
+const maskStyle = (logo: string): CSSProperties => ({
+    maskImage: `url(${logo})`,
+    WebkitMaskImage: `url(${logo})`
+})
+
+const Dots = ({ value, max = 5 }: { value: number; max?: number }) => (
+    <span className={classes.dots} aria-hidden="true">
+        {Array.from({ length: max }, (_, index) => (
+            <span key={index} className={classes.dot} data-filled={index < value || undefined} />
+        ))}
+    </span>
 )
 
 const RatingRow = ({ label, value }: { label: string; value: number }) => (
-    <Group justify="space-between" gap="sm" wrap="nowrap">
-        <Text size="xs" c="dimmed" truncate="end">
-            {upcase(label)}
-        </Text>
-        <Text
-            size="xs"
-            style={{
-                color: rgba(RAW_RED, 0.9),
-                fontFamily: "Courier New, monospace",
-                whiteSpace: "nowrap"
-            }}
-        >
-            {renderPips(value)}
-        </Text>
-    </Group>
+    <div className={classes.rating}>
+        <span className={classes.ratingName}>{upcase(label)}</span>
+        <Dots value={value} />
+        <span className="pg-visually-hidden">{value}</span>
+    </div>
 )
 
 const HungerMeter = ({ hunger }: { hunger: number }) => (
-    <Group gap={4} wrap="nowrap" aria-label={`Hunger ${hunger}`}>
+    <span className={classes.track} aria-label={`Hunger ${hunger}`}>
         {Array.from({ length: 5 }, (_, index) => (
-            <Box
+            <span
                 key={index}
-                style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 2,
-                    backgroundColor:
-                        index < hunger ? rgba(RAW_RED, 0.96) : "rgba(255, 255, 255, 0.1)",
-                    border: `1px solid ${
-                        index < hunger ? rgba(RAW_RED, 0.88) : "rgba(255, 255, 255, 0.16)"
-                    }`,
-                    boxShadow: index < hunger ? `0 0 10px ${rgba(RAW_RED, 0.32)}` : undefined
-                }}
+                className={classes.hungerPip}
+                data-filled={index < hunger || undefined}
             />
         ))}
-    </Group>
-)
-
-const StatusLabel = ({ children, color }: { children: ReactNode; color: string }) => (
-    <Text
-        size="xs"
-        style={{
-            fontFamily: "Cinzel, Georgia, serif",
-            fontSize: "var(--mantine-font-size-xs)",
-            letterSpacing: "0.16em",
-            lineHeight: 1.2,
-            textTransform: "uppercase",
-            color
-        }}
-    >
-        {children}
-    </Text>
-)
-
-const StatusMeterRow = ({ children }: { children: ReactNode }) => (
-    <Box
-        style={{
-            alignItems: "center",
-            columnGap: "var(--mantine-spacing-xs)",
-            display: "grid",
-            gridTemplateColumns: "8.75rem minmax(0, 1fr)"
-        }}
-    >
-        {children}
-    </Box>
+    </span>
 )
 
 const DamageMeter = ({
@@ -180,52 +164,57 @@ const DamageMeter = ({
     superficialDamage: number
     aggravatedDamage: number
 }) => (
-    <Group
-        gap={4}
-        wrap="nowrap"
+    <span
+        className={classes.track}
         aria-label={`${label} damage: ${superficialDamage} superficial, ${aggravatedDamage} aggravated`}
     >
         {Array.from({ length: maximum }, (_, index) => {
             const pipNumber = index + 1
             const isAggravated = pipNumber <= aggravatedDamage
             const isSuperficial = pipNumber <= superficialDamage
+            const state = isAggravated ? "aggravated" : isSuperficial ? "superficial" : "none"
 
             return (
-                <Box
+                <span
                     key={index}
-                    style={{
-                        width: 10,
-                        height: 10,
-                        flex: "0 0 10px",
-                        border: `1px solid ${rgba(RAW_GRAPE, 0.9)}`,
-                        borderRadius: 2,
-                        position: "relative",
-                        marginRight: (index + 1) % 5 === 0 && index < maximum - 1 ? 8 : undefined
-                    }}
+                    className={classes.damagePip}
+                    data-state={state}
+                    data-group-end={((index + 1) % 5 === 0 && index < maximum - 1) || undefined}
                 >
-                    {isSuperficial || isAggravated ? (
+                    {state !== "none" ? (
                         <svg
                             viewBox="0 0 24 24"
                             fill="none"
-                            stroke={rgba(RAW_GRAPE, 0.96)}
+                            stroke="currentColor"
                             strokeWidth="3"
                             strokeLinecap="round"
                             aria-hidden="true"
-                            style={{
-                                position: "absolute",
-                                inset: 0,
-                                width: "100%",
-                                height: "100%"
-                            }}
                         >
-                            <line x1="22" y1="2" x2="2" y2="22" />
-                            {isAggravated ? <line x1="2" y1="2" x2="22" y2="22" /> : null}
+                            <line x1="21" y1="3" x2="3" y2="21" />
+                            {isAggravated ? <line x1="3" y1="3" x2="21" y2="21" /> : null}
                         </svg>
                     ) : null}
-                </Box>
+                </span>
             )
         })}
-    </Group>
+    </span>
+)
+
+const HumanityMeter = ({ humanity, stains }: { humanity: number; stains: number }) => (
+    <span
+        className={classes.track}
+        aria-label={`Humanity ${humanity} of 10${stains > 0 ? `, ${stains} stains` : ""}`}
+    >
+        {Array.from({ length: 10 }, (_, index) => (
+            <span
+                key={index}
+                className={classes.humanityPip}
+                data-filled={index < humanity || undefined}
+                data-stained={index >= 10 - stains || undefined}
+                data-group-end={index === 4 || undefined}
+            />
+        ))}
+    </span>
 )
 
 const getTouchstoneText = (touchstone: Character["touchstones"][number]) => {
@@ -270,462 +259,419 @@ const getDisciplineLogo = (
     )
 }
 
+export const getMemberPlayerName = (member: CoterieMemberResponse, character: Character) =>
+    member.playerNickname?.trim() || character.player?.trim() || "Unknown player"
+
+const SectionTitle = ({ children }: { children: ReactNode }) => (
+    <h4 className={classes.sectionTitle}>{children}</h4>
+)
+
+const Dossier = ({
+    member,
+    character,
+    vitals: liveVitals,
+    actions,
+    highlighted,
+    onContextMenu
+}: {
+    member: CoterieMemberResponse
+    character: Character
+    vitals?: CharacterVitals
+    actions?: ReactNode
+    highlighted: boolean
+    onContextMenu?: CoterieCharacterSummaryGridProps["onMemberContextMenu"]
+}) => {
+    const clan = character.clan ? clans[character.clan] : null
+    const playerName = getMemberPlayerName(member, character)
+    const disciplineGroups = getDisciplineGroups(character)
+    const meritsAndFlaws = [...character.merits, ...character.flaws]
+    const vitals = liveVitals ?? getCharacterVitals(character)
+    const maxHealth = Math.max(0, Math.min(10, vitals.maxHealth))
+    const superficialDamage = Math.max(0, Math.min(maxHealth, vitals.superficialDamage))
+    const aggravatedDamage = Math.max(0, Math.min(maxHealth, vitals.aggravatedDamage))
+    const hunger = Math.max(0, Math.min(5, vitals.hunger))
+    const willpower = Math.max(0, vitals.willpower)
+    const superficialWillpowerDamage = Math.max(
+        0,
+        Math.min(willpower, vitals.superficialWillpowerDamage)
+    )
+    const aggravatedWillpowerDamage = Math.max(
+        0,
+        Math.min(willpower, vitals.aggravatedWillpowerDamage)
+    )
+    const humanity = Math.max(0, Math.min(10, vitals.humanity))
+    const humanityStains = Math.max(0, Math.min(10, vitals.humanityStains))
+    const touchstones = character.touchstones
+        .map((touchstone) => ({
+            touchstone,
+            text: getTouchstoneText(touchstone)
+        }))
+        .filter(({ text }) => text.length > 0)
+    const rites = [...character.rituals, ...character.ceremonies]
+    const lineage = [
+        clan?.name || upcase(character.clan) || "Clanless",
+        character.predatorType.name,
+        character.generation ? `Gen ${character.generation}` : ""
+    ].filter(Boolean)
+    const disciplineEntries = Object.entries(disciplineGroups)
+
+    return (
+        <article
+            id={coterieMemberElementId(member.characterId)}
+            className={classes.dossier}
+            style={clanColorStyle(getClanColor(character))}
+            data-highlighted={highlighted || undefined}
+            aria-label={character.name}
+            onContextMenu={
+                onContextMenu ? (event) => onContextMenu(event, member, character) : undefined
+            }
+        >
+            {clan?.logo ? (
+                <span
+                    className={classes.watermark}
+                    style={maskStyle(clan.logo)}
+                    aria-hidden="true"
+                />
+            ) : null}
+
+            <div className={classes.layout}>
+                <div className={classes.aside}>
+                    <header className={classes.head}>
+                        <span className={classes.sigil} aria-hidden="true">
+                            {clan?.logo ? (
+                                <span className={classes.sigilMark} style={maskStyle(clan.logo)} />
+                            ) : (
+                                <span className={classes.sigilInitial}>
+                                    {character.name.trim().charAt(0) || "?"}
+                                </span>
+                            )}
+                        </span>
+                        <div className={classes.identity}>
+                            <h3 className={classes.name}>{character.name}</h3>
+                            <div className={classes.byline}>
+                                {member.showPlayerNameTag ? (
+                                    <NameTag name={playerName} size="xs" />
+                                ) : (
+                                    <span>{playerName}</span>
+                                )}
+                            </div>
+                            <p className={classes.lineage}>
+                                {lineage.map((part, index) => (
+                                    <Fragment key={`${part}-${index}`}>
+                                        <span
+                                            className={index === 0 ? classes.clanName : undefined}
+                                        >
+                                            {part}
+                                            {index < lineage.length - 1 ? (
+                                                <span
+                                                    className={classes.lineageSep}
+                                                    aria-hidden="true"
+                                                >
+                                                    ·
+                                                </span>
+                                            ) : null}
+                                        </span>{" "}
+                                    </Fragment>
+                                ))}
+                            </p>
+                        </div>
+                        {actions ? <div className={classes.headActions}>{actions}</div> : null}
+                    </header>
+
+                    <div className={classes.vitals}>
+                        <span className={classes.vitalLabel} data-tone="hunger">
+                            Hunger
+                        </span>
+                        <span className={classes.vitalTrack}>
+                            <HungerMeter hunger={hunger} />
+                            <span className={classes.vitalValue}>{hunger}/5</span>
+                        </span>
+
+                        <span className={classes.vitalLabel}>Health</span>
+                        <span className={classes.vitalTrack}>
+                            <DamageMeter
+                                label="Health"
+                                maximum={maxHealth}
+                                superficialDamage={superficialDamage}
+                                aggravatedDamage={aggravatedDamage}
+                            />
+                        </span>
+
+                        <span className={classes.vitalLabel}>Willpower</span>
+                        <span className={classes.vitalTrack}>
+                            <DamageMeter
+                                label="Willpower"
+                                maximum={willpower}
+                                superficialDamage={superficialWillpowerDamage}
+                                aggravatedDamage={aggravatedWillpowerDamage}
+                            />
+                        </span>
+
+                        <span className={classes.vitalLabel}>Humanity</span>
+                        <span className={classes.vitalTrack}>
+                            <HumanityMeter humanity={humanity} stains={humanityStains} />
+                            <span className={classes.vitalValue}>{humanity}/10</span>
+                        </span>
+                    </div>
+
+                    {character.description ? (
+                        <p className={classes.description}>{character.description}</p>
+                    ) : null}
+
+                    <section className={classes.section}>
+                        <SectionTitle>Identity</SectionTitle>
+                        <dl className={classes.facts}>
+                            <dt>Ambition</dt>
+                            <dd>{character.ambition || "—"}</dd>
+                            <dt>Desire</dt>
+                            <dd>{character.desire || "—"}</dd>
+                            {character.sire ? (
+                                <>
+                                    <dt>Sire</dt>
+                                    <dd>{character.sire}</dd>
+                                </>
+                            ) : null}
+                            {humanityStains > 0 ? (
+                                <>
+                                    <dt>Stains</dt>
+                                    <dd>{vitals.humanityStains}</dd>
+                                </>
+                            ) : null}
+                        </dl>
+                    </section>
+
+                    <section className={classes.section}>
+                        <SectionTitle>Touchstones</SectionTitle>
+                        {touchstones.length > 0 ? (
+                            <ul className={classes.touchstones}>
+                                {touchstones.map(({ touchstone, text }, index) => (
+                                    <li
+                                        key={`${touchstone.name}-${touchstone.conviction}-${index}`}
+                                    >
+                                        {text}
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className={classes.muted}>None recorded</p>
+                        )}
+                    </section>
+                </div>
+
+                <div className={classes.main}>
+                    <section className={classes.section}>
+                        <SectionTitle>Attributes</SectionTitle>
+                        <div className={classes.ratingColumns}>
+                            {attributeGroups.map((group) => (
+                                <div key={group.label} className={classes.ratingGroup}>
+                                    <span className={classes.ratingGroupLabel}>{group.label}</span>
+                                    {group.items.map((attr) => (
+                                        <RatingRow
+                                            key={attr}
+                                            label={attr}
+                                            value={
+                                                character.attributes[
+                                                    attributesKeySchema.parse(attr)
+                                                ] ?? 0
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className={classes.section}>
+                        <SectionTitle>Skills</SectionTitle>
+                        <div className={classes.ratingColumns}>
+                            {skillGroups.map((group) => {
+                                const nonZeroSkills = group.items.filter(
+                                    (skill) =>
+                                        (character.skills[skillsKeySchema.parse(skill)] ?? 0) > 0
+                                )
+
+                                return (
+                                    <div key={group.label} className={classes.ratingGroup}>
+                                        <span className={classes.ratingGroupLabel}>
+                                            {group.label}
+                                        </span>
+                                        {nonZeroSkills.length > 0 ? (
+                                            nonZeroSkills.map((skill) => {
+                                                const specialties =
+                                                    character.skillSpecialties.filter(
+                                                        (specialty) => specialty.skill === skill
+                                                    )
+
+                                                return (
+                                                    <div key={skill}>
+                                                        <RatingRow
+                                                            label={skill}
+                                                            value={
+                                                                character.skills[
+                                                                    skillsKeySchema.parse(skill)
+                                                                ] ?? 0
+                                                            }
+                                                        />
+                                                        {specialties.length > 0 ? (
+                                                            <div className={classes.specialty}>
+                                                                {specialties
+                                                                    .map(
+                                                                        (specialty) =>
+                                                                            specialty.name
+                                                                    )
+                                                                    .join(", ")}
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
+                                                )
+                                            })
+                                        ) : (
+                                            <p className={classes.muted}>None</p>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </section>
+
+                    <section className={classes.section}>
+                        <SectionTitle>Disciplines &amp; Powers</SectionTitle>
+                        {disciplineEntries.length > 0 ? (
+                            <div className={classes.powerGrid}>
+                                {disciplineEntries.map(([identity, { disciplineName, powers }]) => {
+                                    const sortedPowers = [...powers].sort(
+                                        (a, b) => a.level - b.level
+                                    )
+                                    const logo = getDisciplineLogo(
+                                        character,
+                                        identity,
+                                        disciplineName
+                                    )
+
+                                    return (
+                                        <div key={identity} className={classes.discipline}>
+                                            <div className={classes.disciplineName}>
+                                                {logo ? (
+                                                    <img
+                                                        src={logo}
+                                                        alt=""
+                                                        className={classes.disciplineLogo}
+                                                    />
+                                                ) : null}
+                                                {upcase(disciplineName)}
+                                            </div>
+                                            {sortedPowers.map((power) => (
+                                                <div
+                                                    key={getPowerIdentity(power)}
+                                                    className={classes.power}
+                                                >
+                                                    <div className={classes.powerHead}>
+                                                        <span>{power.name}</span>
+                                                        <span className={classes.powerLevel}>
+                                                            {power.level}
+                                                        </span>
+                                                    </div>
+                                                    {power.summary ? (
+                                                        <div className={classes.powerSummary}>
+                                                            {power.summary}
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        ) : (
+                            <p className={classes.muted}>No disciplines recorded</p>
+                        )}
+                    </section>
+
+                    {rites.length > 0 ? (
+                        <section className={classes.section}>
+                            <SectionTitle>Rituals &amp; Ceremonies</SectionTitle>
+                            <div className={classes.powerGrid}>
+                                {rites.map((rite) => (
+                                    <div
+                                        key={rite.name}
+                                        className={`${classes.power} ${classes.rite}`}
+                                    >
+                                        <div className={classes.powerHead}>
+                                            <span>{rite.name}</span>
+                                            <span className={classes.powerLevel}>{rite.level}</span>
+                                        </div>
+                                        {rite.summary ? (
+                                            <div className={classes.powerSummary}>
+                                                {rite.summary}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    ) : null}
+
+                    {meritsAndFlaws.length > 0 ? (
+                        <section className={classes.section}>
+                            <SectionTitle>Merits &amp; Flaws</SectionTitle>
+                            <div className={classes.traits}>
+                                {meritsAndFlaws.map((item, index) => (
+                                    <span
+                                        key={`${item.type}-${item.name}-${index}`}
+                                        className={classes.trait}
+                                        data-kind={item.type}
+                                    >
+                                        {getMeritFlawDisplayName(item)}
+                                        <span className={classes.traitLevel}>{item.level}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </section>
+                    ) : null}
+                </div>
+            </div>
+        </article>
+    )
+}
+
 const CoterieCharacterSummaryGrid = ({
     members,
-    vitalsByCharacterId
+    vitalsByCharacterId,
+    onMemberContextMenu,
+    renderMemberActions,
+    highlightedCharacterId,
+    emptyState
 }: CoterieCharacterSummaryGridProps) => {
-    const parsedMembers = useMemo(
-        () =>
-            members
-                .map((member) => ({
-                    member,
-                    character: parseCharacterData(member.character?.data)
-                }))
-                .filter(
-                    (entry): entry is { member: CoterieMemberResponse; character: Character } =>
-                        !!entry.character
-                ),
-        [members]
-    )
+    const parsedMembers = useMemo(() => parseCoterieMembers(members), [members])
 
     if (parsedMembers.length === 0) {
         return (
-            <Paper
-                p="xl"
-                withBorder
-                style={{
-                    background: "rgba(10, 8, 10, 0.72)",
-                    borderColor: rgba(RAW_GOLD, 0.18)
-                }}
-            >
-                <Text c="dimmed" ta="center">
-                    No character summaries available yet.
-                </Text>
-            </Paper>
+            emptyState ?? (
+                <Panel p={0}>
+                    <EmptyState
+                        className={classes.empty}
+                        icon={<IconUsersGroup size={26} stroke={1.5} />}
+                        title="No character summaries available yet."
+                    />
+                </Panel>
+            )
         )
     }
 
     return (
-        <SimpleGrid cols={{ base: 1, xl: 2 }} spacing="lg">
-            {parsedMembers.map(({ member, character }) => {
-                const clan = character.clan ? clans[character.clan] : null
-                const playerName =
-                    member.playerNickname?.trim() || character.player?.trim() || "Unknown player"
-                const disciplineGroups = getDisciplineGroups(character)
-                const meritsAndFlaws = [...character.merits, ...character.flaws]
-                const vitals =
-                    vitalsByCharacterId[member.characterId] ?? getCharacterVitals(character)
-                const maxHealth = Math.max(0, Math.min(10, vitals.maxHealth))
-                const superficialDamage = Math.max(0, Math.min(maxHealth, vitals.superficialDamage))
-                const aggravatedDamage = Math.max(0, Math.min(maxHealth, vitals.aggravatedDamage))
-                const hunger = Math.max(0, Math.min(5, vitals.hunger))
-                const willpower = Math.max(0, vitals.willpower)
-                const superficialWillpowerDamage = Math.max(
-                    0,
-                    Math.min(willpower, vitals.superficialWillpowerDamage)
-                )
-                const aggravatedWillpowerDamage = Math.max(
-                    0,
-                    Math.min(willpower, vitals.aggravatedWillpowerDamage)
-                )
-                const humanity = Math.max(0, Math.min(10, vitals.humanity))
-                const touchstones = character.touchstones
-                    .map((touchstone) => ({
-                        touchstone,
-                        text: getTouchstoneText(touchstone)
-                    }))
-                    .filter(({ text }) => text.length > 0)
-
-                return (
-                    <Paper
-                        key={member.characterId}
-                        p="lg"
-                        withBorder
-                        style={{
-                            height: "100%",
-                            overflow: "hidden",
-                            position: "relative",
-                            borderColor: rgba(RAW_GOLD, 0.24),
-                            background:
-                                "linear-gradient(145deg, rgba(24, 17, 20, 0.95) 0%, rgba(8, 7, 9, 0.96) 72%)",
-                            boxShadow:
-                                "0 18px 45px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
-                        }}
-                    >
-                        {clan?.logo ? (
-                            <Box
-                                style={{
-                                    position: "absolute",
-                                    right: 18,
-                                    top: 18,
-                                    width: 78,
-                                    height: 78,
-                                    backgroundColor: rgba(RAW_RED, 0.24),
-                                    maskImage: `url(${clan.logo})`,
-                                    maskSize: "contain",
-                                    maskRepeat: "no-repeat",
-                                    maskPosition: "center",
-                                    WebkitMaskImage: `url(${clan.logo})`,
-                                    WebkitMaskSize: "contain",
-                                    WebkitMaskRepeat: "no-repeat",
-                                    WebkitMaskPosition: "center"
-                                }}
-                            />
-                        ) : null}
-
-                        <Stack gap="md" style={{ position: "relative" }}>
-                            <Stack gap={8} pr={86}>
-                                <Group gap="xs" align="baseline" style={{ minWidth: 0 }}>
-                                    <Text
-                                        style={{
-                                            fontFamily: "Cinzel, Georgia, serif",
-                                            fontSize: "1.2rem",
-                                            lineHeight: 1.14,
-                                            color: "rgba(244, 236, 232, 0.96)",
-                                            minWidth: 0
-                                        }}
-                                    >
-                                        {character.name}
-                                    </Text>
-                                    {member.showPlayerNameTag ? (
-                                        <NameTag name={playerName} size="xs" />
-                                    ) : (
-                                        <Text
-                                            size="sm"
-                                            c="dimmed"
-                                            truncate="end"
-                                            style={{ minWidth: 0 }}
-                                        >
-                                            {playerName}
-                                        </Text>
-                                    )}
-                                </Group>
-                                <Stack gap={6}>
-                                    <StatusMeterRow>
-                                        <StatusLabel color={rgba(RAW_RED, 0.82)}>
-                                            Hunger
-                                        </StatusLabel>
-                                        <HungerMeter hunger={hunger} />
-                                    </StatusMeterRow>
-                                    <StatusMeterRow>
-                                        <StatusLabel color={rgba(RAW_GRAPE, 0.9)}>
-                                            Health
-                                        </StatusLabel>
-                                        <DamageMeter
-                                            label="Health"
-                                            maximum={maxHealth}
-                                            superficialDamage={superficialDamage}
-                                            aggravatedDamage={aggravatedDamage}
-                                        />
-                                    </StatusMeterRow>
-                                    <StatusMeterRow>
-                                        <StatusLabel color={rgba(RAW_GRAPE, 0.9)}>
-                                            Willpower
-                                        </StatusLabel>
-                                        <DamageMeter
-                                            label="Willpower"
-                                            maximum={willpower}
-                                            superficialDamage={superficialWillpowerDamage}
-                                            aggravatedDamage={aggravatedWillpowerDamage}
-                                        />
-                                    </StatusMeterRow>
-                                </Stack>
-                                <Group gap="xs">
-                                    <Badge color="red" variant="light">
-                                        {clan?.name || upcase(character.clan)}
-                                    </Badge>
-                                    <Badge color="yellow" variant="outline">
-                                        {character.predatorType.name}
-                                    </Badge>
-                                    {character.generation ? (
-                                        <Badge color="gray" variant="light">
-                                            Gen {character.generation}
-                                        </Badge>
-                                    ) : null}
-                                </Group>
-                            </Stack>
-
-                            {character.description ? (
-                                <Text size="sm" style={{ color: rgba(RAW_GREY, 0.7) }}>
-                                    {character.description}
-                                </Text>
-                            ) : null}
-
-                            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                                <Stack gap="xs">
-                                    <SectionTitle>Identity</SectionTitle>
-                                    <Stack gap={4}>
-                                        <Text size="sm">
-                                            <Text span c="dimmed">
-                                                Ambition:{" "}
-                                            </Text>
-                                            {character.ambition}
-                                        </Text>
-                                        <Text size="sm">
-                                            <Text span c="dimmed">
-                                                Desire:{" "}
-                                            </Text>
-                                            {character.desire}
-                                        </Text>
-                                        {character.sire ? (
-                                            <Text size="sm">
-                                                <Text span c="dimmed">
-                                                    Sire:{" "}
-                                                </Text>
-                                                {character.sire}
-                                            </Text>
-                                        ) : null}
-                                        <Text size="sm">
-                                            <Text span c="dimmed">
-                                                Humanity:{" "}
-                                            </Text>
-                                            <Text span c={rgba(RAW_GOLD, 0.95)}>
-                                                {humanity} / 10
-                                                {vitals.humanityStains > 0
-                                                    ? ` · ${vitals.humanityStains} stains`
-                                                    : ""}
-                                            </Text>
-                                        </Text>
-                                    </Stack>
-                                </Stack>
-
-                                <Stack gap="xs">
-                                    <SectionTitle>Touchstones</SectionTitle>
-                                    {touchstones.length > 0 ? (
-                                        touchstones.map(({ touchstone, text }, index) => (
-                                            <Text
-                                                key={`${touchstone.name}-${touchstone.conviction}-${index}`}
-                                                size="sm"
-                                            >
-                                                {text}
-                                            </Text>
-                                        ))
-                                    ) : (
-                                        <Text size="sm" c="dimmed">
-                                            None recorded
-                                        </Text>
-                                    )}
-                                </Stack>
-                            </SimpleGrid>
-
-                            <Divider color={rgba(RAW_GOLD, 0.14)} />
-
-                            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-                                {attributeGroups.map((group) => (
-                                    <Stack key={group.label} gap={6}>
-                                        <SectionTitle>{group.label} Attributes</SectionTitle>
-                                        {group.items.map((attr) => (
-                                            <RatingRow
-                                                key={attr}
-                                                label={attr}
-                                                value={
-                                                    character.attributes[
-                                                        attributesKeySchema.parse(attr)
-                                                    ] ?? 0
-                                                }
-                                            />
-                                        ))}
-                                    </Stack>
-                                ))}
-                            </SimpleGrid>
-
-                            <Divider color={rgba(RAW_GOLD, 0.14)} />
-
-                            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-                                {skillGroups.map((group) => {
-                                    const nonZeroSkills = group.items.filter(
-                                        (skill) =>
-                                            (character.skills[skillsKeySchema.parse(skill)] ?? 0) >
-                                            0
-                                    )
-
-                                    return (
-                                        <Stack key={group.label} gap={6}>
-                                            <SectionTitle>{group.label} Skills</SectionTitle>
-                                            {nonZeroSkills.length > 0 ? (
-                                                nonZeroSkills.map((skill) => {
-                                                    const specialties =
-                                                        character.skillSpecialties.filter(
-                                                            (specialty) => specialty.skill === skill
-                                                        )
-
-                                                    return (
-                                                        <Box key={skill}>
-                                                            <RatingRow
-                                                                label={skill}
-                                                                value={
-                                                                    character.skills[
-                                                                        skillsKeySchema.parse(skill)
-                                                                    ] ?? 0
-                                                                }
-                                                            />
-                                                            {specialties.length > 0 ? (
-                                                                <Text size="xs" c="dimmed" ml="xs">
-                                                                    {specialties
-                                                                        .map(
-                                                                            (specialty) =>
-                                                                                specialty.name
-                                                                        )
-                                                                        .join(", ")}
-                                                                </Text>
-                                                            ) : null}
-                                                        </Box>
-                                                    )
-                                                })
-                                            ) : (
-                                                <Text size="sm" c="dimmed">
-                                                    None
-                                                </Text>
-                                            )}
-                                        </Stack>
-                                    )
-                                })}
-                            </SimpleGrid>
-
-                            <Divider color={rgba(RAW_GOLD, 0.14)} />
-
-                            <Stack gap="sm">
-                                <SectionTitle>Disciplines & Powers</SectionTitle>
-                                {Object.entries(disciplineGroups).length > 0 ? (
-                                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-                                        {Object.entries(disciplineGroups).map(
-                                            ([identity, { disciplineName, powers }]) => {
-                                                const sortedPowers = [...powers].sort(
-                                                    (a, b) => a.level - b.level
-                                                )
-                                                const logo = getDisciplineLogo(
-                                                    character,
-                                                    identity,
-                                                    disciplineName
-                                                )
-
-                                                return (
-                                                    <Box key={identity}>
-                                                        <Group gap="xs" mb={4}>
-                                                            {logo ? (
-                                                                <Box
-                                                                    component="img"
-                                                                    src={logo}
-                                                                    alt=""
-                                                                    style={{
-                                                                        width: 18,
-                                                                        height: 18,
-                                                                        objectFit: "contain",
-                                                                        filter: "drop-shadow(0 0 6px rgba(224, 49, 49, 0.35))"
-                                                                    }}
-                                                                />
-                                                            ) : null}
-                                                            <Text fw={700} size="sm">
-                                                                {upcase(disciplineName)}
-                                                            </Text>
-                                                        </Group>
-                                                        <Stack gap={5}>
-                                                            {sortedPowers.map((power) => (
-                                                                <Box key={getPowerIdentity(power)}>
-                                                                    <Group
-                                                                        justify="space-between"
-                                                                        gap="xs"
-                                                                        wrap="nowrap"
-                                                                    >
-                                                                        <Text size="sm">
-                                                                            {power.name}
-                                                                        </Text>
-                                                                        <Badge
-                                                                            size="xs"
-                                                                            color="red"
-                                                                            variant="outline"
-                                                                        >
-                                                                            {power.level}
-                                                                        </Badge>
-                                                                    </Group>
-                                                                    {power.summary ? (
-                                                                        <Text
-                                                                            size="xs"
-                                                                            c="dimmed"
-                                                                            lineClamp={2}
-                                                                        >
-                                                                            {power.summary}
-                                                                        </Text>
-                                                                    ) : null}
-                                                                </Box>
-                                                            ))}
-                                                        </Stack>
-                                                    </Box>
-                                                )
-                                            }
-                                        )}
-                                    </SimpleGrid>
-                                ) : (
-                                    <Text size="sm" c="dimmed">
-                                        No disciplines recorded
-                                    </Text>
-                                )}
-                            </Stack>
-
-                            {character.rituals.length > 0 || character.ceremonies.length > 0 ? (
-                                <>
-                                    <Divider color={rgba(RAW_GOLD, 0.14)} />
-                                    <Stack gap="sm">
-                                        <SectionTitle>Rituals & Ceremonies</SectionTitle>
-                                        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-                                            {[...character.rituals, ...character.ceremonies].map(
-                                                (rite) => (
-                                                    <Box key={rite.name}>
-                                                        <Group
-                                                            justify="space-between"
-                                                            gap="xs"
-                                                            wrap="nowrap"
-                                                        >
-                                                            <Text size="sm">{rite.name}</Text>
-                                                            <Badge
-                                                                size="xs"
-                                                                color="yellow"
-                                                                variant="outline"
-                                                            >
-                                                                {rite.level}
-                                                            </Badge>
-                                                        </Group>
-                                                        {rite.summary ? (
-                                                            <Text
-                                                                size="xs"
-                                                                c="dimmed"
-                                                                lineClamp={2}
-                                                            >
-                                                                {rite.summary}
-                                                            </Text>
-                                                        ) : null}
-                                                    </Box>
-                                                )
-                                            )}
-                                        </SimpleGrid>
-                                    </Stack>
-                                </>
-                            ) : null}
-
-                            {meritsAndFlaws.length > 0 ? (
-                                <>
-                                    <Divider color={rgba(RAW_GOLD, 0.14)} />
-                                    <Stack gap="sm">
-                                        <SectionTitle>Merits & Flaws</SectionTitle>
-                                        <Group gap="xs">
-                                            {meritsAndFlaws.map((item, index) => (
-                                                <Badge
-                                                    key={`${item.type}-${item.name}-${index}`}
-                                                    color={item.type === "merit" ? "green" : "red"}
-                                                    variant="light"
-                                                >
-                                                    {getMeritFlawDisplayName(item)} {item.level}
-                                                </Badge>
-                                            ))}
-                                        </Group>
-                                    </Stack>
-                                </>
-                            ) : null}
-                        </Stack>
-                    </Paper>
-                )
-            })}
-        </SimpleGrid>
+        <div className={classes.grid}>
+            {parsedMembers.map(({ member, character }) => (
+                <Dossier
+                    key={member.characterId}
+                    member={member}
+                    character={character}
+                    vitals={vitalsByCharacterId[member.characterId]}
+                    actions={renderMemberActions?.(member, character)}
+                    highlighted={highlightedCharacterId === member.characterId}
+                    onContextMenu={onMemberContextMenu}
+                />
+            ))}
+        </div>
     )
 }
 

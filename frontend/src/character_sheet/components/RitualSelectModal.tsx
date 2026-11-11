@@ -1,7 +1,7 @@
-import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { Button } from "@mantine/core"
+import { IconPlus } from "@tabler/icons-react"
 import posthog from "posthog-js"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Character, getDisciplineLevel } from "~/data/Character"
 import { Ritual } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
@@ -16,7 +16,26 @@ import {
     homebrewPowerToRitual
 } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import {
+    DisabledLine,
+    LevelTag,
+    MetaRows,
+    OptionCard,
+    OptionGroup,
+    OptionHead,
+    RouseDrops,
+    SearchField,
+    SelectEmpty,
+    SelectFooter,
+    SelectScroll,
+    SelectToolbar,
+    SheetModal,
+    Summary,
+    Tag,
+    matchesQuery,
+    selectModalClasses,
+    useListNav
+} from "./selectModalParts"
 
 type RitualSelectModalProps = {
     opened: boolean
@@ -29,7 +48,6 @@ const getBloodSorceryLevel = (character: Character): number =>
 
 const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
     const knownRitualIds = useMemo(
@@ -89,153 +107,151 @@ const RitualSelectModal = ({ opened, onClose, options }: RitualSelectModalProps)
         onClose()
     }
 
+    const [query, setQuery] = useState("")
+    const [customOpened, setCustomOpened] = useState(false)
+    useEffect(() => {
+        if (!opened) setQuery("")
+    }, [opened])
+
+    const visibleLevels = sortedLevels
+        .map((level) => ({
+            level,
+            items: ritualsByLevel
+                .get(level)!
+                .filter((item) => matchesQuery(query, item.name, item.summary))
+        }))
+        .filter((group) => group.items.length > 0)
+    const visibleItems = visibleLevels.flatMap((group) => group.items)
+
+    const getBlockedReason = (item: Ritual) => {
+        if (mode !== "xp") return undefined
+        const cost = getRitualCost(item.level)
+        return canAffordUpgrade(availableXP, cost)
+            ? undefined
+            : `Insufficient XP. Need ${cost}, have ${availableXP}`
+    }
+
+    const nav = useListNav({
+        items: visibleItems,
+        onPick: (item) => {
+            if (!getBlockedReason(item)) handleSelectRitual(item)
+        },
+        resetKey: query
+    })
+
+    let navIndex = 0
     return (
-        <Modal
-            opened={opened}
-            onClose={onClose}
-            title="Select a Ritual"
-            size="lg"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
-        >
-            <Stack gap="lg">
+        <SheetModal opened={opened} onClose={onClose} title="Select a Ritual" size="xl">
+            <SelectToolbar>
+                <SearchField
+                    label="Search rituals"
+                    placeholder="Search rituals"
+                    value={query}
+                    onChange={setQuery}
+                    nav={nav}
+                />
+            </SelectToolbar>
+            <SelectScroll listId={nav.listId} label="Rituals">
                 {availableRituals.length === 0 ? (
-                    <Text c="dimmed" ta="center" py="xl">
-                        No available rituals to add.
-                    </Text>
+                    <SelectEmpty>No available rituals to add.</SelectEmpty>
+                ) : visibleItems.length === 0 ? (
+                    <SelectEmpty>No ritual matches “{query.trim()}”.</SelectEmpty>
                 ) : (
-                    <>
-                        {sortedLevels.map((level) => (
-                            <Stack key={level} gap="md">
-                                <Title order={4} c={primaryColor}>
-                                    Level {level}
-                                </Title>
-                                <Grid gap="md">
-                                    {ritualsByLevel.get(level)!.map((ritual) => {
-                                        const cost = getRitualCost(ritual.level)
-                                        const canAfford =
-                                            mode !== "xp" || canAffordUpgrade(availableXP, cost)
-                                        const tooltipLabel =
-                                            mode === "xp"
-                                                ? canAfford
-                                                    ? `${cost} XP`
-                                                    : `Insufficient XP. Need ${cost}, have ${availableXP}`
-                                                : undefined
-
-                                        const card = (
-                                            <Box
-                                                p="xs"
-                                                style={{
-                                                    border: "1px solid var(--mantine-color-gray-8)",
-                                                    borderRadius: "var(--mantine-radius-sm)",
-                                                    minHeight: "180px",
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    opacity: canAfford ? 1 : 0.6
-                                                }}
-                                            >
-                                                <Group justify="space-between" align="flex-start">
-                                                    <Text fw={600} size="sm">
-                                                        {ritual.name}
-                                                    </Text>
-                                                    <Badge
-                                                        size="sm"
-                                                        variant="dot"
-                                                        color={primaryColor}
-                                                    >
-                                                        Lv.{ritual.level}
-                                                    </Badge>
-                                                    {ritual.homebrewSource ? (
-                                                        <HomebrewBadge
-                                                            source={ritual.homebrewSource}
-                                                        />
-                                                    ) : null}
-                                                </Group>
-                                                {ritual.summary ? (
-                                                    <Text
-                                                        size="xs"
-                                                        c="dimmed"
-                                                        mt="xs"
-                                                        lineClamp={4}
-                                                    >
-                                                        {ritual.summary}
-                                                    </Text>
-                                                ) : null}
-                                                <Stack gap={2} mt="sm">
-                                                    {ritual.dicePool ? (
-                                                        <Text size="xs">
-                                                            {ritual.dicePool.toUpperCase()}
-                                                        </Text>
-                                                    ) : null}
-                                                    <Text size="xs">
-                                                        Time: {ritual.requiredTime}
-                                                    </Text>
-                                                </Stack>
-                                                <Button
-                                                    size="xs"
-                                                    variant="light"
-                                                    color={primaryColor}
-                                                    mt="auto"
-                                                    disabled={!canAfford}
-                                                    onClick={() => handleSelectRitual(ritual)}
-                                                >
-                                                    Add Ritual
-                                                </Button>
-                                            </Box>
-                                        )
-
-                                        return (
-                                            <Grid.Col
-                                                key={getRitualIdentity(ritual)}
-                                                span={{ base: 12, sm: 6 }}
-                                            >
-                                                {tooltipLabel ? (
-                                                    <Tooltip label={tooltipLabel}>
-                                                        <div>{card}</div>
-                                                    </Tooltip>
-                                                ) : (
-                                                    card
-                                                )}
-                                            </Grid.Col>
-                                        )
-                                    })}
-                                </Grid>
-                            </Stack>
-                        ))}
-                    </>
+                    visibleLevels.map(({ level, items }) => (
+                        <OptionGroup key={level} label={`Level ${level}`}>
+                            <div className={selectModalClasses.grid}>
+                                {items.map((item) => {
+                                    const index = navIndex++
+                                    const blockedReason = getBlockedReason(item)
+                                    return (
+                                        <OptionCard
+                                            key={getRitualIdentity(item)}
+                                            disabled={!!blockedReason}
+                                            {...nav.optionProps(index)}
+                                        >
+                                            <OptionHead
+                                                name={item.name}
+                                                tags={
+                                                    <>
+                                                        {item.homebrewSource ? (
+                                                            <HomebrewBadge
+                                                                source={item.homebrewSource}
+                                                            />
+                                                        ) : null}
+                                                        {mode === "xp" ? (
+                                                            <Tag tone="accent">
+                                                                {getRitualCost(item.level)} XP
+                                                            </Tag>
+                                                        ) : null}
+                                                        <LevelTag level={item.level} />
+                                                    </>
+                                                }
+                                            />
+                                            <Summary>{item.summary}</Summary>
+                                            <MetaRows
+                                                rows={[
+                                                    item.dicePool
+                                                        ? [
+                                                              "Pool",
+                                                              <span
+                                                                  key="pool"
+                                                                  className={
+                                                                      selectModalClasses.pool
+                                                                  }
+                                                              >
+                                                                  {item.dicePool}
+                                                              </span>
+                                                          ]
+                                                        : null,
+                                                    item.requiredTime
+                                                        ? ["Time", item.requiredTime]
+                                                        : null,
+                                                    item.rouseChecks > 0
+                                                        ? [
+                                                              "Rouse",
+                                                              <RouseDrops
+                                                                  key="r"
+                                                                  n={item.rouseChecks}
+                                                              />
+                                                          ]
+                                                        : null,
+                                                    item.ingredients
+                                                        ? ["Needs", item.ingredients]
+                                                        : null
+                                                ]}
+                                            />
+                                            {blockedReason ? (
+                                                <DisabledLine>{blockedReason}</DisabledLine>
+                                            ) : null}
+                                        </OptionCard>
+                                    )
+                                })}
+                            </div>
+                        </OptionGroup>
+                    ))
                 )}
-                <CustomRitualModalTrigger options={options} onSave={onClose} />
-            </Stack>
-        </Modal>
-    )
-}
-
-const CustomRitualModalTrigger = ({
-    options,
-    onSave
-}: {
-    options: SheetOptions
-    onSave: () => void
-}) => {
-    const [opened, setOpened] = useState(false)
-
-    return (
-        <>
-            <Button variant="filled" color="black" fullWidth onClick={() => setOpened(true)}>
-                Create Custom Ritual
-            </Button>
+            </SelectScroll>
+            <SelectFooter
+                end={
+                    <Button
+                        variant="default"
+                        leftSection={<IconPlus size={16} />}
+                        onClick={() => setCustomOpened(true)}
+                    >
+                        Create Custom Ritual
+                    </Button>
+                }
+            />
             <CustomRitualModal
-                opened={opened}
-                onClose={() => setOpened(false)}
+                opened={customOpened}
+                onClose={() => setCustomOpened(false)}
                 options={options}
                 onSave={() => {
-                    setOpened(false)
-                    onSave()
+                    setCustomOpened(false)
+                    onClose()
                 }}
             />
-        </>
+        </SheetModal>
     )
 }
 

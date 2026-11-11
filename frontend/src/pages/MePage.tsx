@@ -1,72 +1,35 @@
 import { CHARACTER_CONFLICT_EVENT } from "~/components/CharacterConflictModal"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
 import { CharacterOperationError } from "~/utils/characterOperationError"
-import {
-    Accordion,
-    AppShell,
-    BackgroundImage,
-    Badge,
-    Box,
-    Button,
-    Card,
-    Center,
-    Container,
-    Divider,
-    Grid,
-    Group,
-    Loader,
-    Modal,
-    Paper,
-    Select,
-    Stack,
-    Text,
-    TextInput,
-    useComputedColorScheme,
-    useMantineTheme
-} from "@mantine/core"
+import { Button, Modal, Select, Stack, Tabs, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import {
-    IconArrowRight,
+    IconArrowLeft,
     IconBook2,
-    IconCopy,
-    IconEyeOff,
-    IconInfoCircle,
-    IconLink,
+    IconDroplet,
+    IconFlask,
+    IconKey,
+    IconLogout,
     IconMessageCircle,
-    IconTrash,
-    IconUsers
+    IconUser,
+    IconUsersGroup
 } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import { z } from "zod"
-import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
-import ConfirmActionModal, {
-    confirmationModalCancelButtonStyles,
-    confirmationModalWithHeaderStyles
-} from "~/components/ConfirmActionModal"
+import ConfirmActionModal from "~/components/ConfirmActionModal"
 import NameCharacterBeforeSwitchModal from "~/components/NameCharacterBeforeSwitchModal"
 import SaveCharacterCopyModal, {
     type CharacterCopySource
 } from "~/components/SaveCharacterCopyModal"
-import NameTag from "~/components/NameTag"
 import SupportConversationButton from "~/components/SupportConversationButton"
 import { loadCharacterFromFile } from "~/components/LoadModal"
-import { attributesKeySchema } from "~/data/Attributes"
-import { Character as CharacterType, getEmptyCharacter, isCharacterEmpty } from "~/data/Character"
-import { clans } from "~/data/Clans"
-import type { DisciplineName } from "~/data/NameSchemas"
-import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
-import { skillsKeySchema } from "~/data/Skills"
-import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
-import {
-    downloadJson,
-    rndInt,
-    upcase,
-    updateHealthAndWillpowerAndBloodPotencyAndHumanity
-} from "~/generator/utils"
-import { globals } from "~/globals"
+import { EmptyState, PageHeader, Panel } from "~/components/ui"
+import { RouteFallback } from "~/components/ui/RouteFallback"
+import { Character as CharacterType, getEmptyCharacter } from "~/data/Character"
+import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import {
@@ -95,15 +58,8 @@ import {
     useUpdateCoterie
 } from "~/hooks/useCoteries"
 import { parseCharacterData } from "~/utils/characterData"
-import { useCharacterShares, useUnshareCharacter } from "~/hooks/useShares"
+import { useUnshareCharacter } from "~/hooks/useShares"
 import { useSessionChat } from "~/hooks/useSessionChat"
-import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
-import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
-import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
-import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg"
-import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
-import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
-import Topbar from "~/topbar/Topbar"
 import {
     api,
     type CoterieInviteResponse,
@@ -117,105 +73,23 @@ import { characterPersistence, isOwnedSavedCharacter } from "~/modules/character
 import CharactersSection from "./sections/CharactersSection"
 import CoteriesSection from "./sections/CoteriesSection"
 import UserProfileSection from "./sections/UserProfileSection"
-import { getCharacterVitals, isCharacterVitals } from "~/utils/characterVitals"
+import { CharacterSummaryContent } from "./me/CharacterSummaryContent"
+import { CoterieInvitesModal } from "./me/CoterieInvitesModal"
+import { CoterieSummaryContent } from "./me/CoterieSummaryContent"
+import { MeShell } from "./me/MeShell"
+import { ModalFooter } from "./me/ModalFooter"
+import { NameModal } from "./me/NameModal"
+import { ShareCharacterModal } from "./me/ShareCharacterModal"
+import { DEFAULT_ME_TAB, ME_TABS, parseMeTab, type MeTab } from "./me/meTabs"
+import classes from "./me/me.module.css"
+import { isCharacterVitals } from "~/utils/characterVitals"
 import type { CharacterVitals } from "~/utils/characterVitals"
 import { trackCharacterSwitchBlockedUnnamed, trackFeatureGuideOpened } from "~/utils/analytics"
 
-const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
-const topbarHeight = 52
-
-type ShareCharacterModalContentProps = {
-    characterToShare: { id: string; name: string } | null
-    shareNickname: string
-    setShareNickname: (value: string) => void
-    isSharing: boolean
-    redColorValue: string
-    handleConfirmShare: () => void
-    onClose: () => void
-}
-
-const ShareCharacterModalContent = ({
-    characterToShare,
-    shareNickname,
-    setShareNickname,
-    isSharing,
-    redColorValue,
-    handleConfirmShare,
-    onClose
-}: ShareCharacterModalContentProps) => {
-    const { data: shares, isLoading: isLoadingShares } = useCharacterShares(
-        characterToShare?.id || null
-    )
-
-    const sharedWithUsers = shares?.filter((share) => !!share.sharedWith.nickname) || []
-
-    return (
-        <Stack gap="md">
-            <Text>
-                Share <strong>{characterToShare?.name}</strong> with another user.
-            </Text>
-            <Text c="dimmed" size="sm">
-                This is a read-only share. The other user can view your character, and they can
-                store and edit their own copy of it.
-            </Text>
-            <Text c="dimmed" size="sm">
-                They can see updates you have made to your character by clicking "Load".
-            </Text>
-            <TextInput
-                label="User Nickname"
-                placeholder="Enter the user's nickname"
-                value={shareNickname}
-                onChange={(e) => setShareNickname(e.target.value)}
-                disabled={isSharing}
-            />
-            {isLoadingShares ? (
-                <Text c="dimmed" size="sm">
-                    Loading...
-                </Text>
-            ) : sharedWithUsers.length > 0 ? (
-                <Stack gap="xs">
-                    <Text fw={500} size="sm">
-                        Currently shared with:
-                    </Text>
-                    <Group gap="xs">
-                        {sharedWithUsers.map((share) =>
-                            share.sharedWith.showNameTag ? (
-                                <NameTag
-                                    key={share.sharedWith.nickname}
-                                    name={share.sharedWith.nickname!}
-                                />
-                            ) : (
-                                <Badge key={share.sharedWith.nickname} color="red" variant="light">
-                                    {share.sharedWith.nickname}
-                                </Badge>
-                            )
-                        )}
-                    </Group>
-                </Stack>
-            ) : null}
-            <Divider color={rgba(RAW_GOLD, 0.3)} />
-            <Group justify="space-between" gap="xs">
-                <Button
-                    variant="subtle"
-                    color="gray"
-                    onClick={onClose}
-                    disabled={isSharing}
-                    styles={confirmationModalCancelButtonStyles}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    color="red"
-                    onClick={handleConfirmShare}
-                    loading={isSharing}
-                    disabled={!shareNickname.trim()}
-                    styles={confirmationModalDangerConfirmButtonStyles}
-                >
-                    Share
-                </Button>
-            </Group>
-        </Stack>
-    )
+const TAB_META: Record<MeTab, { label: string; icon: typeof IconDroplet }> = {
+    characters: { label: "Characters", icon: IconDroplet },
+    coteries: { label: "Coteries", icon: IconUsersGroup },
+    profile: { label: "Profile", icon: IconUser }
 }
 
 type Character = {
@@ -250,8 +124,6 @@ const getRemovedFromCoterieMessage = (
     return `${characterLabel} removed from coterie ${coterieLabel}`
 }
 
-const formatCoterieDate = (value: string | Date) => new Date(value).toLocaleString()
-
 const parseStoredCharacter = (data: unknown): CharacterType => {
     const character = parseCharacterData(data)
     if (!character) throw new Error("Unable to load character data")
@@ -265,7 +137,16 @@ const parseStoredCharacter = (data: unknown): CharacterType => {
 // * Clean up all the useStates we have in here, most of them can probably be managed with just query state
 // * Move a bunch of the stuff we're currently passing into sections into the section components
 
-const MePage = () => {
+type MePageProps = {
+    /** Active sub-view. The route passes the `tab` search param; tests render without one. */
+    tab?: MeTab
+    onTabChange?: (tab: MeTab) => void
+}
+
+const MePage = ({ tab, onTabChange }: MePageProps = {}) => {
+    const [localTab, setLocalTab] = useState<MeTab>(tab ?? DEFAULT_ME_TAB)
+    const activeTab = onTabChange ? (tab ?? DEFAULT_ME_TAB) : localTab
+    const changeTab = (next: MeTab) => (onTabChange ? onTabChange(next) : setLocalTab(next))
     const {
         user,
         isLoading: authLoading,
@@ -282,7 +163,13 @@ const MePage = () => {
         isError: charactersLoadError,
         refetch: reloadCharacters
     } = useCharacters(isAuthenticated)
-    const { data: coteries } = useCoteries(isAuthenticated)
+    const {
+        data: coteries,
+        isPending: coteriesPending,
+        isError: coteriesLoadError,
+        refetch: reloadCoteries
+    } = useCoteries(isAuthenticated)
+    const coteriesLoading = !!coteriesPending && !coteries
     const { data: coterieVitals } = useCoterieVitals(isAuthenticated)
     const vitalsByCharacterId = useMemo(() => {
         const vitalsMap: Record<string, CharacterVitals> = {}
@@ -303,13 +190,6 @@ const MePage = () => {
         persistence.transitionSnapshot,
         persistence.transitionSnapshot
     )
-    const computedColorScheme = useComputedColorScheme("dark", {
-        getInitialValueInEffect: true
-    })
-    const phoneScreen = globals.isPhoneScreen
-    const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
-    const theme = useMantineTheme()
-    const redColorValue = theme.colors.red[6]
     const { connect: connectChat, joinSession: joinChatSession } = useSessionChat((state) => ({
         connect: state.connect,
         joinSession: state.joinSession
@@ -1681,92 +1561,40 @@ const MePage = () => {
     // Show loading state while checking auth
     if (authLoading) {
         return (
-            <AppShell
-                padding="0"
-                header={{ height: topbarHeight }}
-                styles={(theme) => ({
-                    root: { height: "100vh" },
-                    header: {
-                        background: "rgba(8, 7, 8, 0.7)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
-                        zIndex: 200
-                    },
-                    main: {
-                        backgroundColor:
-                            computedColorScheme === "dark"
-                                ? theme.colors.dark[8]
-                                : theme.colors.gray[0],
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        overflow: "hidden"
-                    }
-                })}
-            >
-                <AppShell.Header>
-                    <Topbar />
-                </AppShell.Header>
-                <Center h="100%">
-                    <Loader size="lg" color="red" />
-                </Center>
-            </AppShell>
+            <MeShell>
+                <RouteFallback />
+            </MeShell>
         )
     }
 
     // Only show "not authenticated" if we've finished loading and still no user
     if (!authLoading && !isAuthenticated) {
         return (
-            <AppShell
-                padding="0"
-                header={{ height: topbarHeight }}
-                styles={(theme) => ({
-                    root: { height: "100vh" },
-                    header: {
-                        background: "rgba(8, 7, 8, 0.7)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
-                        zIndex: 200
-                    },
-                    main: {
-                        backgroundColor:
-                            computedColorScheme === "dark"
-                                ? theme.colors.dark[8]
-                                : theme.colors.gray[0],
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        overflow: "hidden"
-                    }
-                })}
-            >
-                <AppShell.Header>
-                    <Topbar />
-                </AppShell.Header>
-                <Center h="100%">
-                    <Card p="xl" withBorder>
-                        <Stack gap="md" align="center">
-                            <Text size="lg" fw={500}>
-                                Please log in to view your profile
-                            </Text>
-                            <Button color="red" onClick={signIn} loading={isSigningIn}>
-                                {isSigningIn ? "Signing in…" : "Sign in"}
-                            </Button>
-                            <Button
-                                component={Link}
-                                to="/"
-                                variant="subtle"
-                                color="gray"
-                                leftSection={<IconArrowRight size={18} />}
-                            >
-                                Go to Home
-                            </Button>
-                        </Stack>
-                    </Card>
-                </Center>
-            </AppShell>
+            <MeShell>
+                <Panel tone="ornate" grain maw={560} mx="auto" mt="xl" p="lg">
+                    <EmptyState
+                        icon={<IconKey size={26} stroke={1.5} />}
+                        title="Please log in to view your profile"
+                        description="Your saved characters, coteries and profile live behind this door."
+                        actions={
+                            <>
+                                <Button onClick={signIn} loading={isSigningIn}>
+                                    {isSigningIn ? "Signing in…" : "Sign in"}
+                                </Button>
+                                <Button
+                                    component={Link}
+                                    to="/"
+                                    variant="subtle"
+                                    color="gray"
+                                    leftSection={<IconArrowLeft size={16} />}
+                                >
+                                    Go to Home
+                                </Button>
+                            </>
+                        }
+                    />
+                </Panel>
+            </MeShell>
         )
     }
 
@@ -1784,145 +1612,188 @@ const MePage = () => {
     const canSaveToExisting = currentlyLoadedCharacter && !currentlyLoadedCharacter.shared
     const showSaveCurrentButton = !canSaveToExisting && !!character.name.trim()
 
+    const displayName =
+        user?.nickname?.trim() || [user?.firstName, user?.lastName].filter(Boolean).join(" ")
+    const tabCounts: Partial<Record<MeTab, number | undefined>> = {
+        characters: characters ? userCharacters.length : undefined,
+        coteries: coteries ? userCoteries.length : undefined
+    }
+
+    const closeCreateCharacterModal = () => {
+        setCreateCharacterModalOpened(false)
+        setNewCharacterName("")
+    }
+    const closeCreateCoterieModal = () => {
+        setCreateCoterieModalOpened(false)
+        setNewCoterieName("")
+    }
+    const closeEditCoterieModal = () => {
+        setEditCoterieModalOpened(false)
+        setEditingCoterie(null)
+        setNewCoterieName("")
+    }
+    const closeAddCharacterToCoterieModal = () => {
+        setAddCharacterToCoterieModalOpened(false)
+        setSelectedCoterieForAdd(null)
+        setSelectedCharacterForCoterie("")
+    }
+    const closeLoadSameCharacterWarning = () => {
+        setLoadSameCharacterWarningModalOpened(false)
+        setCharacterToLoad(null)
+        setLoadingCharacterId(null)
+    }
+    const closeShareCharacterModal = () => {
+        setShareCharacterModalOpened(false)
+        setCharacterToShare(null)
+        setShareNickname("")
+    }
+    const addableCharacters = ownedCharacters
+        .filter((char) => {
+            // Filter out characters already in this coterie
+            if (!selectedCoterieForAdd?.members) return true
+            return !selectedCoterieForAdd.members.some((m) => m.characterId === char.id)
+        })
+        .map((char) => ({ value: char.id, label: char.name }))
+
     return (
         <>
-            <AppShell
-                padding="0"
-                header={{ height: topbarHeight }}
-                styles={(theme) => ({
-                    root: {
-                        height: "100vh"
-                    },
-                    header: {
-                        background: "rgba(8, 7, 8, 0.7)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
-                        zIndex: 200
-                    },
-                    main: {
-                        backgroundColor:
-                            computedColorScheme === "dark"
-                                ? theme.colors.dark[8]
-                                : theme.colors.gray[0],
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        overflow: "hidden"
+            <MeShell>
+                <PageHeader
+                    className={classes.header}
+                    eyebrow="Account"
+                    title={displayName || "Your Haven"}
+                    icon={
+                        <span className={classes.monogram} aria-hidden="true">
+                            <span>{(displayName || "P").charAt(0).toUpperCase()}</span>
+                        </span>
                     }
-                })}
-            >
-                <AppShell.Header>
-                    <Topbar />
-                </AppShell.Header>
-                <BackgroundImage
-                    h="100%"
-                    src={backgrounds[backgroundIndex]}
-                    style={{ flex: 1, minHeight: 0, width: "100%" }}
+                    actions={
+                        <div className={classes.headerActions}>
+                            <Button
+                                component={Link}
+                                to="/features"
+                                variant="default"
+                                leftSection={<IconBook2 size={16} />}
+                                onClick={() => trackFeatureGuideOpened("account-page")}
+                            >
+                                Feature guide
+                            </Button>
+                            <Button
+                                component={Link}
+                                to="/homebrew"
+                                variant="default"
+                                leftSection={<IconFlask size={16} />}
+                            >
+                                Homebrew
+                            </Button>
+                            <SupportConversationButton
+                                source="account-page"
+                                variant="default"
+                                leftSection={<IconMessageCircle size={16} />}
+                            >
+                                Feedback & Support
+                            </SupportConversationButton>
+                            <Button
+                                onClick={signOut}
+                                variant="subtle"
+                                color="gray"
+                                leftSection={<IconLogout size={16} />}
+                            >
+                                Sign Out
+                            </Button>
+                        </div>
+                    }
+                />
+
+                <Tabs
+                    value={activeTab}
+                    onChange={(value) => {
+                        const next = parseMeTab(value)
+                        if (next) changeTab(next)
+                    }}
+                    keepMounted={false}
+                    activateTabWithKeyboard
                 >
-                    <div
-                        style={{
-                            backgroundColor: "rgba(0, 0, 0, 0.7)",
-                            height: "100%",
-                            width: "100%",
-                            boxSizing: "border-box",
-                            display: "flex",
-                            flexDirection: "column",
-                            overflow: "auto",
-                            paddingTop: topbarHeight
-                        }}
-                    >
-                        <Container size="lg" py="xl" style={{ width: "100%", flex: 1 }}>
-                            <Group mb="xl" justify="space-between" align="center" wrap="wrap">
-                                <Button
-                                    component={Link}
-                                    to="/features"
-                                    color="gray"
-                                    variant="light"
-                                    leftSection={<IconBook2 size={18} />}
-                                    onClick={() => trackFeatureGuideOpened("account-page")}
-                                >
-                                    Feature guide
-                                </Button>
-                                <Group justify="flex-end" wrap="wrap">
-                                    <Button
-                                        component={Link}
-                                        to="/homebrew"
-                                        color="grape"
-                                        variant="light"
-                                        leftSection={<IconBook2 size={18} />}
+                    <div className={classes.tabsBar}>
+                        <Tabs.List className={classes.tabsList}>
+                            {ME_TABS.map((tab) => {
+                                const Icon = TAB_META[tab].icon
+                                const count = tabCounts[tab]
+                                return (
+                                    <Tabs.Tab
+                                        key={tab}
+                                        value={tab}
+                                        className={classes.tab}
+                                        leftSection={<Icon size={16} stroke={1.6} />}
                                     >
-                                        Homebrew
-                                    </Button>
-                                    <SupportConversationButton
-                                        source="account-page"
-                                        color="red"
-                                        variant="outline"
-                                        leftSection={<IconMessageCircle size={18} />}
-                                    >
-                                        Feedback & Support
-                                    </SupportConversationButton>
-                                    <Button onClick={signOut} color="red" variant="outline">
-                                        Sign Out
-                                    </Button>
-                                </Group>
-                            </Group>
-                            <Stack gap="xl">
-                                <UserProfileSection
-                                    user={user}
-                                    isEditingNickname={isEditingNickname}
-                                    setIsEditingNickname={setIsEditingNickname}
-                                    isUpdatingProfile={isUpdatingProfile}
-                                    redColorValue={redColorValue}
-                                    handleSaveNickname={handleSaveNickname}
-                                    handleCancelNickname={handleCancelNickname}
-                                    handleNameTagToggle={handleNameTagToggle}
-                                />
-
-                                <CharactersSection
-                                    isLoading={charactersLoading}
-                                    hasLoadError={charactersLoadError}
-                                    onRetry={() => void reloadCharacters()}
-                                    userCharacters={userCharacters}
-                                    character={character}
-                                    showSaveCurrentButton={showSaveCurrentButton}
-                                    isSavingCharacter={isSavingCharacter}
-                                    isAnyOperationInFlight={isAnyOperationInFlight}
-                                    loadingCharacterId={loadingCharacterId}
-                                    setCreateCharacterModalOpened={setCreateCharacterModalOpened}
-                                    handleSaveCurrentCharacter={handleSaveCurrentCharacter}
-                                    handleLoadFromFile={handleLoadFromFile}
-                                    handleLoadCharacter={handleLoadCharacter}
-                                    handleShareCharacter={handleShareCharacter}
-                                    handleShowSummary={handleShowSummary}
-                                    handleSaveJson={handleSaveJson}
-                                    handleDownloadPdf={handleDownloadPdf}
-                                    handleDeleteCharacter={handleDeleteCharacter}
-                                    handleUnshareCharacter={handleUnshareCharacter}
-                                />
-
-                                <CoteriesSection
-                                    userCoteries={userCoteries}
-                                    setCreateCoterieModalOpened={setCreateCoterieModalOpened}
-                                    handleAddCharacterToCoterie={handleAddCharacterToCoterie}
-                                    handleEditCoterie={handleEditCoterie}
-                                    handleDeleteCoterie={handleDeleteCoterie}
-                                    handleManageCoterieInvites={handleManageCoterieInvites}
-                                    handleJoinCoterieChat={handleJoinCoterieChat}
-                                    handleRemoveCoteriePlayer={handleRemoveCoteriePlayer}
-                                    handleShowCharacterSummary={handleShowSummary}
-                                    handleRemoveCharacterFromCoterie={
-                                        handleRemoveCharacterFromCoterie
-                                    }
-                                    setCoterieForSummary={setCoterieForSummary}
-                                    setCoterieSummaryModalOpened={setCoterieSummaryModalOpened}
-                                    vitalsByCharacterId={vitalsByCharacterId}
-                                />
-                            </Stack>
-                        </Container>
+                                        {TAB_META[tab].label}
+                                        {count !== undefined ? (
+                                            <span className={classes.tabCount}>{count}</span>
+                                        ) : null}
+                                    </Tabs.Tab>
+                                )
+                            })}
+                        </Tabs.List>
                     </div>
-                </BackgroundImage>
-            </AppShell>
+
+                    <Tabs.Panel value="characters" className={classes.panel}>
+                        <CharactersSection
+                            isLoading={charactersLoading}
+                            hasLoadError={charactersLoadError}
+                            onRetry={() => void reloadCharacters()}
+                            userCharacters={userCharacters}
+                            character={character}
+                            showSaveCurrentButton={showSaveCurrentButton}
+                            isSavingCharacter={isSavingCharacter}
+                            isAnyOperationInFlight={isAnyOperationInFlight}
+                            loadingCharacterId={loadingCharacterId}
+                            setCreateCharacterModalOpened={setCreateCharacterModalOpened}
+                            handleSaveCurrentCharacter={handleSaveCurrentCharacter}
+                            handleLoadFromFile={handleLoadFromFile}
+                            handleLoadCharacter={handleLoadCharacter}
+                            handleShareCharacter={handleShareCharacter}
+                            handleShowSummary={handleShowSummary}
+                            handleSaveJson={handleSaveJson}
+                            handleDownloadPdf={handleDownloadPdf}
+                            handleDeleteCharacter={handleDeleteCharacter}
+                            handleUnshareCharacter={handleUnshareCharacter}
+                        />
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="coteries" className={classes.panel}>
+                        <CoteriesSection
+                            userCoteries={userCoteries}
+                            isLoading={coteriesLoading}
+                            hasLoadError={coteriesLoadError && !coteries}
+                            onRetry={() => void reloadCoteries?.()}
+                            setCreateCoterieModalOpened={setCreateCoterieModalOpened}
+                            handleAddCharacterToCoterie={handleAddCharacterToCoterie}
+                            handleEditCoterie={handleEditCoterie}
+                            handleDeleteCoterie={handleDeleteCoterie}
+                            handleManageCoterieInvites={handleManageCoterieInvites}
+                            handleJoinCoterieChat={handleJoinCoterieChat}
+                            handleRemoveCoteriePlayer={handleRemoveCoteriePlayer}
+                            handleShowCharacterSummary={handleShowSummary}
+                            handleRemoveCharacterFromCoterie={handleRemoveCharacterFromCoterie}
+                            setCoterieForSummary={setCoterieForSummary}
+                            setCoterieSummaryModalOpened={setCoterieSummaryModalOpened}
+                            vitalsByCharacterId={vitalsByCharacterId}
+                        />
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="profile" className={classes.panel}>
+                        <UserProfileSection
+                            user={user}
+                            isEditingNickname={isEditingNickname}
+                            setIsEditingNickname={setIsEditingNickname}
+                            isUpdatingProfile={isUpdatingProfile}
+                            handleSaveNickname={handleSaveNickname}
+                            handleCancelNickname={handleCancelNickname}
+                            handleNameTagToggle={handleNameTagToggle}
+                        />
+                    </Tabs.Panel>
+                </Tabs>
+            </MeShell>
 
             <SaveCharacterCopyModal
                 source={copySource}
@@ -1930,319 +1801,92 @@ const MePage = () => {
                 setCharacter={setCharacter}
             />
 
-            {/* Create Character Modal */}
-            <Modal
+            <NameModal
                 opened={createCharacterModalOpened}
-                onClose={() => {
-                    setCreateCharacterModalOpened(false)
-                    setNewCharacterName("")
-                }}
+                onClose={closeCreateCharacterModal}
                 title="Create Empty Character"
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
-            >
-                <Stack gap="md">
-                    <TextInput
-                        label="Character Name"
-                        placeholder="Enter character name"
-                        value={newCharacterName}
-                        onChange={(e) => setNewCharacterName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleCreateEmptyCharacter()
-                            }
-                        }}
-                    />
-                    <Divider color={rgba(RAW_GOLD, 0.3)} />
-                    <Group justify="space-between">
-                        <Button
-                            variant="subtle"
-                            color="gray"
-                            styles={confirmationModalCancelButtonStyles}
-                            onClick={() => {
-                                setCreateCharacterModalOpened(false)
-                                setNewCharacterName("")
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleCreateEmptyCharacter}
-                            styles={confirmationModalDangerConfirmButtonStyles}
-                        >
-                            Create
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                label="Character Name"
+                placeholder="Enter character name"
+                value={newCharacterName}
+                onChange={setNewCharacterName}
+                onSubmit={handleCreateEmptyCharacter}
+                submitLabel="Create"
+                loading={createCharacterMutation.isPending}
+            />
 
-            {/* Create Coterie Modal */}
-            <Modal
+            <NameModal
                 opened={createCoterieModalOpened}
-                onClose={() => {
-                    setCreateCoterieModalOpened(false)
-                    setNewCoterieName("")
-                }}
+                onClose={closeCreateCoterieModal}
                 title="Create Coterie"
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
-            >
-                <Stack gap="md">
-                    <TextInput
-                        label="Coterie Name"
-                        placeholder="Enter coterie name"
-                        value={newCoterieName}
-                        onChange={(e) => setNewCoterieName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleCreateCoterie()
-                            }
-                        }}
-                    />
-                    <Divider color={rgba(RAW_GOLD, 0.3)} />
-                    <Group justify="space-between">
-                        <Button
-                            variant="subtle"
-                            color="gray"
-                            styles={confirmationModalCancelButtonStyles}
-                            onClick={() => {
-                                setCreateCoterieModalOpened(false)
-                                setNewCoterieName("")
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleCreateCoterie}
-                            styles={confirmationModalDangerConfirmButtonStyles}
-                        >
-                            Create
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                label="Coterie Name"
+                placeholder="Enter coterie name"
+                value={newCoterieName}
+                onChange={setNewCoterieName}
+                onSubmit={handleCreateCoterie}
+                submitLabel="Create"
+                loading={createCoterieMutation.isPending}
+            />
 
-            {/* Edit Coterie Modal */}
-            <Modal
+            <NameModal
                 opened={editCoterieModalOpened}
-                onClose={() => {
-                    setEditCoterieModalOpened(false)
-                    setEditingCoterie(null)
-                    setNewCoterieName("")
-                }}
+                onClose={closeEditCoterieModal}
                 title="Edit Coterie"
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
-            >
-                <Stack gap="md">
-                    <TextInput
-                        label="Coterie Name"
-                        placeholder="Enter coterie name"
-                        value={newCoterieName}
-                        onChange={(e) => setNewCoterieName(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleUpdateCoterie()
-                            }
-                        }}
-                    />
-                    <Divider color={rgba(RAW_GOLD, 0.3)} />
-                    <Group justify="space-between">
-                        <Button
-                            variant="subtle"
-                            color="gray"
-                            styles={confirmationModalCancelButtonStyles}
-                            onClick={() => {
-                                setEditCoterieModalOpened(false)
-                                setEditingCoterie(null)
-                                setNewCoterieName("")
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleUpdateCoterie}
-                            styles={confirmationModalDangerConfirmButtonStyles}
-                        >
-                            Save
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+                label="Coterie Name"
+                placeholder="Enter coterie name"
+                value={newCoterieName}
+                onChange={setNewCoterieName}
+                onSubmit={handleUpdateCoterie}
+                submitLabel="Save"
+                loading={updateCoterieMutation.isPending}
+            />
 
-            {/* Add Character to Coterie Modal */}
             <Modal
                 opened={addCharacterToCoterieModalOpened}
-                onClose={() => {
-                    setAddCharacterToCoterieModalOpened(false)
-                    setSelectedCoterieForAdd(null)
-                    setSelectedCharacterForCoterie("")
-                }}
+                onClose={closeAddCharacterToCoterieModal}
                 title={`Add Character to ${selectedCoterieForAdd?.name || "Coterie"}`}
                 centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 <Stack gap="md">
                     <Select
+                        data-autofocus
                         label="Character"
-                        placeholder="Select a character"
-                        data={ownedCharacters
-                            .filter((char) => {
-                                // Filter out characters already in this coterie
-                                if (!selectedCoterieForAdd?.members) return true
-                                return !selectedCoterieForAdd.members.some(
-                                    (m) => m.characterId === char.id
-                                )
-                            })
-                            .map((char) => ({ value: char.id, label: char.name }))}
+                        placeholder={
+                            addableCharacters.length ? "Select a character" : "No characters to add"
+                        }
+                        data={addableCharacters}
                         value={selectedCharacterForCoterie}
                         onChange={(value) => setSelectedCharacterForCoterie(value || "")}
+                        searchable={addableCharacters.length > 8}
+                        nothingFoundMessage="No matching character"
                     />
-                    <Divider color={rgba(RAW_GOLD, 0.3)} />
-                    <Group justify="space-between">
-                        <Button
-                            variant="subtle"
-                            color="gray"
-                            styles={confirmationModalCancelButtonStyles}
-                            onClick={() => {
-                                setAddCharacterToCoterieModalOpened(false)
-                                setSelectedCoterieForAdd(null)
-                                setSelectedCharacterForCoterie("")
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleConfirmAddCharacterToCoterie}
-                            disabled={!selectedCharacterForCoterie}
-                            styles={confirmationModalDangerConfirmButtonStyles}
-                        >
-                            Add
-                        </Button>
-                    </Group>
+                    <ModalFooter
+                        onCancel={closeAddCharacterToCoterieModal}
+                        onConfirm={handleConfirmAddCharacterToCoterie}
+                        confirmLabel="Add"
+                        loading={addCharacterToCoterieMutation.isPending}
+                        disabledReason={
+                            selectedCharacterForCoterie ? undefined : "Pick a character first"
+                        }
+                    />
                 </Stack>
             </Modal>
 
-            {/* Coterie Invites Modal */}
-            <Modal
+            <CoterieInvitesModal
                 opened={coterieInvitesModalOpened}
                 onClose={() => {
                     setCoterieInvitesModalOpened(false)
                     setCoterieForInvites(null)
                     setGeneratedInviteUrl("")
                 }}
-                title={`Invites for ${coterieForInvites?.name || "Coterie"}`}
-                centered
-                size="lg"
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
-            >
-                <Stack gap="md">
-                    <Button
-                        color="red"
-                        leftSection={<IconLink size={16} />}
-                        onClick={handleGenerateCoterieInvite}
-                        loading={createCoterieInviteMutation.isPending}
-                    >
-                        Generate Invite Link
-                    </Button>
-
-                    {generatedInviteUrl ? (
-                        <Stack gap="xs">
-                            <Text size="sm" c="dimmed">
-                                This full invite link is shown only once.
-                            </Text>
-                            <Group gap="xs" align="flex-end">
-                                <TextInput
-                                    label="New invite link"
-                                    value={generatedInviteUrl}
-                                    readOnly
-                                    style={{ flex: 1 }}
-                                />
-                                <Button
-                                    color="red"
-                                    variant="light"
-                                    leftSection={<IconCopy size={16} />}
-                                    onClick={handleCopyGeneratedInvite}
-                                >
-                                    Copy
-                                </Button>
-                                <Button
-                                    color="gray"
-                                    variant="subtle"
-                                    leftSection={<IconEyeOff size={16} />}
-                                    onClick={handleHideGeneratedInvite}
-                                >
-                                    Hide
-                                </Button>
-                            </Group>
-                        </Stack>
-                    ) : null}
-
-                    <Divider color={rgba(RAW_GOLD, 0.3)} />
-
-                    <Stack gap="xs">
-                        {coterieInvites && coterieInvites.length > 0 ? (
-                            coterieInvites.map((invite) => (
-                                <Paper
-                                    key={invite.id}
-                                    p="sm"
-                                    withBorder
-                                    style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
-                                >
-                                    <Group justify="space-between" align="center">
-                                        <Stack gap={2}>
-                                            <Text size="sm">
-                                                Expires {formatCoterieDate(invite.expiresAt)}
-                                            </Text>
-                                            <Text size="xs" c="dimmed">
-                                                Created {formatCoterieDate(invite.createdAt)}
-                                            </Text>
-                                        </Stack>
-                                        <Group gap="xs">
-                                            <Badge
-                                                color={invite.active ? "green" : "gray"}
-                                                variant="light"
-                                            >
-                                                {invite.active ? "Active" : "Inactive"}
-                                            </Badge>
-                                            {invite.active ? (
-                                                <Button
-                                                    size="xs"
-                                                    color="red"
-                                                    variant="light"
-                                                    onClick={() =>
-                                                        handleRequestRevokeInvite(invite)
-                                                    }
-                                                >
-                                                    Revoke
-                                                </Button>
-                                            ) : null}
-                                        </Group>
-                                    </Group>
-                                </Paper>
-                            ))
-                        ) : (
-                            <Text c="dimmed" size="sm">
-                                No invite links yet.
-                            </Text>
-                        )}
-                    </Stack>
-                </Stack>
-            </Modal>
+                coterieName={coterieForInvites?.name}
+                invites={coterieInvites}
+                generatedInviteUrl={generatedInviteUrl}
+                isGenerating={createCoterieInviteMutation.isPending}
+                onGenerate={handleGenerateCoterieInvite}
+                onCopy={handleCopyGeneratedInvite}
+                onHide={handleHideGeneratedInvite}
+                onRevoke={handleRequestRevokeInvite}
+            />
 
             <ConfirmActionModal
                 opened={removeCharacterFromCoterieModalOpened}
@@ -2319,6 +1963,7 @@ const MePage = () => {
                     </>
                 }
                 confirmLabel="Delete"
+                loading={deleteCharacterMutation.isPending}
             />
 
             <ConfirmActionModal
@@ -2336,85 +1981,40 @@ const MePage = () => {
                     </>
                 }
                 confirmLabel="Delete"
+                loading={deleteCoterieMutation.isPending}
             />
 
-            <Modal
+            <ConfirmActionModal
                 opened={loadSameCharacterWarningModalOpened}
-                onClose={() => {
-                    setLoadSameCharacterWarningModalOpened(false)
-                    setCharacterToLoad(null)
-                    setLoadingCharacterId(null)
-                }}
+                onClose={closeLoadSameCharacterWarning}
+                onConfirm={handleConfirmLoadSameCharacter}
                 title="Warning: Unsaved Changes"
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
-            >
-                <Stack gap="md">
-                    <Text>
+                body={
+                    <>
                         You have unsaved changes to{" "}
                         <strong>{characterToLoad?.name || character.name}</strong>. Loading this
                         character will discard your current unsaved changes.
-                    </Text>
-                    <Text c="dimmed" size="sm">
-                        You can save your current changes first, or load the character anyway (which
-                        will discard your unsaved changes).
-                    </Text>
-                    <Divider color={rgba(RAW_GOLD, 0.3)} />
-                    <Group justify="space-between" gap="xs">
-                        <Button
-                            variant="subtle"
-                            color="gray"
-                            styles={confirmationModalCancelButtonStyles}
-                            onClick={() => {
-                                setLoadSameCharacterWarningModalOpened(false)
-                                setCharacterToLoad(null)
-                                setLoadingCharacterId(null)
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="red"
-                            onClick={handleConfirmLoadSameCharacter}
-                            disabled={isAnyOperationInFlight}
-                            loading={isLoadingCharacter}
-                            styles={confirmationModalDangerConfirmButtonStyles}
-                        >
-                            Load Anyway
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
-
-            <Modal
-                opened={shareCharacterModalOpened}
-                onClose={() => {
-                    setShareCharacterModalOpened(false)
-                    setCharacterToShare(null)
-                    setShareNickname("")
-                }}
-                title="Share Character"
-                centered
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
+                    </>
+                }
+                confirmLabel="Load Anyway"
+                disabled={isAnyOperationInFlight}
+                loading={isLoadingCharacter}
             >
-                <ShareCharacterModalContent
-                    characterToShare={characterToShare}
-                    shareNickname={shareNickname}
-                    setShareNickname={setShareNickname}
-                    isSharing={isSharing}
-                    redColorValue={redColorValue}
-                    handleConfirmShare={handleConfirmShare}
-                    onClose={() => {
-                        setShareCharacterModalOpened(false)
-                        setCharacterToShare(null)
-                        setShareNickname("")
-                    }}
-                />
-            </Modal>
+                <Text c="dimmed" size="sm" ta="center">
+                    You can save your current changes first, or load the character anyway (which
+                    will discard your unsaved changes).
+                </Text>
+            </ConfirmActionModal>
+
+            <ShareCharacterModal
+                opened={shareCharacterModalOpened}
+                characterToShare={characterToShare}
+                shareNickname={shareNickname}
+                setShareNickname={setShareNickname}
+                isSharing={isSharing}
+                handleConfirmShare={handleConfirmShare}
+                onClose={closeShareCharacterModal}
+            />
 
             <ConfirmActionModal
                 opened={loadJsonModalOpened}
@@ -2449,20 +2049,18 @@ const MePage = () => {
                 title={`Coterie Summary: ${currentCoterieForSummary?.name || ""}`}
                 centered
                 size="xl"
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 {currentCoterieForSummary &&
                 currentCoterieForSummary.members &&
                 currentCoterieForSummary.members.length > 0 ? (
                     <CoterieSummaryContent
                         members={currentCoterieForSummary.members}
-                        theme={theme}
                         vitalsByCharacterId={vitalsByCharacterId}
                     />
                 ) : (
-                    <Text c="dimmed">No members in this coterie.</Text>
+                    <Text c="dimmed" ta="center">
+                        No members in this coterie.
+                    </Text>
                 )}
             </Modal>
 
@@ -2475,15 +2073,11 @@ const MePage = () => {
                 title="Character Summary"
                 centered
                 size="xl"
-                withCloseButton={false}
-                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-                styles={confirmationModalWithHeaderStyles(phoneScreen)}
             >
                 {characterForSummary?.data ? (
                     <CharacterSummaryContent
                         character={characterForSummary.data as CharacterType}
                         characterName={characterForSummary.name}
-                        theme={theme}
                     />
                 ) : null}
             </Modal>
@@ -2497,811 +2091,6 @@ const MePage = () => {
                 sessionLabelSessionId={activeChatCoterieId}
             />
         </>
-    )
-}
-
-type CoterieSummaryContentProps = {
-    members: Array<{
-        characterId: string
-        playerNickname?: string | null
-        showPlayerNameTag?: boolean
-        character?: Character
-    }>
-    theme: ReturnType<typeof useMantineTheme>
-    vitalsByCharacterId: Record<string, CharacterVitals>
-}
-
-// TODOdin: Move modals and their contents from MePage into their own components under sections/
-const CoterieSummaryContent = ({
-    members,
-    theme,
-    vitalsByCharacterId
-}: CoterieSummaryContentProps) => {
-    const getDisciplineCategory = (
-        disciplineName: DisciplineName
-    ): "physical" | "social" | "mental" => {
-        const physicalDisciplines: DisciplineName[] = [
-            "celerity",
-            "potence",
-            "fortitude",
-            "protean"
-        ]
-        const socialDisciplines: DisciplineName[] = [
-            "presence",
-            "dominate",
-            "obfuscate",
-            "animalism"
-        ]
-        const mentalDisciplines: DisciplineName[] = [
-            "auspex",
-            "blood sorcery",
-            "oblivion",
-            "thin-blood alchemy"
-        ]
-
-        if (physicalDisciplines.includes(disciplineName)) return "physical"
-        if (socialDisciplines.includes(disciplineName)) return "social"
-        if (mentalDisciplines.includes(disciplineName)) return "mental"
-        return "physical"
-    }
-
-    const calculateCharacterStrength = (
-        character: CharacterType
-    ): {
-        physical: number
-        social: number
-        mental: number
-        dominant: "physical" | "social" | "mental"
-    } => {
-        const physicalAttributes = ["strength", "dexterity", "stamina"] as const
-        const socialAttributes = ["charisma", "manipulation", "composure"] as const
-        const mentalAttributes = ["intelligence", "wits", "resolve"] as const
-
-        const physicalSkills = [
-            "athletics",
-            "brawl",
-            "craft",
-            "drive",
-            "firearms",
-            "melee",
-            "larceny",
-            "stealth",
-            "survival"
-        ] as const
-        const socialSkills = [
-            "animal ken",
-            "etiquette",
-            "insight",
-            "intimidation",
-            "leadership",
-            "performance",
-            "persuasion",
-            "streetwise",
-            "subterfuge"
-        ] as const
-        const mentalSkills = [
-            "academics",
-            "awareness",
-            "finance",
-            "investigation",
-            "medicine",
-            "occult",
-            "politics",
-            "science",
-            "technology"
-        ] as const
-
-        let physicalScore = 0
-        let socialScore = 0
-        let mentalScore = 0
-
-        physicalAttributes.forEach((attr) => {
-            const key = attributesKeySchema.parse(attr)
-            physicalScore += character.attributes[key] ?? 0
-        })
-
-        socialAttributes.forEach((attr) => {
-            const key = attributesKeySchema.parse(attr)
-            socialScore += character.attributes[key] ?? 0
-        })
-
-        mentalAttributes.forEach((attr) => {
-            const key = attributesKeySchema.parse(attr)
-            mentalScore += character.attributes[key] ?? 0
-        })
-
-        physicalSkills.forEach((skill) => {
-            const key = skillsKeySchema.parse(skill)
-            physicalScore += character.skills[key] ?? 0
-        })
-
-        socialSkills.forEach((skill) => {
-            const key = skillsKeySchema.parse(skill)
-            socialScore += character.skills[key] ?? 0
-        })
-
-        mentalSkills.forEach((skill) => {
-            const key = skillsKeySchema.parse(skill)
-            mentalScore += character.skills[key] ?? 0
-        })
-
-        character.disciplines.forEach((power) => {
-            const category = getDisciplineCategory(power.discipline)
-            const level = power.level
-            if (category === "physical") physicalScore += level * 2
-            if (category === "social") socialScore += level * 2
-            if (category === "mental") mentalScore += level * 2
-        })
-
-        const dominant =
-            physicalScore > socialScore && physicalScore > mentalScore
-                ? "physical"
-                : socialScore > mentalScore
-                  ? "social"
-                  : "mental"
-
-        return {
-            physical: physicalScore,
-            social: socialScore,
-            mental: mentalScore,
-            dominant
-        }
-    }
-
-    const getBackgroundColor = (dominant: "physical" | "social" | "mental"): string => {
-        const opacity = 0.15
-        if (dominant === "physical") {
-            return `rgba(220, 38, 38, ${opacity})`
-        } else if (dominant === "social") {
-            return `rgba(147, 51, 234, ${opacity})`
-        } else {
-            return `rgba(59, 130, 246, ${opacity})`
-        }
-    }
-
-    const getBorderColor = (dominant: "physical" | "social" | "mental"): string => {
-        if (dominant === "physical") {
-            return theme.colors.red[6]
-        } else if (dominant === "social") {
-            return theme.colors.grape[6]
-        } else {
-            return theme.colors.blue[6]
-        }
-    }
-
-    const memberSummaries = useMemo(
-        () =>
-            members.flatMap((member) => {
-                const character = parseCharacterData(member.character?.data)
-                if (!character) return []
-
-                return {
-                    member,
-                    character,
-                    strength: calculateCharacterStrength(character),
-                    clan: character.clan ? clans[character.clan] : null,
-                    vitals: vitalsByCharacterId[member.characterId] ?? getCharacterVitals(character)
-                }
-            }),
-        [members, vitalsByCharacterId]
-    )
-
-    return (
-        <Grid>
-            {memberSummaries.map(({ member, character, strength, clan, vitals }) => {
-                const backgroundColor = getBackgroundColor(strength.dominant)
-                const borderColor = getBorderColor(strength.dominant)
-                const playerName =
-                    member.playerNickname?.trim() || character.player?.trim() || "Unknown player"
-
-                return (
-                    <Grid.Col key={member.characterId} span={{ base: 12, md: 6, lg: 4 }}>
-                        <Paper
-                            p="md"
-                            withBorder
-                            radius="md"
-                            style={{
-                                backgroundColor,
-                                borderColor,
-                                borderWidth: 2,
-                                minHeight: 150,
-                                height: "100%",
-                                display: "flex"
-                            }}
-                        >
-                            <Group gap="md" align="center" wrap="nowrap" style={{ width: "100%" }}>
-                                {clan?.logo ? (
-                                    <Box
-                                        style={{
-                                            width: 52,
-                                            height: 52,
-                                            flex: "0 0 52px",
-                                            backgroundColor: borderColor,
-                                            maskImage: `url(${clan.logo})`,
-                                            maskSize: "contain",
-                                            maskRepeat: "no-repeat",
-                                            maskPosition: "center",
-                                            WebkitMaskImage: `url(${clan.logo})`,
-                                            WebkitMaskSize: "contain",
-                                            WebkitMaskRepeat: "no-repeat",
-                                            WebkitMaskPosition: "center"
-                                        }}
-                                    />
-                                ) : (
-                                    <Box
-                                        style={{
-                                            width: 52,
-                                            height: 52,
-                                            flex: "0 0 52px"
-                                        }}
-                                    />
-                                )}
-                                <Stack gap={4} style={{ minWidth: 0, flex: 1 }}>
-                                    <Text fw={700} size="lg" truncate="end">
-                                        {character.name}
-                                    </Text>
-                                    <Group gap="xs" wrap="nowrap">
-                                        <Text size="sm" c="dimmed">
-                                            Player:
-                                        </Text>
-                                        {member.showPlayerNameTag ? (
-                                            <NameTag name={playerName} size="xs" />
-                                        ) : (
-                                            <Text size="sm" c="dimmed" truncate="end">
-                                                {playerName}
-                                            </Text>
-                                        )}
-                                    </Group>
-                                    <Group gap="xs">
-                                        <Badge size="sm" color="red" variant="light">
-                                            Hunger {vitals.hunger}/5
-                                        </Badge>
-                                        <Badge size="lg" color="grape" variant="filled">
-                                            Willpower {vitals.currentWillpower}/{vitals.willpower}
-                                        </Badge>
-                                        <Badge size="sm" color="blue" variant="light">
-                                            Humanity {vitals.humanity}/10
-                                            {vitals.humanityStains > 0
-                                                ? ` · ${vitals.humanityStains} stains`
-                                                : ""}
-                                        </Badge>
-                                    </Group>
-                                </Stack>
-                            </Group>
-                        </Paper>
-                    </Grid.Col>
-                )
-            })}
-        </Grid>
-    )
-}
-
-type CharacterSummaryContentProps = {
-    character: CharacterType
-    characterName: string
-    theme: ReturnType<typeof useMantineTheme>
-}
-
-const CharacterSummaryContent = ({
-    character,
-    characterName,
-    theme
-}: CharacterSummaryContentProps) => {
-    const redColorValue = theme.colors.red[6]
-
-    const physicalAttributes = ["strength", "dexterity", "stamina"] as const
-    const socialAttributes = ["charisma", "manipulation", "composure"] as const
-    const mentalAttributes = ["intelligence", "wits", "resolve"] as const
-
-    const physicalSkills = [
-        "athletics",
-        "brawl",
-        "craft",
-        "drive",
-        "firearms",
-        "melee",
-        "larceny",
-        "stealth",
-        "survival"
-    ] as const
-    const socialSkills = [
-        "animal ken",
-        "etiquette",
-        "insight",
-        "intimidation",
-        "leadership",
-        "performance",
-        "persuasion",
-        "streetwise",
-        "subterfuge"
-    ] as const
-    const mentalSkills = [
-        "academics",
-        "awareness",
-        "finance",
-        "investigation",
-        "medicine",
-        "occult",
-        "politics",
-        "science",
-        "technology"
-    ] as const
-
-    const renderPips = (level: number, minLevel: number = 0) => {
-        return "●".repeat(level) + "○".repeat(5 - level)
-    }
-
-    const disciplineGroups = character.disciplines.reduce(
-        (acc, power) => {
-            const identity = getPowerDisciplineIdentity(power)
-            if (!acc[identity]) {
-                acc[identity] = { disciplineName: power.discipline, powers: [] }
-            }
-            acc[identity].powers.push(power)
-            return acc
-        },
-        {} as Record<
-            string,
-            { disciplineName: DisciplineName; powers: typeof character.disciplines }
-        >
-    )
-
-    const clan = character.clan ? clans[character.clan] : null
-
-    return (
-        <Accordion variant="separated" radius="md" chevronPosition="left">
-            <Accordion.Item value="identity">
-                <Accordion.Control>
-                    <Group gap="sm" align="center">
-                        {clan?.logo ? (
-                            <Box
-                                style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    backgroundColor: redColorValue,
-                                    maskImage: `url(${clan.logo})`,
-                                    maskSize: "contain",
-                                    maskRepeat: "no-repeat",
-                                    maskPosition: "center",
-                                    WebkitMaskImage: `url(${clan.logo})`,
-                                    WebkitMaskSize: "contain",
-                                    WebkitMaskRepeat: "no-repeat",
-                                    WebkitMaskPosition: "center"
-                                }}
-                            />
-                        ) : null}
-                        <Text fw={600} size="lg" c={redColorValue}>
-                            {characterName || "Unnamed Character"}
-                        </Text>
-                    </Group>
-                </Accordion.Control>
-                <Accordion.Panel>
-                    <Stack gap="md">
-                        <Grid>
-                            <Grid.Col span={{ base: 12, md: 4 }}>
-                                <Stack gap="xs">
-                                    <Group justify="space-between">
-                                        <Text fw={500} size="sm" c="dimmed">
-                                            Clan
-                                        </Text>
-                                        <Text fw={500}>{clan?.name || character.clan || "—"}</Text>
-                                    </Group>
-                                    <Group justify="space-between">
-                                        <Text fw={500} size="sm" c="dimmed">
-                                            Predator Type
-                                        </Text>
-                                        <Text>{character.predatorType.name || "—"}</Text>
-                                    </Group>
-                                </Stack>
-                            </Grid.Col>
-                            <Grid.Col span={{ base: 12, md: 4 }}>
-                                <Stack gap="xs">
-                                    <Group justify="space-between">
-                                        <Text fw={500} size="sm" c="dimmed">
-                                            Ambition
-                                        </Text>
-                                        <Text>{character.ambition || "—"}</Text>
-                                    </Group>
-                                    <Group justify="space-between">
-                                        <Text fw={500} size="sm" c="dimmed">
-                                            Desire
-                                        </Text>
-                                        <Text>{character.desire || "—"}</Text>
-                                    </Group>
-                                    {character.player ? (
-                                        <Group justify="space-between">
-                                            <Text fw={500} size="sm" c="dimmed">
-                                                Player
-                                            </Text>
-                                            <Text>{character.player}</Text>
-                                        </Group>
-                                    ) : null}
-                                </Stack>
-                            </Grid.Col>
-                            <Grid.Col span={{ base: 12, md: 4 }}>
-                                <Stack gap="xs">
-                                    {character.generation ? (
-                                        <Group justify="space-between">
-                                            <Text fw={500} size="sm" c="dimmed">
-                                                Generation
-                                            </Text>
-                                            <Text>{character.generation}</Text>
-                                        </Group>
-                                    ) : null}
-                                    {character.sire ? (
-                                        <Group justify="space-between">
-                                            <Text fw={500} size="sm" c="dimmed">
-                                                Sire
-                                            </Text>
-                                            <Text>{character.sire}</Text>
-                                        </Group>
-                                    ) : null}
-                                </Stack>
-                            </Grid.Col>
-                        </Grid>
-                        {character.description ? (
-                            <Paper
-                                p="md"
-                                withBorder
-                                radius="md"
-                                style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }}
-                            >
-                                <Text fw={500} size="sm" mb="xs" c="dimmed">
-                                    Description
-                                </Text>
-                                <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-                                    {character.description}
-                                </Text>
-                            </Paper>
-                        ) : null}
-                    </Stack>
-                </Accordion.Panel>
-            </Accordion.Item>
-
-            <Accordion.Item value="attributes">
-                <Accordion.Control>
-                    <Text fw={600} size="lg">
-                        Attributes
-                    </Text>
-                </Accordion.Control>
-                <Accordion.Panel>
-                    <Grid>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                PHYSICAL
-                            </Text>
-                            <Stack gap="xs">
-                                {physicalAttributes.map((attr) => {
-                                    const key = attributesKeySchema.parse(attr)
-                                    return (
-                                        <Group key={attr} justify="space-between">
-                                            <Text style={{ fontFamily: "Courier New" }}>
-                                                {upcase(attr)}
-                                            </Text>
-                                            <Text
-                                                style={{ fontFamily: "Courier New" }}
-                                                c={redColorValue}
-                                            >
-                                                {renderPips(character.attributes[key], 1)}
-                                            </Text>
-                                        </Group>
-                                    )
-                                })}
-                            </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                SOCIAL
-                            </Text>
-                            <Stack gap="xs">
-                                {socialAttributes.map((attr) => {
-                                    const key = attributesKeySchema.parse(attr)
-                                    return (
-                                        <Group key={attr} justify="space-between">
-                                            <Text style={{ fontFamily: "Courier New" }}>
-                                                {upcase(attr)}
-                                            </Text>
-                                            <Text
-                                                style={{ fontFamily: "Courier New" }}
-                                                c={redColorValue}
-                                            >
-                                                {renderPips(character.attributes[key], 1)}
-                                            </Text>
-                                        </Group>
-                                    )
-                                })}
-                            </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                MENTAL
-                            </Text>
-                            <Stack gap="xs">
-                                {mentalAttributes.map((attr) => {
-                                    const key = attributesKeySchema.parse(attr)
-                                    return (
-                                        <Group key={attr} justify="space-between">
-                                            <Text style={{ fontFamily: "Courier New" }}>
-                                                {upcase(attr)}
-                                            </Text>
-                                            <Text
-                                                style={{ fontFamily: "Courier New" }}
-                                                c={redColorValue}
-                                            >
-                                                {renderPips(character.attributes[key], 1)}
-                                            </Text>
-                                        </Group>
-                                    )
-                                })}
-                            </Stack>
-                        </Grid.Col>
-                    </Grid>
-                </Accordion.Panel>
-            </Accordion.Item>
-
-            <Accordion.Item value="skills">
-                <Accordion.Control>
-                    <Text fw={600} size="lg">
-                        Skills
-                    </Text>
-                </Accordion.Control>
-                <Accordion.Panel>
-                    <Grid>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                PHYSICAL
-                            </Text>
-                            <Stack gap="xs">
-                                {physicalSkills.map((skill) => {
-                                    const key = skillsKeySchema.parse(skill)
-                                    const level = character.skills[key]
-                                    if (level === 0) return null
-                                    const specialties = character.skillSpecialties.filter(
-                                        (s) => s.skill === skill
-                                    )
-                                    return (
-                                        <div key={skill}>
-                                            <Group justify="space-between">
-                                                <Text style={{ fontFamily: "Courier New" }}>
-                                                    {upcase(skill)}
-                                                </Text>
-                                                <Text
-                                                    style={{ fontFamily: "Courier New" }}
-                                                    c={redColorValue}
-                                                >
-                                                    {renderPips(level)}
-                                                </Text>
-                                            </Group>
-                                            {specialties.length > 0 ? (
-                                                <Text size="xs" c="dimmed" ml="md">
-                                                    Specialties:{" "}
-                                                    {specialties.map((s) => s.name).join(", ")}
-                                                </Text>
-                                            ) : null}
-                                        </div>
-                                    )
-                                })}
-                            </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                SOCIAL
-                            </Text>
-                            <Stack gap="xs">
-                                {socialSkills.map((skill) => {
-                                    const key = skillsKeySchema.parse(skill)
-                                    const level = character.skills[key]
-                                    if (level === 0) return null
-                                    const specialties = character.skillSpecialties.filter(
-                                        (s) => s.skill === skill
-                                    )
-                                    return (
-                                        <div key={skill}>
-                                            <Group justify="space-between">
-                                                <Text style={{ fontFamily: "Courier New" }}>
-                                                    {upcase(skill)}
-                                                </Text>
-                                                <Text
-                                                    style={{ fontFamily: "Courier New" }}
-                                                    c={redColorValue}
-                                                >
-                                                    {renderPips(level)}
-                                                </Text>
-                                            </Group>
-                                            {specialties.length > 0 ? (
-                                                <Text size="xs" c="dimmed" ml="md">
-                                                    Specialties:{" "}
-                                                    {specialties.map((s) => s.name).join(", ")}
-                                                </Text>
-                                            ) : null}
-                                        </div>
-                                    )
-                                })}
-                            </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 4 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                MENTAL
-                            </Text>
-                            <Stack gap="xs">
-                                {mentalSkills.map((skill) => {
-                                    const key = skillsKeySchema.parse(skill)
-                                    const level = character.skills[key]
-                                    if (level === 0) return null
-                                    const specialties = character.skillSpecialties.filter(
-                                        (s) => s.skill === skill
-                                    )
-                                    return (
-                                        <div key={skill}>
-                                            <Group justify="space-between">
-                                                <Text style={{ fontFamily: "Courier New" }}>
-                                                    {upcase(skill)}
-                                                </Text>
-                                                <Text
-                                                    style={{ fontFamily: "Courier New" }}
-                                                    c={redColorValue}
-                                                >
-                                                    {renderPips(level)}
-                                                </Text>
-                                            </Group>
-                                            {specialties.length > 0 ? (
-                                                <Text size="xs" c="dimmed" ml="md">
-                                                    Specialties:{" "}
-                                                    {specialties.map((s) => s.name).join(", ")}
-                                                </Text>
-                                            ) : null}
-                                        </div>
-                                    )
-                                })}
-                            </Stack>
-                        </Grid.Col>
-                    </Grid>
-                </Accordion.Panel>
-            </Accordion.Item>
-
-            <Accordion.Item value="disciplines">
-                <Accordion.Control>
-                    <Text fw={600} size="lg">
-                        Disciplines & Powers
-                    </Text>
-                </Accordion.Control>
-                <Accordion.Panel>
-                    <Stack gap="md">
-                        {Object.entries(disciplineGroups).map(
-                            ([identity, { disciplineName, powers }]) => {
-                                const sortedPowers = [...powers].sort((a, b) => a.level - b.level)
-                                return (
-                                    <Paper key={identity} p="md" withBorder radius="md">
-                                        <Group gap="xs" mb="sm">
-                                            <Text fw={600} size="md">
-                                                {upcase(disciplineName)}
-                                            </Text>
-                                            <Badge size="sm" color="red" variant="light">
-                                                Level{" "}
-                                                {Math.max(...sortedPowers.map((p) => p.level))}
-                                            </Badge>
-                                        </Group>
-                                        <Stack gap="xs">
-                                            {sortedPowers.map((power) => (
-                                                <div key={getPowerIdentity(power)}>
-                                                    <Group justify="space-between" mb={2}>
-                                                        <Text fw={500} size="sm">
-                                                            {power.name}
-                                                        </Text>
-                                                        <Badge
-                                                            size="xs"
-                                                            color="red"
-                                                            variant="outline"
-                                                        >
-                                                            Level {power.level}
-                                                        </Badge>
-                                                    </Group>
-                                                    <Text size="xs" c="dimmed" ml="md">
-                                                        {power.summary}
-                                                    </Text>
-                                                </div>
-                                            ))}
-                                        </Stack>
-                                    </Paper>
-                                )
-                            }
-                        )}
-                        {character.rituals.length > 0 ? (
-                            <Paper p="md" withBorder radius="md">
-                                <Text fw={600} size="md" mb="sm">
-                                    Rituals
-                                </Text>
-                                <Stack gap="xs">
-                                    {character.rituals.map((ritual) => (
-                                        <div key={ritual.name}>
-                                            <Group justify="space-between" mb={2}>
-                                                <Text fw={500} size="sm">
-                                                    {ritual.name}
-                                                </Text>
-                                                <Badge size="xs" color="red" variant="outline">
-                                                    Level {ritual.level}
-                                                </Badge>
-                                            </Group>
-                                            <Text size="xs" c="dimmed" ml="md">
-                                                {ritual.summary}
-                                            </Text>
-                                        </div>
-                                    ))}
-                                </Stack>
-                            </Paper>
-                        ) : null}
-                    </Stack>
-                </Accordion.Panel>
-            </Accordion.Item>
-
-            <Accordion.Item value="merits-flaws">
-                <Accordion.Control>
-                    <Text fw={600} size="lg">
-                        Merits & Flaws
-                    </Text>
-                </Accordion.Control>
-                <Accordion.Panel>
-                    <Grid>
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                MERITS
-                            </Text>
-                            <Stack gap="xs">
-                                {character.merits.length > 0 ? (
-                                    character.merits.map((merit, idx) => (
-                                        <Paper key={idx} p="xs" withBorder radius="sm">
-                                            <Group justify="space-between" mb={2}>
-                                                <Text fw={500} size="sm">
-                                                    {merit.name}
-                                                </Text>
-                                                <Badge size="xs" color="green" variant="light">
-                                                    {merit.level}
-                                                </Badge>
-                                            </Group>
-                                            <Text size="xs" c="dimmed">
-                                                {merit.summary}
-                                            </Text>
-                                        </Paper>
-                                    ))
-                                ) : (
-                                    <Text size="sm" c="dimmed" fs="italic">
-                                        No merits
-                                    </Text>
-                                )}
-                            </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Text fw={500} size="sm" c="dimmed" mb="sm">
-                                FLAWS
-                            </Text>
-                            <Stack gap="xs">
-                                {character.flaws.length > 0 ? (
-                                    character.flaws.map((flaw, idx) => (
-                                        <Paper key={idx} p="xs" withBorder radius="sm">
-                                            <Group justify="space-between" mb={2}>
-                                                <Text fw={500} size="sm">
-                                                    {flaw.name}
-                                                </Text>
-                                                <Badge size="xs" color="red" variant="light">
-                                                    {flaw.level}
-                                                </Badge>
-                                            </Group>
-                                            <Text size="xs" c="dimmed">
-                                                {flaw.summary}
-                                            </Text>
-                                        </Paper>
-                                    ))
-                                ) : (
-                                    <Text size="sm" c="dimmed" fs="italic">
-                                        No flaws
-                                    </Text>
-                                )}
-                            </Stack>
-                        </Grid.Col>
-                    </Grid>
-                </Accordion.Panel>
-            </Accordion.Item>
-        </Accordion>
     )
 }
 
