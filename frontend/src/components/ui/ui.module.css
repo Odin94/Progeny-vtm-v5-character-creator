@@ -22,7 +22,7 @@
     flex-direction: column;
     gap: var(--pg-space-2);
     min-width: 0;
-    flex: 1 1 320px;
+    flex: 1 1 440px;
 }
 
 .pageHeader[data-align="center"] .pageHeaderText {
@@ -129,6 +129,7 @@
 }
 
 .sectionHeaderDescription {
+    flex-basis: 100%;
     margin: 0;
     font-size: 0.8125rem;
     color: var(--pg-ink-3);
@@ -139,6 +140,12 @@
     min-width: var(--pg-space-6);
     height: 1px;
     background: linear-gradient(90deg, var(--pg-border-gold), transparent);
+}
+
+/* With a description, it wraps onto its own full-width line below the title row. */
+.sectionHeader[data-has-description] {
+    flex-wrap: wrap;
+    row-gap: 2px;
 }
 
 .sectionHeaderActions {
@@ -369,4 +376,51 @@
     width: 1px;
     height: 1px;
     pointer-events: none;
+}
+
+/* ---- Dots (ratings) ---------------------------------------------------------- */
+
+.dots {
+    --dot-size: 7px;
+    --dot-fill: var(--dot-color, var(--pg-blood-bright));
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: none;
+}
+
+.dots[data-size="sm"] {
+    --dot-size: 6px;
+    gap: 2px;
+}
+
+.dots[data-size="lg"] {
+    --dot-size: 9px;
+    gap: 4px;
+}
+
+.dot {
+    width: var(--dot-size);
+    height: var(--dot-size);
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--dot-fill) 70%, transparent);
+    background: transparent;
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out);
+}
+
+.dots[data-empty-tone="quiet"] .dot {
+    border-color: rgba(242, 220, 210, 0.2);
+}
+
+.dot[data-filled],
+.dots[data-empty-tone="quiet"] .dot[data-filled] {
+    border-color: var(--dot-fill);
+    background: var(--dot-fill);
+}
+
+.dots[data-glow] .dot[data-filled] {
+    box-shadow: 0 0 8px -1px color-mix(in srgb, var(--dot-fill) 70%, transparent);
 }

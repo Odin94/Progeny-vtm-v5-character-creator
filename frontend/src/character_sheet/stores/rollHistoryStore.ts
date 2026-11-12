@@ -17,7 +17,10 @@ const MAX_ENTRIES = 12
 
 type RollHistoryStore = {
     entries: RollHistoryEntry[]
+    /** Character the entries belong to; switching characters starts a fresh history. */
+    characterKey: string | null
     record: (entry: Omit<RollHistoryEntry, "rerolled" | "at">) => void
+    bindToCharacter: (characterKey: string) => void
     clear: () => void
 }
 
@@ -26,6 +29,7 @@ const sameFaces = (a: RollHistoryEntry["dice"], b: RollHistoryEntry["dice"]) =>
 
 export const useRollHistoryStore = create<RollHistoryStore>((set) => ({
     entries: [],
+    characterKey: null,
     record: (entry) =>
         set((state) => {
             const existing = state.entries.find((item) => item.rollId === entry.rollId)
@@ -44,5 +48,9 @@ export const useRollHistoryStore = create<RollHistoryStore>((set) => ({
                 )
             }
         }),
+    bindToCharacter: (characterKey) =>
+        set((state) =>
+            state.characterKey === characterKey ? state : { characterKey, entries: [] }
+        ),
     clear: () => set({ entries: [] })
 }))

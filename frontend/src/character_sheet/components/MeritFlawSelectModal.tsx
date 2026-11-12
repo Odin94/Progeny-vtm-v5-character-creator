@@ -595,17 +595,27 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                     </Button>
                 }
                 end={
-                    <Button
-                        onClick={handleSelect}
-                        color={primaryColor}
-                        disabled={
+                    <DisabledReason
+                        reason={
                             mode === "xp" &&
                             type === "merit" &&
                             !canAffordUpgrade(availableXP, getCostForLevel(selectedLevel))
+                                ? `Not enough XP: needs ${getCostForLevel(selectedLevel)}, ${availableXP} available`
+                                : undefined
                         }
                     >
-                        {getExistingLevel(meritFlaw) > 0 ? "Upgrade" : "Add"}
-                    </Button>
+                        <Button
+                            onClick={handleSelect}
+                            color={primaryColor}
+                            disabled={
+                                mode === "xp" &&
+                                type === "merit" &&
+                                !canAffordUpgrade(availableXP, getCostForLevel(selectedLevel))
+                            }
+                        >
+                            {getExistingLevel(meritFlaw) > 0 ? "Upgrade" : "Add"}
+                        </Button>
+                    </DisabledReason>
                 }
             />
         </>

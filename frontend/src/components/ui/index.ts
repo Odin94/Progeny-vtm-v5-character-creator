@@ -2,6 +2,8 @@
 export { BrandMark } from "./BrandMark"
 export { ContextMenu, useContextMenu } from "./ContextMenu"
 export type { ContextMenuAction, ContextMenuEntry } from "./ContextMenu"
+export { Dots } from "./Dots"
+export type { DotsProps } from "./Dots"
 export { EmptyState } from "./EmptyState"
 export type { EmptyStateProps } from "./EmptyState"
 export { DeleteIconButton, DisabledReason, IconButton } from "./IconButtons"

@@ -138,6 +138,10 @@
     --pg-topbar-h: 52px;
     --pg-content-max: 1200px;
     --pg-gutter: clamp(16px, 4vw, 32px);
+    /* Floating sheet buttons (menu + session chat) sit in one row along the bottom edge. */
+    --pg-fab-size: 48px;
+    --pg-fab-edge: 1.5rem;
+    --pg-fab-gap: 12px;
     --pg-safe-bottom: env(safe-area-inset-bottom, 0px);
     --pg-safe-top: env(safe-area-inset-top, 0px);
 

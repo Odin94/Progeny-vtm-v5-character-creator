@@ -30,7 +30,7 @@ export const confirmationModalWithHeaderStyles = (
     title: confirmationModalHeadingStyle(phoneScreen)
 })
 
-export const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
+const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
     fontFamily: "var(--pg-font-display)",
     fontWeight: 600,
     fontSize: phoneScreen ? "1.15rem" : "1.3rem",
@@ -39,7 +39,7 @@ export const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
     color: "var(--pg-ink)"
 })
 
-export const confirmationModalBodyStyle = {
+const confirmationModalBodyStyle = {
     fontFamily: "var(--pg-font-body)",
     fontSize: "0.9rem",
     lineHeight: 1.55,

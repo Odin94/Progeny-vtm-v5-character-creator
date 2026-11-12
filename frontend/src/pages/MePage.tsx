@@ -16,7 +16,7 @@ import {
 } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { z } from "zod"
 import ChatWindow from "~/character_sheet/components/ChatWindow"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
@@ -147,6 +147,10 @@ const MePage = ({ tab, onTabChange }: MePageProps = {}) => {
     const [localTab, setLocalTab] = useState<MeTab>(tab ?? DEFAULT_ME_TAB)
     const activeTab = onTabChange ? (tab ?? DEFAULT_ME_TAB) : localTab
     const changeTab = (next: MeTab) => (onTabChange ? onTabChange(next) : setLocalTab(next))
+    const changeTabRef = useRef(changeTab)
+    useEffect(() => {
+        changeTabRef.current = changeTab
+    })
     const {
         user,
         isLoading: authLoading,
@@ -319,6 +323,8 @@ const MePage = ({ tab, onTabChange }: MePageProps = {}) => {
 
         acceptCoterieInviteMutation.mutate(inviteToken, {
             onSuccess: () => {
+                // The account page is tabbed now; show the coterie that was just joined.
+                changeTabRef.current("coteries")
                 notifications.show({
                     title: "Coterie joined",
                     message: "You can now add your characters to this coterie.",

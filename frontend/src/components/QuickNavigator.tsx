@@ -1,4 +1,3 @@
-import { Group, Kbd, Text } from "@mantine/core"
 import {
     createSpotlight,
     Spotlight,
@@ -207,20 +206,5 @@ export const QuickNavigator = () => {
                 "aria-label": "Search pages"
             }}
         />
-    )
-}
-
-/** Footer hint row used inside the topbar trigger tooltip. */
-export const QuickNavigatorShortcut = () => {
-    const isMac =
-        typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "")
-    return (
-        <Group gap={4} wrap="nowrap">
-            <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
-            <Text span size="xs" c="dimmed">
-                +
-            </Text>
-            <Kbd>K</Kbd>
-        </Group>
     )
 }

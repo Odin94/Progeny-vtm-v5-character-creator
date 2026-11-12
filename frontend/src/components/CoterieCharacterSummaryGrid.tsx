@@ -1,7 +1,7 @@
 import { IconUsersGroup } from "@tabler/icons-react"
 import { Fragment, memo, useMemo, type CSSProperties, type MouseEvent, type ReactNode } from "react"
 import { getPrimaryColor } from "~/character_sheet/utils/style"
-import { EmptyState, Panel } from "~/components/ui"
+import { Dots as DotTrack, EmptyState, Panel } from "~/components/ui"
 import NameTag from "~/components/NameTag"
 import { attributesKeySchema } from "~/data/Attributes"
 import { type Character } from "~/data/Character"
@@ -126,11 +126,7 @@ const maskStyle = (logo: string): CSSProperties => ({
 })
 
 const Dots = ({ value, max = 5 }: { value: number; max?: number }) => (
-    <span className={classes.dots} aria-hidden="true">
-        {Array.from({ length: max }, (_, index) => (
-            <span key={index} className={classes.dot} data-filled={index < value || undefined} />
-        ))}
-    </span>
+    <DotTrack filled={value} total={max} emptyTone="quiet" color="var(--clan-bright)" />
 )
 
 const RatingRow = ({ label, value }: { label: string; value: number }) => (

@@ -1,6 +1,6 @@
 import { ActionIcon, createTheme, MantineProvider, SegmentedControl, Tooltip } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { Character, getEmptyCharacter } from "~/data/Character"
 import { IconDice } from "@tabler/icons-react"
 import posthog from "posthog-js"
@@ -22,6 +22,7 @@ import DiceRollModal from "./components/diceRollModal/DiceRollModal"
 import ChatWindow from "./components/ChatWindow"
 import CharacterNotesControl from "./components/CharacterNotesControl"
 import { useDiceRollModalStore } from "./stores/diceRollModalStore"
+import { useRollHistoryStore } from "./stores/rollHistoryStore"
 import { hasSheetMeritsAndFlaws } from "./utils/meritsAndFlaws"
 import { useAuth } from "~/hooks/useAuth"
 import { useVampireDiceFeatureFlag } from "~/hooks/useVampireDiceFeatureFlag"
@@ -63,6 +64,11 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
             character.flaws.length === 0
         )
     }, [character])
+
+    // The roll history is per character: loading another character starts a fresh list.
+    useEffect(() => {
+        useRollHistoryStore.getState().bindToCharacter(character.id || "local")
+    }, [character.id])
 
     const [mode, setMode] = useLocalStorage<CharacterSheetMode>({
         key: "characterSheetMode",
@@ -164,8 +170,10 @@ const CharacterSheet = ({ character, setCharacter }: CharacterSheetProps) => {
         character.rituals.length > 0 ||
         character.ceremonies.length > 0
 
+    // Deduplication would skip `--mantine-primary-color-*` when the clan color equals Mantine's
+    // default primary (blue: Ventrue), leaving the sheet in the app's violet.
     return (
-        <MantineProvider theme={sheetTheme} forceColorScheme="dark">
+        <MantineProvider theme={sheetTheme} forceColorScheme="dark" deduplicateCssVariables={false}>
             <div
                 className={classes.backdrop}
                 style={{

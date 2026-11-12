@@ -54,7 +54,7 @@ const PipButton = ({
     groupEnd = false,
     label
 }: PipButtonProps) => {
-    const isInteractive = !!onClick && !hardDisabled && !disabledReason
+    const isInteractive = !!onClick && !hardDisabled
     const { delay, changed } = getPipStagger(index, firstChangingIndex, isFilling)
 
     const button = (

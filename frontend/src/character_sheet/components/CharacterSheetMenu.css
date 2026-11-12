@@ -2,8 +2,8 @@
 
 .sheet-menu__fab {
     position: fixed;
-    right: 2rem;
-    bottom: calc(2rem + var(--pg-safe-bottom));
+    right: var(--pg-fab-edge);
+    bottom: calc(var(--pg-fab-edge) + var(--pg-safe-bottom));
     z-index: var(--pg-z-header);
     border: 1px solid var(--pg-border-strong);
     background: var(--pg-surface-glass);
@@ -21,10 +21,9 @@
     }
 }
 
-@media (max-width: 36em) {
+@media (max-width: 48em) {
     .sheet-menu__fab {
-        right: 1rem;
-        bottom: calc(1rem + var(--pg-safe-bottom));
+        --pg-fab-edge: 1rem;
     }
 }
 

@@ -308,18 +308,6 @@
     border-color: color-mix(in srgb, var(--pg-success) 45%, transparent);
 }
 
-.dots {
-    display: inline-flex;
-    gap: 2px;
-}
-
-.dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
 .reason {
     display: flex;
     align-items: flex-start;

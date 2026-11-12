@@ -362,7 +362,12 @@ export const progenyTheme: MantineThemeOverride = createTheme({
             classNames: { input: classes.checkboxInput }
         }),
         Switch: Switch.extend({
-            classNames: { track: classes.switchTrack }
+            defaultProps: { withThumbIndicator: false },
+            classNames: {
+                input: classes.switchInput,
+                track: classes.switchTrack,
+                thumb: classes.switchThumb
+            }
         }),
         ScrollArea: ScrollArea.extend({
             defaultProps: { scrollbarSize: 10 },

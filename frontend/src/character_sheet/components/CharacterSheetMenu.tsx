@@ -271,7 +271,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         <>
             <ActionIcon
                 aria-label="Open character sheet menu"
-                size="xl"
+                size={48}
                 variant="default"
                 radius="xl"
                 onClick={openMenu}

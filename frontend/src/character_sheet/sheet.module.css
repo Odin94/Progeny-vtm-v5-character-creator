@@ -765,6 +765,7 @@
     border-radius: var(--pg-radius-sm);
     background: transparent;
     color: var(--pg-ink-3);
+    font: 500 15px/1 var(--pg-font-body);
     cursor: pointer;
     transition:
         transform var(--pg-dur-press) var(--ease-out),

@@ -1,5 +1,4 @@
-import { TextInput, Textarea, Tooltip } from "@mantine/core"
-import { IconPlus } from "@tabler/icons-react"
+import { Group, TextInput, Textarea, Tooltip } from "@mantine/core"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import posthog from "posthog-js"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
@@ -201,7 +200,7 @@ const SkillRow = ({
                     data-blocked={addSpecialtyDisabledReason ? true : undefined}
                     onClick={handleAddSpecialtyClick}
                 >
-                    <IconPlus size={12} stroke={2.2} />
+                    <span aria-hidden="true">+</span>
                 </button>
             </Tooltip>
         )
@@ -220,7 +219,9 @@ const SkillRow = ({
     const level = character.skills[skill]
 
     return (
-        <div
+        <Group
+            gap={0}
+            wrap="nowrap"
             className={`${classes.traitRow} ${classes.skillRow}`}
             data-selected={isSelected || undefined}
             data-zero={level === 0 || undefined}
@@ -292,7 +293,7 @@ const SkillRow = ({
                 </div>
             ) : null}
             {addBlockedReason ? <p className={classes.inlineWarning}>{addBlockedReason}</p> : null}
-        </div>
+        </Group>
     )
 }
 

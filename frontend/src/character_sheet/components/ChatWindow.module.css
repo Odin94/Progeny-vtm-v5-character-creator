@@ -6,8 +6,9 @@
 
 .launcher {
     position: fixed;
-    right: 1.5rem;
-    bottom: calc(1.5rem + var(--pg-safe-bottom));
+    /* Sits left of the sheet menu button, sharing its bottom edge. */
+    right: calc(var(--pg-fab-edge) + var(--pg-fab-size) + var(--pg-fab-gap));
+    bottom: calc(var(--pg-fab-edge) + var(--pg-safe-bottom));
     /* Above the sheet, below modals (z 200) and the dice roller. */
     z-index: 190;
 }
@@ -21,8 +22,7 @@
 
 @media (max-width: 48em) {
     .launcher {
-        right: 1rem;
-        bottom: calc(1rem + var(--pg-safe-bottom));
+        --pg-fab-edge: 1rem;
     }
 }
 
@@ -31,7 +31,8 @@
 .panel {
     position: fixed;
     z-index: 190;
-    right: 1.5rem;
+    /* Opens above its launcher and leaves the sheet menu button reachable. */
+    right: calc(var(--pg-fab-edge) + var(--pg-fab-size) + var(--pg-fab-gap));
     bottom: calc(1.5rem + var(--pg-safe-bottom));
     width: 400px;
     height: min(560px, calc(100dvh - var(--pg-topbar-h) - 3rem));

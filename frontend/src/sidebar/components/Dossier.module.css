@@ -168,24 +168,6 @@
     white-space: nowrap;
 }
 
-.dots {
-    display: inline-flex;
-    gap: 3px;
-    flex-shrink: 0;
-}
-
-.dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 1px rgba(242, 220, 210, 0.2);
-}
-
-.dot[data-filled] {
-    background: var(--dot, var(--pg-blood-bright));
-    box-shadow: none;
-}
-
 .fields {
     display: flex;
     flex-direction: column;

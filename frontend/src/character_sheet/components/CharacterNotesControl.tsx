@@ -19,6 +19,7 @@ import {
 } from "~/character_sheet/hooks/useCharacterNotesController"
 import { memo } from "react"
 import { formatPrivateNoteWordCount } from "~/utils/privateNotes"
+import { IconButton } from "~/components/ui"
 
 type CharacterNotesControlProps = {
     characterId: string
@@ -140,16 +141,19 @@ const CharacterNotesControl = memo(
                                     marginRight: "0.75rem"
                                 }}
                             >
-                                <ActionIcon
+                                <IconButton
                                     color={primaryColor}
                                     variant="light"
-                                    aria-label="Version history"
-                                    title="Version history"
-                                    disabled={notesLoading || notesError}
+                                    label="Version history"
+                                    icon={<IconVersions size={18} />}
+                                    disabled={notesLoading}
+                                    disabledReason={
+                                        notesError && !notesLoading
+                                            ? "Notes could not be loaded"
+                                            : undefined
+                                    }
                                     onClick={openHistory}
-                                >
-                                    <IconVersions size={18} />
-                                </ActionIcon>
+                                />
                             </Box>
                         </Box>
                     }

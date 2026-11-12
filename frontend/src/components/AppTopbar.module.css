@@ -162,6 +162,25 @@
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    /* The active underline fades in place instead of growing from the center. */
+    .navLink::after {
+        transform: none;
+        opacity: 0;
+        transition: opacity var(--pg-dur-base) var(--ease-out);
+    }
+
+    .navLink[data-status="active"]::after,
+    .navLink[data-active]::after {
+        transform: none;
+        opacity: 1;
+    }
+
+    .navLink:hover::after {
+        transform: none;
+    }
+}
+
 /* ---- Quick nav trigger ---- */
 
 .searchTrigger {

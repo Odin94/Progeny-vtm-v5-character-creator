@@ -118,7 +118,6 @@ const TopData = ({ options }: TopDataProps) => {
 
     const clanSelect = (
         <Select
-            aria-label="Clan"
             placeholder="Select a clan"
             data={Object.keys(clans)
                 .filter((clanName) => clanName !== "")
@@ -174,7 +173,6 @@ const TopData = ({ options }: TopDataProps) => {
 
     const predatorTypeSelect = (
         <Select
-            aria-label="Predator type"
             placeholder="Select a predator type"
             data={Object.keys(predatorTypes)
                 .filter((predatorTypeName) => predatorTypeName !== "")

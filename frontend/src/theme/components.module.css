@@ -533,9 +533,75 @@
     border-color: var(--pg-border-strong);
 }
 
-.switchTrack {
-    background-color: var(--pg-sunken);
-    border-color: var(--pg-border-strong);
+/* Switch: sunken track + bone thumb when off, accent-filled track when on. State selectors go
+   through the input sibling so they beat Mantine's color-scheme `--switch-bg` defaults. */
+.switchInput + .switchTrack {
+    --switch-bg: rgba(0, 0, 0, 0.38);
+    border: 1px solid var(--pg-border-strong);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        box-shadow var(--pg-dur-fast) var(--ease-out);
+}
+
+.switchInput:checked + .switchTrack {
+    --switch-bg: var(--switch-color);
+    border-color: color-mix(in srgb, var(--switch-color) 70%, white 10%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        0 0 10px -2px color-mix(in srgb, var(--switch-color) 70%, transparent);
+}
+
+.switchInput:disabled + .switchTrack,
+.switchInput[data-disabled] + .switchTrack {
+    --switch-bg: var(--pg-surface-2);
+    border-color: var(--pg-border);
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Focus ring hugs the track instead of floating 2px away from it. */
+.switchInput:focus-visible + .switchTrack {
+    outline: 2px solid var(--pg-focus-ring);
+    outline-offset: 0;
+}
+
+/* Thumb travels with transform (GPU) rather than Mantine's inset-inline-start transition. The
+   track has a 1px border, so the travel distance subtracts it on both sides. */
+.switchThumb {
+    --switch-thumb-bg: var(--pg-ink-2);
+    inset-inline-start: var(--switch-track-label-padding);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: translateX(0);
+    transition:
+        transform var(--pg-dur-base) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.switchInput:checked + * > .switchThumb {
+    --switch-thumb-bg: #fff;
+    --switch-thumb-start: var(--switch-track-label-padding);
+    transform: translateX(
+        calc(
+            var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-track-label-padding) -
+                2px
+        )
+    );
+}
+
+.switchInput:disabled + * > .switchThumb,
+.switchInput[data-disabled] + * > .switchThumb {
+    --switch-thumb-bg: var(--pg-ink-4);
+    box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .switchThumb {
+        transition: background-color var(--pg-dur-fast) var(--ease-out);
+    }
 }
 
 /* ---- Scroll area --------------------------------------------------------------- */

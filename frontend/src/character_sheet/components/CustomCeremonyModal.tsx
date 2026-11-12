@@ -174,6 +174,7 @@ const CustomCeremonyModal = ({
             size="lg"
         >
             <form
+                noValidate
                 className={formClasses.form}
                 onSubmit={(event) => {
                     event.preventDefault()

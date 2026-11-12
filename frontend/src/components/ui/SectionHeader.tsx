@@ -39,18 +39,18 @@ export const SectionHeader = ({
         <div
             className={[classes.sectionHeader, className].filter(Boolean).join(" ")}
             data-size={size}
+            data-has-description={description ? true : undefined}
         >
             <div className={classes.sectionHeaderLead}>
                 <Heading id={id} className={classes.sectionHeaderTitle}>
                     <span className={classes.sectionHeaderGlyph} aria-hidden="true" />
                     {title}
                 </Heading>
-                {description ? (
-                    <p className={classes.sectionHeaderDescription}>{description}</p>
-                ) : null}
             </div>
             {rule ? <span className={classes.sectionHeaderRule} aria-hidden="true" /> : null}
             {actions ? <div className={classes.sectionHeaderActions}>{actions}</div> : null}
+            {/* Wraps onto its own line so the rule stays on the title's line. */}
+            {description ? <p className={classes.sectionHeaderDescription}>{description}</p> : null}
         </div>
     )
 }

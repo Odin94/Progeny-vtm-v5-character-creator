@@ -18,35 +18,6 @@
     max-width: 720px;
 }
 
-.dots {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    flex: none;
-}
-
-.dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--dot-color, var(--pg-blood-bright)) 70%, transparent);
-    background: transparent;
-    transition:
-        background-color var(--pg-dur-fast) var(--ease-out),
-        box-shadow var(--pg-dur-fast) var(--ease-out);
-}
-
-.dot[data-filled] {
-    background: var(--dot-color, var(--pg-blood-bright));
-    box-shadow: 0 0 8px -1px
-        color-mix(in srgb, var(--dot-color, var(--pg-blood-bright)) 70%, transparent);
-}
-
-.dots[data-size="lg"] .dot {
-    width: 9px;
-    height: 9px;
-}
-
 .enter {
     animation: card-enter var(--pg-dur-slow) var(--ease-out) both;
 }

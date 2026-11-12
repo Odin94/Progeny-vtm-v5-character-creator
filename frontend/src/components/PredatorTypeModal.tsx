@@ -10,7 +10,7 @@ import {
     Tooltip
 } from "@mantine/core"
 import { IconChevronLeft, IconLock } from "@tabler/icons-react"
-import { Ornament } from "~/components/ui"
+import { Dots as DotTrack, Ornament } from "~/components/ui"
 import { GeneratorConfirmButton } from "~/generator/components/sharedGeneratorUi"
 import classes from "./PredatorTypeModal.module.css"
 import { trackEvent } from "../utils/analytics"
@@ -83,11 +83,13 @@ const SectionDivider = ({ label }: { label: string }) => (
 )
 
 const Dots = ({ n }: { n: number }) => (
-    <span className={classes.dots} aria-label={`${n} ${n === 1 ? "dot" : "dots"}`}>
-        {Array.from({ length: n }, (_, index) => (
-            <span key={index} className={classes.dot} />
-        ))}
-    </span>
+    <DotTrack
+        filled={n}
+        glow
+        color="var(--cat)"
+        className={classes.dots}
+        label={`${n} ${n === 1 ? "dot" : "dots"}`}
+    />
 )
 
 type PredatorTypeModalProps = {

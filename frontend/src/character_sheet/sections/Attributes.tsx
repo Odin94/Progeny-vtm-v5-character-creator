@@ -1,3 +1,4 @@
+import { Group } from "@mantine/core"
 import { memo } from "react"
 import { attributesKeySchema, AttributesKey } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
@@ -76,7 +77,11 @@ const AttributeRow = ({ attribute, options }: AttributeRowProps) => {
     }
 
     return (
-        <div
+        // Mantine Group (restyled as a grid by `.traitRow`) keeps the row addressable as a
+        // `.mantine-Group-root`, which the e2e pip-feedback specs rely on.
+        <Group
+            gap={0}
+            wrap="nowrap"
             className={classes.traitRow}
             data-selected={isSelected || undefined}
             onClick={() => {
@@ -104,7 +109,7 @@ const AttributeRow = ({ attribute, options }: AttributeRowProps) => {
                     label={upcase(attribute)}
                 />
             </div>
-        </div>
+        </Group>
     )
 }
 

@@ -13,7 +13,17 @@
 }
 
 .hb-editor-modal__body {
+    /* Fill the (full-screen on phones) modal so the footer rests on the bottom edge even when
+       the form is short; it stays sticky when the form scrolls. */
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
     padding: 0;
+}
+
+.hb-editor-modal__body > .hb-editor {
+    flex: 1 0 auto;
+    align-content: start;
 }
 
 .hb-editor__title {

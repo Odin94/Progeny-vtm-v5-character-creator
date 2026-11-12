@@ -166,18 +166,7 @@
 }
 
 .dots {
-    display: inline-flex;
-    gap: 3px;
-    flex-shrink: 0;
     min-width: 46px;
-}
-
-.dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--cat);
-    box-shadow: 0 0 6px -1px var(--cat);
 }
 
 .meritName {

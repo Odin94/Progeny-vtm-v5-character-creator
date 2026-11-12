@@ -812,7 +812,7 @@ const CoteriePage = ({ coterieId }: CoteriePageProps) => {
                     color: "green"
                 })
                 setDeleteOpened(false)
-                void navigate({ to: "/me" })
+                void navigate({ to: "/me", search: { tab: "coteries" } })
             },
             onError: (error) => {
                 notifications.show({

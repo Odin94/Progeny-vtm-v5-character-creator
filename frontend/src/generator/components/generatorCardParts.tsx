@@ -2,7 +2,7 @@ import { Button } from "@mantine/core"
 import { IconCircleCheck, IconLock, IconPlus } from "@tabler/icons-react"
 import type { ReactNode } from "react"
 import HomebrewBadge from "~/components/HomebrewBadge"
-import { DisabledReason } from "~/components/ui"
+import { DisabledReason, Dots as DotTrack } from "~/components/ui"
 import type { HomebrewSource } from "~/data/Homebrew"
 import classes from "./generatorCards.module.css"
 
@@ -18,13 +18,7 @@ export const Dots = ({
     filled: number
     total?: number
     size?: "md" | "lg"
-}) => (
-    <span className={classes.dots} data-size={size} aria-hidden="true">
-        {Array.from({ length: Math.max(total, filled) }, (_, index) => (
-            <span key={index} className={classes.dot} data-filled={index < filled || undefined} />
-        ))}
-    </span>
-)
+}) => <DotTrack filled={filled} total={total} size={size} glow />
 
 export type GrimoireFact = { label: string; value: string; icon?: ReactNode }
 

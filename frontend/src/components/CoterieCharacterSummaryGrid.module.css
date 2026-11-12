@@ -497,24 +497,6 @@
     overflow-wrap: anywhere;
 }
 
-.dots {
-    display: inline-flex;
-    gap: 3px;
-    flex: none;
-}
-
-.dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-}
-
-.dot[data-filled] {
-    background: var(--clan-bright);
-    border-color: var(--clan-bright);
-}
-
 .powerGrid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

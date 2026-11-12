@@ -221,6 +221,7 @@ const CustomRitualModal = ({
             size="lg"
         >
             <form
+                noValidate
                 className={formClasses.form}
                 onSubmit={(event) => {
                     event.preventDefault()

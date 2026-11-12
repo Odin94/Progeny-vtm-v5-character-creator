@@ -113,6 +113,8 @@ Selection: `::selection` is the active accent at 45%, so it matches whatever is 
   Glows are for hover/selected/featured states only.
 - Z-index: `--pg-z-raised 1 · sticky 10 · header 100 · modal 200 · popover 300 · overlay 400 ·
 spotlight 1000 · cookie 2500 · toast 3000` (JS: `zIndex` in `tokens.ts`).
+- Floating sheet buttons (menu, session chat) share one bottom row: `--pg-fab-size` 48px,
+  `--pg-fab-edge` (1.5rem, 1rem on phones), `--pg-fab-gap` 12px.
 - Layout: `--pg-topbar-h` 52px; `--pg-safe-bottom` = `env(safe-area-inset-bottom)` — add it to
   anything fixed to the bottom (FABs, sticky footers). Use `100dvh`, not `100vh`, for full-height
   layouts so mobile browser chrome (Firefox's bottom URL bar) never covers UI.
@@ -280,6 +282,19 @@ cached data while refetching (React Query does this — don't swap to skeletons 
 
 Full-height loader for `Suspense`/page-level loading; fades in after 120ms so fast loads never
 flash. All lazy routes except the landing page already use it.
+
+### `Dots`
+
+The one VtM dot rating (●●○○○) for the generator, sidebar, coterie dossiers and modals. Color
+comes from `color` or an ancestor's `--dot-color` (blood by default).
+
+```tsx
+<Dots filled={3} total={5} />                                  // decorative, accent rings
+<Dots filled={n} total={5} emptyTone="quiet" label={`${n} of 5`} /> // neutral rings, announced
+<Dots filled={2} size="lg" glow />                             // featured
+```
+
+(Sheet pips are interactive and live in `character_sheet/components/Pips.tsx`.)
 
 ### `IconButton`, `DeleteIconButton`, `DisabledReason`
 

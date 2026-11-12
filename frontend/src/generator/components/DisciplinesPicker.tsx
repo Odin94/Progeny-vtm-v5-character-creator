@@ -457,7 +457,7 @@ const DisciplinesPicker = ({
                         <span className={classes.tomeText}>
                             <span className={classes.tomeName}>{upcase(disciplineLabel)}</span>
                             {discipline.summary && !phoneScreen ? (
-                                <span className={classes.tomeSummary}>
+                                <span className={classes.tomeSummary} aria-hidden="true">
                                     {upcase(discipline.summary)}
                                 </span>
                             ) : null}

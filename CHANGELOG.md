@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Redesign every page with a darker, gothic look: Cinzel headings, blood-and-violet accents, gilded ornaments, and consistent page headers, panels, buttons, tooltips, dialogs and empty, loading and error states across the generator, sheet, account, coterie, homebrew and admin pages. The character sheet takes on the clan or chosen theme color throughout.
+- Add a quick navigator (Ctrl+K / ⌘K) for jumping to pages, coteries and homebrew collections, right-click menus on characters, coteries and homebrew lists, and drag-and-drop or paste for JSON and image uploads.
 - Add a Reset to default button to the 3D dice throw settings.
 - Angle sorted dice faces slightly toward the camera so every die in the grid reads evenly, without the bright environment flare that rolled dice keep.
 - Open the dice roller without rerendering the whole sheet, and prepare WebGL in idle time after the controls paint. Keep sorting manual after rerolls, and allow Sort dice to finish and arrange an active roll immediately.

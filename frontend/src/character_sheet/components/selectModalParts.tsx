@@ -13,6 +13,7 @@ import {
     type ReactNode
 } from "react"
 import classes from "./selectModals.module.css"
+import { Dots as DotTrack } from "~/components/ui"
 
 export { classes as selectModalClasses }
 
@@ -114,11 +115,12 @@ export const Tag = ({ children, tone = "default" }: { children: ReactNode; tone?
 /** Level as dots, the way the sheet shows ratings. */
 export const LevelTag = ({ level, tone = "accent" }: { level: number; tone?: Tone }) => (
     <Tag tone={tone}>
-        <span className={classes.dots} aria-label={`Level ${level}`}>
-            {Array.from({ length: Math.max(0, Math.min(level, 5)) }, (_, i) => (
-                <span key={i} className={classes.dot} />
-            ))}
-        </span>
+        <DotTrack
+            filled={Math.max(0, Math.min(level, 5))}
+            size="sm"
+            color="currentColor"
+            label={`Level ${level}`}
+        />
     </Tag>
 )
 

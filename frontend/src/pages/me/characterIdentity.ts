@@ -15,6 +15,8 @@ export type CharacterIdentity = {
     player?: string
 }
 
+const text = (value: unknown) => (typeof value === "string" ? value.trim() : "")
+
 /** Pulls the gallery-facing identity out of loosely typed stored character data. */
 export const getCharacterIdentity = (data: unknown): CharacterIdentity => {
     const character = (data && typeof data === "object" ? data : {}) as Partial<CharacterType>
@@ -23,15 +25,15 @@ export const getCharacterIdentity = (data: unknown): CharacterIdentity => {
     const homebrew = character.homebrewClan
 
     return {
-        clanName: homebrew?.name?.trim() || clan,
-        logo: homebrew?.logo || official?.logo,
+        clanName: text(homebrew?.name) || clan,
+        logo: text(homebrew?.logo) || official?.logo,
         color: official ? getPrimaryColor(clan as ClanName) : "red",
         generation:
             typeof character.generation === "number" && character.generation > 0
                 ? character.generation
                 : undefined,
-        predatorType: character.predatorType?.name?.trim() || undefined,
-        player: character.player?.trim() || undefined
+        predatorType: text(character.predatorType?.name) || undefined,
+        player: text(character.player) || undefined
     }
 }
 
