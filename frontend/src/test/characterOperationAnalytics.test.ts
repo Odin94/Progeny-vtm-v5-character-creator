@@ -307,3 +307,43 @@ it("keeps actual storage failures in error tracking even when a modal is offered
     )
     expect(posthog.capture).not.toHaveBeenCalled()
 })
+
+it("reports a save-before-load 404 handed to the deleted-draft dialog as a warning with risk metadata", () => {
+    const error = Object.assign(new Error("Private character contents"), { status: 404 })
+    reportCharacterOperationFailure("save-before-load", error, {
+        severity: "warning",
+        resolution: "modal",
+        characterId: "deleted-id"
+    })
+    expect(posthog.captureException).not.toHaveBeenCalled()
+    expect(posthog.capture).toHaveBeenCalledWith(
+        "character_operation_warning",
+        expect.objectContaining({
+            operation: "save-before-load",
+            failure_reason: "not_found",
+            severity: "warning",
+            character_id: "deleted-id",
+            data_loss_risk: true,
+            resolution: "modal"
+        })
+    )
+    expect(JSON.stringify(vi.mocked(posthog.capture).mock.calls)).not.toContain("Private")
+})
+
+it("keeps the deleted-draft dialog's own 404 in error tracking", () => {
+    reportCharacterOperationFailure("restore-deleted-draft", undefined, {
+        severity: "warning",
+        reason: "not_found",
+        resolution: "modal"
+    })
+    expect(posthog.capture).not.toHaveBeenCalled()
+    expect(posthog.captureException).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+            operation: "restore-deleted-draft",
+            failure_reason: "not_found",
+            severity: "error",
+            data_loss_risk: true
+        })
+    )
+})
