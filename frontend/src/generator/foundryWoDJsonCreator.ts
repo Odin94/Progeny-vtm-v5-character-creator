@@ -1,3 +1,5 @@
+import { potencyEffects, getBloodPotencyEffectLevel } from "~/data/BloodPotency"
+import { getClanBaneText } from "~/data/VariantClanBanes"
 // https://github.com/WoD5E-Developers/wod5e/issues/235#issuecomment-3372866896
 
 import { z } from "zod"
@@ -453,8 +455,10 @@ export const createWoD5EVttJson = (
             type: "clan",
             system: {
                 description: homebrewClan?.description ?? clanDef?.description ?? "",
-                // TODO: Figure out how Foundry VTT uses variant clan banes and include them here.
-                bane: homebrewClan?.bane ?? clanDef?.bane ?? "",
+                bane: getClanBaneText(
+                    character,
+                    potencyEffects[getBloodPotencyEffectLevel(character.bloodPotency)].bane
+                ),
                 bonuses: []
             }
         })

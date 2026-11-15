@@ -26,6 +26,24 @@ export const meritFlawSchema = z.object({
     summary: z.string(),
     excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
+    clanCurse: z
+        .enum([
+            "Brujah",
+            "Gangrel",
+            "Nosferatu",
+            "Malkavian",
+            "Tremere",
+            "Ventrue",
+            "Toreador",
+            "Lasombra",
+            "Banu Haqim",
+            "Ministry",
+            "Ravnos",
+            "Tzimisce",
+            "Hecata",
+            "Salubri"
+        ])
+        .optional(),
     text: z.string().optional(),
     homebrewSource: homebrewSourceSchema.optional()
 })
@@ -40,7 +58,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 12
+export const schemaVersion = 13
 
 export const disciplineLevelsSchema = z.record(z.string(), z.number().int().min(0).max(5))
 
@@ -411,6 +429,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV9ToV10Compatibility(parsed)
     patchV10ToV11Compatibility(parsed)
     patchV11ToV12Compatibility(parsed)
+    patchV12ToV13Compatibility(parsed)
 
     parsed["version"] = schemaVersion
 }
@@ -519,4 +538,9 @@ export const patchV6ToV7Compatibility = (parsed: Record<string, unknown>): void 
     if (parsed["clanBane"] === undefined || parsed["clanBane"] === null) {
         parsed["clanBane"] = "default"
     }
+}
+
+export const patchV12ToV13Compatibility = (parsed: Record<string, unknown>): void => {
+    // Existing free-text Clan Curse descriptions are preserved without guessing a clan.
+    if (typeof parsed["version"] !== "number" || parsed["version"] < 13) parsed["version"] = 13
 }

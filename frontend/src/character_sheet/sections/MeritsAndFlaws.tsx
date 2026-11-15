@@ -1,3 +1,4 @@
+import ClanCurseSelect from "~/components/ClanCurseSelect"
 import {
     Box,
     Grid,
@@ -442,6 +443,22 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                                     >
                                                         {flaw.level}
                                                     </Badge>
+                                                ) : null}
+                                                {character.clan === "Thin-blood" &&
+                                                flaw.name === "Clan Curse" &&
+                                                !flaw.homebrewSource ? (
+                                                    <ClanCurseSelect
+                                                        flaw={flaw}
+                                                        disabled={!isEditable}
+                                                        onChange={(updated) =>
+                                                            setCharacter((current) => ({
+                                                                ...current,
+                                                                flaws: current.flaws.map((item) =>
+                                                                    item === flaw ? updated : item
+                                                                )
+                                                            }))
+                                                        }
+                                                    />
                                                 ) : null}
                                                 {isFreeMode && !isFromBonus ? (
                                                     <Textarea

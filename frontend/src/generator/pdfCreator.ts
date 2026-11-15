@@ -1,3 +1,4 @@
+import { getBaneSeverity } from "~/data/VariantClanBanes"
 import { notifications } from "@mantine/notifications"
 import fontkit from "@pdf-lib/fontkit"
 import { PDFBool, PDFDict, PDFDocument, PDFFont, PDFForm, PDFImage, PDFName } from "pdf-lib"
@@ -302,7 +303,7 @@ export const createPdf_nerdbert = async (character: Character): Promise<Uint8Arr
     form.getTextField("PowBonus").setText(effects.discBonus)
     form.getTextField("ReRouse").setText(effects.discRouse)
     form.getTextField("FeedPen").setText(effects.penalty)
-    form.getTextField("BaneSev").setText(`${effects.bane}`)
+    form.getTextField("BaneSev").setText(`${getBaneSeverity(character, effects.bane)}`)
 
     //Humanity
     const humanity = Math.max(0, Math.min(10, character.humanity))

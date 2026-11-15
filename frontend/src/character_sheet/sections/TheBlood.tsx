@@ -1,3 +1,4 @@
+import { getBaneSeverity } from "~/data/VariantClanBanes"
 import { Box, Button, Divider, Grid, Group, Paper, Stack, Text } from "@mantine/core"
 import { IconSwitchHorizontal } from "@tabler/icons-react"
 import { memo } from "react"
@@ -65,7 +66,11 @@ const TheBlood = ({ options }: TheBloodProps) => {
                         <Text fw={600} size="sm">
                             Bane Severity
                         </Text>
-                        <Tally n={effects.bane} size={22} style={tallyStyle} />
+                        <Tally
+                            n={getBaneSeverity(character, effects.bane)}
+                            size={22}
+                            style={tallyStyle}
+                        />
                     </Box>
                 </Grid.Col>
 
@@ -169,6 +174,7 @@ export default memo(TheBlood, (prev, next) => {
         p.character.bloodPotency === n.character.bloodPotency &&
         p.character.clan === n.character.clan &&
         p.character.clanBane === n.character.clanBane &&
+        p.character.flaws === n.character.flaws &&
         p.character.homebrewClan?.bane === n.character.homebrewClan?.bane &&
         p.character.homebrewClan?.compulsion === n.character.homebrewClan?.compulsion
     )

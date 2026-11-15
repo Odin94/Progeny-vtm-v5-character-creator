@@ -19,6 +19,24 @@ export const meritFlawSchema = z.object({
     summary: z.string(),
     excludes: z.string().array(),
     type: z.union([z.literal("merit"), z.literal("flaw")]),
+    clanCurse: z
+        .enum([
+            "Brujah",
+            "Gangrel",
+            "Nosferatu",
+            "Malkavian",
+            "Tremere",
+            "Ventrue",
+            "Toreador",
+            "Lasombra",
+            "Banu Haqim",
+            "Ministry",
+            "Ravnos",
+            "Tzimisce",
+            "Hecata",
+            "Salubri"
+        ])
+        .optional(),
     text: z.string().optional(),
     homebrewSource: homebrewSourceSchema.optional()
 })
@@ -36,7 +54,7 @@ export type Touchstone = z.infer<typeof touchstoneSchema>
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
 
-export const schemaVersion = 12
+export const schemaVersion = 13
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),

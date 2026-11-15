@@ -1,3 +1,4 @@
+import ClanCurseSelect from "~/components/ClanCurseSelect"
 import { faPlay } from "@fortawesome/free-solid-svg-icons"
 import { COLOR_RED, RAW_GREY, RAW_RED, RAW_GRAPE, rgba } from "~/theme/colors"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -311,6 +312,19 @@ const MeritOrFlawCard = memo(
                 >
                     {summaryText}
                 </Text>
+                {type === "flaw" &&
+                meritOrFlaw.name === "Clan Curse" &&
+                !meritOrFlaw.homebrewSource &&
+                alreadyPickedItem ? (
+                    <ClanCurseSelect
+                        flaw={alreadyPickedItem}
+                        onChange={(flaw) =>
+                            setPickedMeritsAndFlaws((prev) =>
+                                prev.map((item) => (item === alreadyPickedItem ? flaw : item))
+                            )
+                        }
+                    />
+                ) : null}
 
                 <Group gap={6} mt={10}>
                     {meritOrFlaw.cost.map((i) => createButton(i))}
