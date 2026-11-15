@@ -1,8 +1,8 @@
 import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
 import { downloadFile } from "~/utils/fileDownload"
-import { Alert, Anchor, Button, Modal, ScrollArea } from "@mantine/core"
-import { IconAlertTriangle, IconChevronDown, IconDownload, IconTool } from "@tabler/icons-react"
-import classes from "./AppModals.module.css"
+import { faDownload } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { Alert, Anchor, Button, Divider, List, Modal, ScrollArea, Stack, Text } from "@mantine/core"
 import { useBrokenCharacter } from "~/hooks/useBrokenCharacter"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useEffect, useMemo, useState } from "react"
@@ -32,7 +32,6 @@ const BrokenSaveModal = () => {
     const fileSaveOpen = useFileSavePromptOpen()
     const queryClient = useQueryClient()
     const [recoveryError, setRecoveryError] = useState("")
-    const [detailsOpened, setDetailsOpened] = useState(false)
     const { brokenData, brokenError, hasBrokenCharacter, clearBrokenCharacter } =
         useBrokenCharacter()
     const repair = useMemo(() => characterIntake.preview(brokenData), [brokenData])
@@ -93,95 +92,69 @@ const BrokenSaveModal = () => {
             closeOnClickOutside={false}
             closeOnEscape={false}
         >
-            <div className={classes.body}>
-                <div className={classes.fileRow}>
-                    <span className={classes.fileIcon} aria-hidden="true">
-                        <IconAlertTriangle size={20} stroke={1.6} />
-                    </span>
-                    <div>
-                        <p className={classes.fileName}>Failed to load character from saved data</p>
-                        <p className={classes.note}>
-                            <strong>Error details:</strong> {describeBrokenAttribute(brokenError)}
-                        </p>
-                    </div>
-                </div>
+            <Stack>
+                <Text fz="lg" fw={700}>
+                    Failed to load character from saved data
+                </Text>
                 {recoveryError && (
-                    <Alert color="red" icon={<IconAlertTriangle size={16} />}>
+                    <Text c="red" role="alert">
                         {recoveryError}
-                    </Alert>
+                    </Text>
                 )}
-                <div>
-                    <Button
-                        size="compact-sm"
-                        variant="subtle"
-                        color="gray"
-                        rightSection={
-                            <IconChevronDown
-                                size={14}
-                                className={classes.chevron}
-                                data-open={detailsOpened || undefined}
-                            />
-                        }
-                        aria-expanded={detailsOpened}
-                        onClick={() => setDetailsOpened((value) => !value)}
-                    >
-                        {detailsOpened ? "Hide technical details" : "Show technical details"}
-                    </Button>
-                    {detailsOpened ? (
-                        <pre className={classes.code} data-spaced>
-                            {brokenError || "No error message"}
-                        </pre>
-                    ) : null}
-                </div>
-                <hr className={classes.rule} />
+                <Text size="sm">
+                    <strong>Error details:</strong> {describeBrokenAttribute(brokenError)}
+                </Text>
+                <Divider my="sm" />
                 {repair.success ? (
-                    <div className={classes.body}>
+                    <Stack>
                         <Alert
                             color="yellow"
-                            icon={<IconAlertTriangle size={16} />}
                             title="Automatic repair may cause partial data loss"
-                        >
-                            {repair.changes.length === 0 ? (
-                                "This save now passes validation. No data needs to be removed."
-                            ) : (
-                                <ScrollArea.Autosize mah={240} offsetScrollbars>
-                                    <ul className={classes.list}>
-                                        {repair.changes.map((change, index) => (
-                                            <li key={index}>{change.description}</li>
-                                        ))}
-                                    </ul>
-                                </ScrollArea.Autosize>
-                            )}
-                        </Alert>
-                        <Button
-                            color="orange"
-                            leftSection={<IconTool size={16} />}
-                            onClick={onRepair}
-                        >
+                        />
+                        <ScrollArea.Autosize mah={300} offsetScrollbars>
+                            <List
+                                size="sm"
+                                spacing="xs"
+                                styles={{
+                                    itemWrapper: { maxWidth: "100%" },
+                                    itemLabel: { overflowWrap: "anywhere" }
+                                }}
+                            >
+                                {repair.changes.map((change, index) => (
+                                    <List.Item key={index}>{change.description}</List.Item>
+                                ))}
+                            </List>
+                        </ScrollArea.Autosize>
+                        {repair.changes.length === 0 && (
+                            <Text size="sm">
+                                This save now passes validation. No data needs to be removed.
+                            </Text>
+                        )}
+                        <Button color="orange" onClick={onRepair}>
                             Auto-repair
                         </Button>
-                    </div>
+                    </Stack>
                 ) : (
-                    <p className={classes.note}>{repair.error}</p>
+                    <Stack gap="xs">
+                        <Text size="sm" c="dimmed">
+                            {repair.error}
+                        </Text>
+                    </Stack>
                 )}
-                <hr className={classes.rule} />
-                <div className={classes.body}>
-                    <SupportConversationButton
-                        source="broken-save-modal"
-                        variant="default"
-                        fullWidth
-                    >
+                <Divider my="sm" />
+                <Stack gap="sm">
+                    <SupportConversationButton source="broken-save-modal" color="orange" fullWidth>
                         Get help in support chat
                     </SupportConversationButton>
                     <Button
                         color="gray"
                         variant="subtle"
-                        leftSection={<IconDownload size={16} />}
+                        leftSection={<FontAwesomeIcon icon={faDownload} />}
                         onClick={onDownload}
                     >
                         Download Broken Save Data
                     </Button>
-                    <p className={classes.links}>
+                    <Text size="xs" c="dimmed" ta="center">
                         Find Odin on{" "}
                         <Anchor href={CONTACT_LINKS.reddit.href} target="_blank" rel="noreferrer">
                             {CONTACT_LINKS.reddit.label}
@@ -190,9 +163,9 @@ const BrokenSaveModal = () => {
                         <Anchor href={CONTACT_LINKS.bluesky.href} target="_blank" rel="noreferrer">
                             {CONTACT_LINKS.bluesky.label}
                         </Anchor>
-                    </p>
-                </div>
-            </div>
+                    </Text>
+                </Stack>
+            </Stack>
         </Modal>
     )
 }

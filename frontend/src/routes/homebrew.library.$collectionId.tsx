@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { lazy, Suspense } from "react"
-import { RouteFallback } from "~/components/ui/RouteFallback"
 import RenderProfiler from "~/components/RenderProfiler"
 
 const HomebrewLibraryDetailsPage = lazy(() => import("~/pages/HomebrewLibraryDetailsPage"))
@@ -14,7 +13,7 @@ function HomebrewLibraryDetails() {
 
     return (
         <RenderProfiler id="HomebrewLibraryDetailsPage">
-            <Suspense fallback={<RouteFallback />}>
+            <Suspense fallback={null}>
                 <HomebrewLibraryDetailsPage collectionId={collectionId} />
             </Suspense>
         </RenderProfiler>

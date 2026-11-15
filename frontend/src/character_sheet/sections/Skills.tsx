@@ -1,5 +1,17 @@
-import { Group, TextInput, Textarea, Tooltip } from "@mantine/core"
-import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import {
+    Box,
+    Grid,
+    Group,
+    Text,
+    Title,
+    Badge,
+    TextInput,
+    Textarea,
+    Tooltip,
+    Paper,
+    Stack
+} from "@mantine/core"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import posthog from "posthog-js"
 import { skillsKeySchema, SkillsKey } from "~/data/Skills"
 import { upcase } from "~/generator/utils"
@@ -10,7 +22,7 @@ import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
 import { removeSkillSpecialty } from "../utils/specialties"
-import classes from "../sheet.module.css"
+import { sheetSurfaceStyle } from "../utils/style"
 import type { Specialty } from "~/data/Specialties"
 import { getSkillSpecialtyCustomTextKey, updateCustomText } from "~/utils/customText"
 
@@ -23,6 +35,7 @@ type SpecialtyEntry = Specialty & {
 }
 
 const noSpecialties: SpecialtyEntry[] = []
+const SPECIALTIES_BELOW_WIDTH = 560
 
 type SkillRowProps = {
     skill: SkillsKey
@@ -30,6 +43,7 @@ type SkillRowProps = {
     character: SheetOptions["character"]
     options: SheetOptions
     primaryColor: string
+    textStyle: React.CSSProperties
     isEditable: boolean
     addSpecialty: (skill: SkillsKey) => void
     addSpecialtyDisabledReason?: string
@@ -42,12 +56,16 @@ const SkillRow = ({
     specialties,
     character,
     options,
+    primaryColor,
+    textStyle,
     isEditable,
     addSpecialty,
     addSpecialtyDisabledReason,
     updateSpecialty,
     removeSpecialty
 }: SkillRowProps) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [showSpecialtiesBelow, setShowSpecialtiesBelow] = useState(false)
     const [editingSpecialty, setEditingSpecialty] = useState<{
         skill: SkillsKey
         index: number
@@ -84,6 +102,36 @@ const SkillRow = ({
             useDiceRollModalStore.getState().openSelectedPool()
         }
     }
+
+    useEffect(() => {
+        const checkOverflow = () => {
+            if (!containerRef.current) {
+                setShowSpecialtiesBelow(false)
+                return
+            }
+
+            // At this width, the specialty controls have to compete with the skill name and its
+            // fixed-width pips. Put the controls in the vertical space below instead, keeping
+            // every name and rating in the same columns.
+            setShowSpecialtiesBelow(
+                containerRef.current.offsetWidth < SPECIALTIES_BELOW_WIDTH &&
+                    (isEditable || specialties.length > 0)
+            )
+        }
+
+        checkOverflow()
+        window.addEventListener("resize", checkOverflow)
+        const resizeObserver =
+            typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(checkOverflow)
+        if (containerRef.current && resizeObserver) {
+            resizeObserver.observe(containerRef.current)
+        }
+
+        return () => {
+            window.removeEventListener("resize", checkOverflow)
+            resizeObserver?.disconnect()
+        }
+    }, [isEditable, specialties.length])
 
     // Number of user-added (non-predator) specialties, i.e. the index a newly added one lands at.
     const editableSpecialtyCount = specialties.filter(
@@ -124,37 +172,36 @@ const SkillRow = ({
         const customText = character.customText.skillSpecialties[customTextKey] ?? ""
         const isEditing = editingPredatorTypeSpecialty === index
 
-        const isFreeMode = options.mode === "free"
-
         return (
-            <span
+            <Stack
                 key={`${skill}-bonus-${specialty.name}-${index}`}
-                className={classes.fieldInline}
-                style={isEditing ? { flex: "1 1 100%" } : undefined}
+                gap={2}
+                style={{ flexShrink: 0, minWidth: 0 }}
             >
-                <Tooltip label="From predator type" withArrow>
-                    <span
-                        className={classes.specialty}
-                        data-source="predator"
-                        data-editable={isFreeMode || undefined}
-                        onClick={
-                            isFreeMode
-                                ? (event) => {
-                                      event.stopPropagation()
-                                      setEditingPredatorTypeSpecialty((current) =>
-                                          current === index ? null : index
-                                      )
-                                  }
-                                : undefined
-                        }
-                        onMouseDown={(event) => event.preventDefault()}
-                    >
-                        {[specialty.name, customText.trim()].filter(Boolean).join(" ")}
-                    </span>
-                </Tooltip>
+                <Badge
+                    variant="outline"
+                    size="xs"
+                    color={primaryColor}
+                    style={{
+                        width: "fit-content",
+                        cursor: options.mode === "free" ? "pointer" : undefined
+                    }}
+                    onClick={
+                        options.mode === "free"
+                            ? (event) => {
+                                  event.stopPropagation()
+                                  setEditingPredatorTypeSpecialty((current) =>
+                                      current === index ? null : index
+                                  )
+                              }
+                            : undefined
+                    }
+                    onMouseDown={(event) => event.preventDefault()}
+                >
+                    {[specialty.name, customText.trim()].filter(Boolean).join(" ")}
+                </Badge>
                 {isEditing ? (
                     <Textarea
-                        className={classes.specialtyInput}
                         aria-label={`${upcase(skill)} ${specialty.name} custom note`}
                         value={customText}
                         onChange={(event) => {
@@ -172,6 +219,7 @@ const SkillRow = ({
                         placeholder="Add a custom note..."
                         minRows={1}
                         size="xs"
+                        style={{ minWidth: 160 }}
                         autoFocus
                         onBlur={() => setEditingPredatorTypeSpecialty(null)}
                         onKeyDown={(event) => {
@@ -182,72 +230,176 @@ const SkillRow = ({
                         }}
                     />
                 ) : null}
-            </span>
+            </Stack>
         )
     }
 
-    const renderAddSpecialtyButton = () => {
+    const renderAddSpecialtyBadge = () => {
         const cost = options.mode === "xp" ? getSpecialtyCost() : undefined
         const tooltipLabel =
-            addSpecialtyDisabledReason ||
-            (cost !== undefined ? `Add specialty · ${cost} XP` : "Add specialty")
-        return (
+            addSpecialtyDisabledReason || (cost !== undefined ? `${cost} XP` : undefined)
+        const badge = (
+            <Badge
+                variant="light"
+                size="sm"
+                color={primaryColor}
+                style={{
+                    cursor: "pointer",
+                    opacity: addSpecialtyDisabledReason ? 0.6 : 1
+                }}
+                onClick={handleAddSpecialtyClick}
+            >
+                +
+            </Badge>
+        )
+        const badgeWithTooltip = tooltipLabel ? (
             <Tooltip label={tooltipLabel} withArrow>
-                <button
-                    type="button"
-                    className={classes.addSpecialty}
-                    aria-label={`Add ${upcase(skill)} specialty`}
-                    data-blocked={addSpecialtyDisabledReason ? true : undefined}
-                    onClick={handleAddSpecialtyClick}
-                >
-                    <span aria-hidden="true">+</span>
-                </button>
+                <span style={{ display: "inline-block" }}>{badge}</span>
             </Tooltip>
+        ) : (
+            badge
+        )
+        return (
+            <Group gap={4} wrap="nowrap" align="center">
+                {badgeWithTooltip}
+                {addBlockedReason ? (
+                    <Text size="xs" c="red.4" style={{ lineHeight: 1.2 }}>
+                        {addBlockedReason}
+                    </Text>
+                ) : null}
+            </Group>
         )
     }
-
-    const finishEditing = (index: number) => {
-        if (editingValue.trim() === "") {
-            removeSpecialty(skill, index)
-        } else {
-            updateSpecialty(skill, index, editingValue)
-        }
-        setEditingSpecialty(null)
-        setEditingValue("")
-    }
-
-    const level = character.skills[skill]
 
     return (
         <Group
-            gap={0}
+            ref={containerRef}
+            justify="space-between"
+            mb="xs"
             wrap="nowrap"
-            className={`${classes.traitRow} ${classes.skillRow}`}
-            data-selected={isSelected || undefined}
-            data-zero={level === 0 || undefined}
+            align="flex-start"
+            style={{
+                minWidth: 0,
+                padding: "0.35rem 0.5rem",
+                position: "relative",
+                borderRadius: "var(--mantine-radius-sm)",
+                backgroundColor: isSelected
+                    ? `var(--mantine-color-${primaryColor}-light)`
+                    : "transparent",
+                transition: "background-color 0.2s"
+            }}
         >
-            <p className={classes.traitName} onClick={handleSkillClick}>
-                {upcase(skill)}
-            </p>
-            <span className={classes.leader} aria-hidden="true" />
-            <div
-                className={classes.traitPips}
-                onClick={(e) => {
-                    if (useDiceRollModalStore.getState().opened) {
-                        e.stopPropagation()
-                    }
-                }}
-            >
-                <Pips
-                    level={level}
-                    options={options}
-                    field={`skills.${skill}`}
-                    label={upcase(skill)}
-                />
-            </div>
-            {isEditable ? renderAddSpecialtyButton() : null}
-            {specialties.length > 0 ? (
-                <div className={classes.specialties}>
+            {showSpecialtiesBelow ? (
+                <Box style={{ flex: 1, minWidth: 0, position: "relative" }}>
+                    <Group gap={4} wrap="nowrap">
+                        <Text
+                            style={{
+                                ...textStyle,
+                                cursor: "pointer",
+                                width: "fit-content",
+                                whiteSpace: "nowrap"
+                            }}
+                            onClick={handleSkillClick}
+                        >
+                            {upcase(skill)}
+                        </Text>
+                        {isEditable && renderAddSpecialtyBadge()}
+                    </Group>
+                    {specialties.length > 0 ? (
+                        <Group
+                            gap={4}
+                            wrap="wrap"
+                            style={{
+                                position: "absolute",
+                                top: "calc(100% + 0.15rem)",
+                                left: 0,
+                                right: 0,
+                                zIndex: 1
+                            }}
+                        >
+                            {specialties.map((specialty, index) => {
+                                if (specialty.fromPredatorType) {
+                                    return renderPredatorTypeSpecialty(specialty, index)
+                                }
+                                const isEditing =
+                                    editingSpecialty?.skill === skill &&
+                                    editingSpecialty?.index === index
+                                return isEditing ? (
+                                    <TextInput
+                                        key={`${skill}-edit-${specialty.name}-${index}`}
+                                        value={editingValue}
+                                        onChange={(e) => setEditingValue(e.target.value)}
+                                        onBlur={() => {
+                                            if (editingValue.trim() === "") {
+                                                removeSpecialty(skill, index)
+                                            } else {
+                                                updateSpecialty(skill, index, editingValue)
+                                            }
+                                            setEditingSpecialty(null)
+                                            setEditingValue("")
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                if (editingValue.trim() === "") {
+                                                    removeSpecialty(skill, index)
+                                                } else {
+                                                    updateSpecialty(skill, index, editingValue)
+                                                }
+                                                setEditingSpecialty(null)
+                                                setEditingValue("")
+                                            }
+                                        }}
+                                        size="xs"
+                                        autoFocus
+                                        style={{ width: "100%" }}
+                                    />
+                                ) : (
+                                    <Badge
+                                        key={`${skill}-${specialty.name}-${index}`}
+                                        variant="light"
+                                        size="xs"
+                                        color={primaryColor}
+                                        style={isEditable ? { cursor: "pointer" } : undefined}
+                                        onClick={
+                                            isEditable
+                                                ? (e) => {
+                                                      e.stopPropagation()
+                                                      setEditingSpecialty({ skill, index })
+                                                      setEditingValue(specialty.name)
+                                                  }
+                                                : undefined
+                                        }
+                                    >
+                                        {specialty.name || "New Specialty"}
+                                    </Badge>
+                                )
+                            })}
+                        </Group>
+                    ) : null}
+                </Box>
+            ) : (
+                <Group
+                    gap={4}
+                    wrap="nowrap"
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                        overflowX: "auto",
+                        scrollbarWidth: "none"
+                    }}
+                >
+                    <Text
+                        style={{
+                            ...textStyle,
+                            cursor: "pointer",
+                            flexShrink: 0,
+                            whiteSpace: "nowrap"
+                        }}
+                        onClick={handleSkillClick}
+                    >
+                        {upcase(skill)}
+                    </Text>
+                    {isEditable && renderAddSpecialtyBadge()}
                     {specialties.map((specialty, index) => {
                         if (specialty.fromPredatorType) {
                             return renderPredatorTypeSpecialty(specialty, index)
@@ -257,25 +409,39 @@ const SkillRow = ({
                         return isEditing ? (
                             <TextInput
                                 key={`${skill}-edit-${specialty.name}-${index}`}
-                                className={classes.specialtyInput}
-                                aria-label={`${upcase(skill)} specialty`}
-                                placeholder="Specialty"
                                 value={editingValue}
                                 onChange={(e) => setEditingValue(e.target.value)}
-                                onBlur={() => finishEditing(index)}
+                                onBlur={() => {
+                                    if (editingValue.trim() === "") {
+                                        removeSpecialty(skill, index)
+                                    } else {
+                                        updateSpecialty(skill, index, editingValue)
+                                    }
+                                    setEditingSpecialty(null)
+                                    setEditingValue("")
+                                }}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
-                                        finishEditing(index)
+                                        if (editingValue.trim() === "") {
+                                            removeSpecialty(skill, index)
+                                        } else {
+                                            updateSpecialty(skill, index, editingValue)
+                                        }
+                                        setEditingSpecialty(null)
+                                        setEditingValue("")
                                     }
                                 }}
                                 size="xs"
                                 autoFocus
+                                style={{ width: 140, flexShrink: 0 }}
                             />
                         ) : (
-                            <span
+                            <Badge
                                 key={`${skill}-${specialty.name}-${index}`}
-                                className={classes.specialty}
-                                data-editable={isEditable || undefined}
+                                variant="light"
+                                size="xs"
+                                color={primaryColor}
+                                style={isEditable ? { cursor: "pointer" } : undefined}
                                 onClick={
                                     isEditable
                                         ? (e) => {
@@ -287,12 +453,20 @@ const SkillRow = ({
                                 }
                             >
                                 {specialty.name || "New Specialty"}
-                            </span>
+                            </Badge>
                         )
                     })}
-                </div>
-            ) : null}
-            {addBlockedReason ? <p className={classes.inlineWarning}>{addBlockedReason}</p> : null}
+                </Group>
+            )}
+            <Box
+                onClick={(e) => {
+                    if (useDiceRollModalStore.getState().opened) {
+                        e.stopPropagation()
+                    }
+                }}
+            >
+                <Pips level={character.skills[skill]} options={options} field={`skills.${skill}`} />
+            </Box>
         </Group>
     )
 }
@@ -321,50 +495,11 @@ const MemoizedSkillRow = memo(SkillRow, (prev, next) => {
     )
 })
 
-const skillGroups: Array<{ title: string; skills: string[] }> = [
-    {
-        title: "Physical",
-        skills: [
-            "athletics",
-            "brawl",
-            "craft",
-            "drive",
-            "firearms",
-            "melee",
-            "larceny",
-            "stealth",
-            "survival"
-        ]
-    },
-    {
-        title: "Social",
-        skills: [
-            "animal ken",
-            "etiquette",
-            "insight",
-            "intimidation",
-            "leadership",
-            "performance",
-            "persuasion",
-            "streetwise",
-            "subterfuge"
-        ]
-    },
-    {
-        title: "Mental",
-        skills: [
-            "academics",
-            "awareness",
-            "finance",
-            "investigation",
-            "medicine",
-            "occult",
-            "politics",
-            "science",
-            "technology"
-        ]
-    }
-]
+const skillTextStyle: React.CSSProperties = {
+    fontFamily: "Inter, Segoe UI, sans-serif",
+    fontWeight: 600,
+    fontSize: "0.95rem"
+}
 
 const Skills = ({ options }: SkillsProps) => {
     const { character, primaryColor, mode, setCharacter } = options
@@ -479,6 +614,7 @@ const Skills = ({ options }: SkillsProps) => {
                 character={character}
                 options={options}
                 primaryColor={primaryColor}
+                textStyle={skillTextStyle}
                 isEditable={isEditable}
                 addSpecialty={addSpecialty}
                 addSpecialtyDisabledReason={addSpecialtyDisabledReason}
@@ -489,14 +625,70 @@ const Skills = ({ options }: SkillsProps) => {
     }
 
     return (
-        <div className={classes.triad}>
-            {skillGroups.map(({ title, skills }) => (
-                <div key={title} className={classes.column}>
-                    <h3 className={classes.columnTitle}>{title}</h3>
-                    {skills.map((s) => skillsKeySchema.parse(s)).map(renderSkillRow)}
-                </div>
-            ))}
-        </div>
+        <Box>
+            <Grid>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            PHYSICAL
+                        </Title>
+                        {[
+                            "athletics",
+                            "brawl",
+                            "craft",
+                            "drive",
+                            "firearms",
+                            "melee",
+                            "larceny",
+                            "stealth",
+                            "survival"
+                        ]
+                            .map((s) => skillsKeySchema.parse(s))
+                            .map(renderSkillRow)}
+                    </Paper>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            SOCIAL
+                        </Title>
+                        {[
+                            "animal ken",
+                            "etiquette",
+                            "insight",
+                            "intimidation",
+                            "leadership",
+                            "performance",
+                            "persuasion",
+                            "streetwise",
+                            "subterfuge"
+                        ]
+                            .map((s) => skillsKeySchema.parse(s))
+                            .map(renderSkillRow)}
+                    </Paper>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
+                        <Title order={4} mb="sm" c="dimmed">
+                            MENTAL
+                        </Title>
+                        {[
+                            "academics",
+                            "awareness",
+                            "finance",
+                            "investigation",
+                            "medicine",
+                            "occult",
+                            "politics",
+                            "science",
+                            "technology"
+                        ]
+                            .map((s) => skillsKeySchema.parse(s))
+                            .map(renderSkillRow)}
+                    </Paper>
+                </Grid.Col>
+            </Grid>
+        </Box>
     )
 }
 

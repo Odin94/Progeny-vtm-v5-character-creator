@@ -8,8 +8,7 @@ import {
     Stack,
     Text
 } from "@mantine/core"
-import { IconRestore, IconWind } from "@tabler/icons-react"
-import classes from "../diceRoller.module.css"
+import { IconRestore } from "@tabler/icons-react"
 import { DEFAULT_VAMPIRE_THROW, type VampireDiceStyle, type VampireThrowSettings } from "./settings"
 
 type Props = {
@@ -41,7 +40,6 @@ export default function ThrowControls({
                 <SegmentedControl
                     aria-label="Vampire dice style"
                     fullWidth
-                    size="xs"
                     disabled={disabled}
                     value={style}
                     onChange={(value) => onStyleChange(value as VampireDiceStyle)}
@@ -51,25 +49,12 @@ export default function ThrowControls({
                     ]}
                 />
             ) : null}
-            <Accordion
-                variant="default"
-                classNames={{
-                    item: classes.settingsItem,
-                    control: classes.settingsControl,
-                    label: classes.settingsLabel,
-                    content: classes.settingsContent,
-                    chevron: classes.settingsChevron
-                }}
-            >
+            <Accordion variant="default">
                 <Accordion.Item value="throw">
-                    <Accordion.Control icon={<IconWind size={14} />}>
-                        Throw settings
-                    </Accordion.Control>
+                    <Accordion.Control>Throw settings</Accordion.Control>
                     <Accordion.Panel keepMounted={false}>
                         <Stack gap="sm">
-                            <Text size="xs" fw={600} c="dimmed">
-                                Intensity · {settings.intensity.toFixed(1)}×
-                            </Text>
+                            <Text size="sm">Intensity · {settings.intensity.toFixed(1)}×</Text>
                             <Slider
                                 aria-label="Throw intensity"
                                 disabled={disabled}
@@ -81,7 +66,6 @@ export default function ThrowControls({
                             />
                             <Group grow>
                                 <NumberInput
-                                    size="xs"
                                     label="Drop height"
                                     disabled={disabled}
                                     min={0.6}
@@ -91,7 +75,6 @@ export default function ThrowControls({
                                     onChange={(value) => set("dropHeight", value)}
                                 />
                                 <NumberInput
-                                    size="xs"
                                     label="Direction (°)"
                                     disabled={disabled}
                                     min={0}
@@ -102,7 +85,6 @@ export default function ThrowControls({
                             </Group>
                             <Group grow>
                                 <NumberInput
-                                    size="xs"
                                     label="Spread (°)"
                                     disabled={disabled}
                                     min={0}
@@ -111,7 +93,6 @@ export default function ThrowControls({
                                     onChange={(value) => set("spread", value)}
                                 />
                                 <NumberInput
-                                    size="xs"
                                     label="Start position (%)"
                                     disabled={disabled}
                                     min={-150}

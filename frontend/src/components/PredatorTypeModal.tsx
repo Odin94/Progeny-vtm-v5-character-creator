@@ -1,3 +1,6 @@
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
     Button,
     Group,
@@ -9,10 +12,6 @@ import {
     TextInput,
     Tooltip
 } from "@mantine/core"
-import { IconChevronLeft, IconLock } from "@tabler/icons-react"
-import { Dots as DotTrack, Ornament } from "~/components/ui"
-import { GeneratorConfirmButton } from "~/generator/components/sharedGeneratorUi"
-import classes from "./PredatorTypeModal.module.css"
 import { trackEvent } from "../utils/analytics"
 import { Character, getCharacterExcludedPredatorTypes, meritFlawSchema } from "../data/Character"
 import { disciplines } from "../data/Disciplines"
@@ -30,28 +29,57 @@ import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../g
 import { globals } from "../globals"
 import usePointStates from "../hooks/usePointStates"
 import PointPicker from "./PointPicker"
+import Tally from "./Tally"
 import { useEffect, useState } from "react"
 import { DisciplineName, disciplineNameSchema, PredatorTypeName } from "~/data/NameSchemas"
 
 type CategoryInfo = {
-    key: string
     label: string
+    accentColor: string
+    bgColor: string
+    headerBg: string
+    borderColor: string
+    tallyColor: string
     mantineColor: string
 }
 
 const CATEGORY_INFO: Record<string, CategoryInfo> = {
-    violent: { key: "violent", label: "Violent", mantineColor: "red" },
-    sociable: { key: "sociable", label: "Sociable", mantineColor: "grape" },
-    stealth: { key: "stealth", label: "Stealth", mantineColor: "gray" },
-    exclusive: { key: "exclusive", label: "Excluding Mortals", mantineColor: "violet" }
-}
-
-const CATEGORY_COLOR: Record<string, string> = {
-    violent: "var(--pg-blood-bright)",
-    sociable: "var(--mantine-color-grape-4)",
-    homebrew: "var(--mantine-color-grape-4)",
-    stealth: "#c9bdb8",
-    exclusive: "var(--mantine-color-violet-4)"
+    violent: {
+        label: "Violent",
+        accentColor: "rgba(250, 82, 82, 0.95)",
+        bgColor: rgba(RAW_RED, 0.05),
+        headerBg: `linear-gradient(to bottom, ${rgba(RAW_RED, 0.06)} 0%, transparent 100%)`,
+        borderColor: rgba(RAW_RED, 0.22),
+        tallyColor: "rgba(250, 82, 82, 0.85)",
+        mantineColor: "red"
+    },
+    sociable: {
+        label: "Sociable",
+        accentColor: "rgba(190, 75, 219, 0.95)",
+        bgColor: "rgba(190, 75, 219, 0.05)",
+        headerBg: "linear-gradient(to bottom, rgba(190, 75, 219, 0.06) 0%, transparent 100%)",
+        borderColor: "rgba(190, 75, 219, 0.22)",
+        tallyColor: "rgba(190, 75, 219, 0.85)",
+        mantineColor: "grape"
+    },
+    stealth: {
+        label: "Stealth",
+        accentColor: "rgba(222, 226, 230, 0.92)",
+        bgColor: "rgba(173, 181, 189, 0.05)",
+        headerBg: "linear-gradient(to bottom, rgba(173, 181, 189, 0.06) 0%, transparent 100%)",
+        borderColor: "rgba(173, 181, 189, 0.22)",
+        tallyColor: "rgba(222, 226, 230, 0.75)",
+        mantineColor: "gray"
+    },
+    exclusive: {
+        label: "Excluding Mortals",
+        accentColor: "rgba(153, 105, 229, 0.95)",
+        bgColor: "rgba(132, 94, 247, 0.10)",
+        headerBg: "linear-gradient(to bottom, rgba(132, 94, 247, 0.06) 0%, transparent 100%)",
+        borderColor: "rgba(132, 94, 247, 0.22)",
+        tallyColor: "rgba(153, 105, 229, 0.85)",
+        mantineColor: "violet"
+    }
 }
 
 const PREDATOR_TO_CATEGORY: Partial<Record<PredatorTypeName, string>> = {
@@ -74,22 +102,53 @@ const PREDATOR_TO_CATEGORY: Partial<Record<PredatorTypeName, string>> = {
     Farmer: "exclusive"
 }
 
-const SectionDivider = ({ label }: { label: string }) => (
-    <div className={classes.divider}>
-        <span className={classes.dividerRule} />
-        <span className={classes.dividerLabel}>{label}</span>
-        <span className={classes.dividerRule} data-side="end" />
+const SectionDivider = ({
+    label,
+    color,
+    lineColor
+}: {
+    label?: string
+    color?: string
+    lineColor: string
+}) => (
+    <div
+        style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.85rem",
+            margin: "16px 0"
+        }}
+    >
+        <div
+            style={{
+                flex: 1,
+                height: "1px",
+                background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)`
+            }}
+        />
+        {label && color && (
+            <Text
+                style={{
+                    fontFamily: "Cinzel, Georgia, serif",
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color,
+                    whiteSpace: "nowrap"
+                }}
+            >
+                {label}
+            </Text>
+        )}
+        <div
+            style={{
+                flex: 1,
+                height: "1px",
+                background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)`
+            }}
+        />
     </div>
-)
-
-const Dots = ({ n }: { n: number }) => (
-    <DotTrack
-        filled={n}
-        glow
-        color="var(--cat)"
-        className={classes.dots}
-        label={`${n} ${n === 1 ? "dot" : "dots"}`}
-    />
 )
 
 type PredatorTypeModalProps = {
@@ -131,7 +190,7 @@ const PredatorTypeModal = ({
     const pickedDiscipline = disciplines[discipline as DisciplineName]
 
     const cat = predatorType.homebrewSource
-        ? { ...CATEGORY_INFO.sociable, key: "homebrew", label: "Homebrew" }
+        ? { ...CATEGORY_INFO.sociable, label: "Homebrew" }
         : CATEGORY_INFO[PREDATOR_TO_CATEGORY[pickedPredatorType] ?? "violent"]
 
     const [customSpecialtyText, setCustomSpecialtyText] = useState("")
@@ -204,12 +263,6 @@ const PredatorTypeModal = ({
     const hasStatChanges =
         predatorType.bloodPotencyChange !== 0 || predatorType.humanityChange !== 0
 
-    const confirmDisabledReason = clanExcluded
-        ? `Locked for ${activeClanName}`
-        : !exclusiveGroupsFilled
-          ? "Choose an option in every group first"
-          : undefined
-
     return (
         <Modal
             withCloseButton={false}
@@ -217,29 +270,97 @@ const PredatorTypeModal = ({
             opened={modalOpened}
             onClose={closeModal}
             centered
-            classNames={{ content: classes.content }}
+            radius="xl"
             styles={{
-                content: { "--cat": CATEGORY_COLOR[cat.key] ?? CATEGORY_COLOR.violent },
+                content: {
+                    background:
+                        "linear-gradient(to bottom, hsl(0 0% 13%), hsl(0 0% 13%), hsl(0 0% 10%))",
+                    backgroundColor: "hsl(0 0% 10%)",
+                    border: "1px solid rgba(255, 255, 255, 0.06)",
+                    maxHeight: "calc(100dvh - 32px)",
+                    overflowX: "hidden",
+                    overflowY: "auto"
+                },
+                overlay: { backdropFilter: "blur(6px)" },
                 body: { padding: 0 }
             }}
         >
             {/* Hero header */}
-            <div className={classes.hero}>
-                <span className={classes.eyebrow}>{cat.label}</span>
-                <h2 className={classes.title}>{predatorType.name}</h2>
-                <Ornament className={classes.ornament} />
-                <span className={classes.summary}>{predatorType.summary}</span>
+            <div
+                style={{
+                    padding: "22px 28px 18px",
+                    background: cat.headerBg,
+                    textAlign: "center"
+                }}
+            >
+                <Text
+                    style={{
+                        fontFamily: "Inter, Segoe UI, sans-serif",
+                        fontSize: "0.68rem",
+                        letterSpacing: "0.22em",
+                        textTransform: "uppercase",
+                        color: cat.accentColor,
+                        marginBottom: 6
+                    }}
+                >
+                    {cat.label}
+                </Text>
+                <Text
+                    style={{
+                        fontFamily: "Cinzel, Georgia, serif",
+                        fontSize: "1.55rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.05em",
+                        color: "rgba(244, 236, 232, 0.97)",
+                        lineHeight: 1.2
+                    }}
+                >
+                    {predatorType.name}
+                </Text>
+                <Text
+                    style={{
+                        fontFamily: "Crimson Text, Georgia, serif",
+                        fontSize: "1rem",
+                        color: rgba(RAW_GREY, 0.65),
+                        marginTop: 6
+                    }}
+                >
+                    {predatorType.summary}
+                </Text>
             </div>
 
-            <div className={classes.body}>
+            {/* Body */}
+            <Stack gap="md" p="xl" pt="lg">
                 {/* Clan restriction notice */}
                 {clanExcluded && (
-                    <div className={classes.notice}>
-                        <div className={classes.noticeTitle}>
-                            <IconLock size={12} stroke={2.4} />
+                    <div
+                        style={{
+                            padding: "12px 14px",
+                            borderRadius: 10,
+                            background: rgba(RAW_RED, 0.1),
+                            border: `1px solid ${rgba(RAW_RED, 0.35)}`
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontFamily: "Inter, Segoe UI, sans-serif",
+                                fontSize: "0.72rem",
+                                letterSpacing: "0.18em",
+                                textTransform: "uppercase",
+                                color: "rgba(250, 82, 82, 0.95)",
+                                marginBottom: 4
+                            }}
+                        >
                             Locked for {activeClanName}
-                        </div>
-                        <Text className={classes.noticeText}>
+                        </Text>
+                        <Text
+                            style={{
+                                fontFamily: "Crimson Text, Georgia, serif",
+                                fontSize: "0.98rem",
+                                color: rgba(RAW_GREY, 0.8),
+                                lineHeight: 1.35
+                            }}
+                        >
                             The {activeClanName} clan can&apos;t take the {predatorType.name}{" "}
                             predator type. Go back to the clan step and pick a different clan to
                             unlock it. Changing clans may reset your discipline selections.
@@ -249,53 +370,120 @@ const PredatorTypeModal = ({
 
                 {/* Stat changes */}
                 {hasStatChanges && (
-                    <div className={classes.stats}>
-                        {predatorType.bloodPotencyChange !== 0 && (
-                            <div className={classes.stat}>
-                                <span className={classes.statLabel}>Blood Potency</span>
-                                <span
-                                    className={classes.statValue}
-                                    data-sign={predatorType.bloodPotencyChange > 0 ? "up" : "down"}
-                                >
-                                    {predatorType.bloodPotencyChange > 0
-                                        ? `+${predatorType.bloodPotencyChange}`
-                                        : `−${Math.abs(predatorType.bloodPotencyChange)}`}
-                                </span>
-                            </div>
-                        )}
-                        {predatorType.humanityChange !== 0 && (
-                            <div className={classes.stat}>
-                                <span className={classes.statLabel}>Humanity</span>
-                                <span
-                                    className={classes.statValue}
-                                    data-sign={predatorType.humanityChange > 0 ? "up" : "down"}
-                                >
-                                    {predatorType.humanityChange > 0
-                                        ? `+${predatorType.humanityChange}`
-                                        : `−${Math.abs(predatorType.humanityChange)}`}
-                                </span>
-                            </div>
-                        )}
+                    <div>
+                        <Group gap="xl" justify="center">
+                            {predatorType.bloodPotencyChange !== 0 && (
+                                <div style={{ textAlign: "center" }}>
+                                    <Text
+                                        style={{
+                                            fontFamily: "Inter, sans-serif",
+                                            fontSize: "0.68rem",
+                                            letterSpacing: "0.15em",
+                                            textTransform: "uppercase",
+                                            color: rgba(RAW_GREY, 0.45),
+                                            marginBottom: 2
+                                        }}
+                                    >
+                                        Blood Potency
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontFamily: "Cinzel, Georgia, serif",
+                                            fontSize: "1.1rem",
+                                            fontWeight: 700,
+                                            color:
+                                                predatorType.bloodPotencyChange > 0
+                                                    ? "rgba(100, 220, 120, 0.9)"
+                                                    : "rgba(250, 82, 82, 0.9)"
+                                        }}
+                                    >
+                                        {predatorType.bloodPotencyChange > 0
+                                            ? `+${predatorType.bloodPotencyChange}`
+                                            : predatorType.bloodPotencyChange}
+                                    </Text>
+                                </div>
+                            )}
+                            {predatorType.humanityChange !== 0 && (
+                                <div style={{ textAlign: "center" }}>
+                                    <Text
+                                        style={{
+                                            fontFamily: "Inter, sans-serif",
+                                            fontSize: "0.68rem",
+                                            letterSpacing: "0.15em",
+                                            textTransform: "uppercase",
+                                            color: rgba(RAW_GREY, 0.45),
+                                            marginBottom: 2
+                                        }}
+                                    >
+                                        Humanity
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontFamily: "Cinzel, Georgia, serif",
+                                            fontSize: "1.1rem",
+                                            fontWeight: 700,
+                                            color:
+                                                predatorType.humanityChange > 0
+                                                    ? "rgba(100, 220, 120, 0.9)"
+                                                    : "rgba(250, 82, 82, 0.9)"
+                                        }}
+                                    >
+                                        {predatorType.humanityChange > 0
+                                            ? `+${predatorType.humanityChange}`
+                                            : predatorType.humanityChange}
+                                    </Text>
+                                </div>
+                            )}
+                        </Group>
                     </div>
                 )}
 
                 {/* Merits & Flaws */}
                 {hasMeritsSection && (
                     <div>
-                        <SectionDivider label="Merits & Flaws" />
+                        <SectionDivider
+                            label="Merits & Flaws"
+                            color={cat.accentColor}
+                            lineColor="rgba(80, 80, 90, 0.4)"
+                        />
                         <Stack gap="sm">
                             {predatorType.meritsAndFlaws.map((mf) => (
-                                <div key={mf.name + mf.level} className={classes.meritRow}>
-                                    <Dots n={mf.level} />
+                                <Group
+                                    key={mf.name + mf.level}
+                                    gap="sm"
+                                    wrap="nowrap"
+                                    align="center"
+                                >
+                                    <Tally
+                                        n={mf.level}
+                                        style={{ color: cat.tallyColor, flexShrink: 0 }}
+                                        size="22px"
+                                    />
                                     <div>
-                                        <Text className={classes.meritName}>{mf.name}</Text>
+                                        <Text
+                                            style={{
+                                                fontFamily: "Crimson Text, Georgia, serif",
+                                                fontSize: "1.05rem",
+                                                color: "rgba(244, 236, 232, 0.9)",
+                                                lineHeight: 1.2
+                                            }}
+                                        >
+                                            {mf.name}
+                                        </Text>
                                         {mf.summary && (
-                                            <Text className={classes.meritSummary}>
+                                            <Text
+                                                style={{
+                                                    fontFamily: "Inter, sans-serif",
+                                                    fontSize: "0.76rem",
+                                                    color: rgba(RAW_GREY, 0.5),
+                                                    marginTop: 1
+                                                }}
+                                            >
                                                 {mf.summary}
                                             </Text>
                                         )}
                                     </div>
-                                </div>
+                                </Group>
                             ))}
 
                             {predatorType.selectableMeritsAndFlaws.map(
@@ -313,74 +501,114 @@ const PredatorTypeModal = ({
                                     )
 
                                     return (
-                                        <div key={i} className={classes.group}>
+                                        <div
+                                            key={i}
+                                            style={{
+                                                padding: "12px 14px",
+                                                borderRadius: 10,
+                                                background: cat.bgColor,
+                                                border: `1px solid ${cat.borderColor}`
+                                            }}
+                                        >
                                             {exclusive ? (
-                                                <>
-                                                    <div className={classes.groupHead}>
-                                                        <Group gap="sm" wrap="nowrap">
-                                                            <Dots n={totalPoints} />
-                                                            <span className={classes.groupTitle}>
-                                                                {options[0].name}
-                                                            </span>
-                                                        </Group>
-                                                        <span
-                                                            className={classes.remaining}
-                                                            data-done={
-                                                                selectedExclusiveIndex !== -1 ||
-                                                                undefined
-                                                            }
+                                                <Group
+                                                    justify="space-between"
+                                                    wrap="nowrap"
+                                                    align="flex-start"
+                                                >
+                                                    <Group
+                                                        gap="sm"
+                                                        align="center"
+                                                        style={{ paddingTop: 2 }}
+                                                    >
+                                                        <Tally
+                                                            n={totalPoints}
+                                                            style={{
+                                                                color: cat.tallyColor,
+                                                                flexShrink: 0
+                                                            }}
+                                                            size="26px"
+                                                        />
+                                                        <Text
+                                                            style={{
+                                                                fontFamily:
+                                                                    "Cinzel, Georgia, serif",
+                                                                fontSize: "0.9rem",
+                                                                fontWeight: 600,
+                                                                letterSpacing: "0.15em",
+                                                                textTransform: "uppercase",
+                                                                color: cat.accentColor
+                                                            }}
                                                         >
-                                                            {selectedExclusiveIndex === -1
-                                                                ? "Choose one"
-                                                                : "Chosen"}
-                                                        </span>
-                                                    </div>
+                                                            {options[0].name}
+                                                        </Text>
+                                                    </Group>
                                                     <Stack gap="xs">
                                                         {options.map((option, j) => (
-                                                            <Radio
+                                                            <Group
                                                                 key={
                                                                     predatorType.name +
                                                                     "/" +
                                                                     option.name +
                                                                     j
                                                                 }
-                                                                checked={
-                                                                    selectedExclusiveIndex === j
-                                                                }
-                                                                onChange={() =>
-                                                                    setExclusiveSelection(i, j)
-                                                                }
-                                                                color={cat.mantineColor}
-                                                                label={
-                                                                    option.summary || option.name
-                                                                }
-                                                                classNames={{
-                                                                    label: classes.radioLabel
-                                                                }}
-                                                            />
+                                                                gap="xs"
+                                                                wrap="nowrap"
+                                                                align="center"
+                                                            >
+                                                                <Radio
+                                                                    checked={
+                                                                        selectedExclusiveIndex === j
+                                                                    }
+                                                                    onChange={() =>
+                                                                        setExclusiveSelection(i, j)
+                                                                    }
+                                                                    color={cat.mantineColor}
+                                                                    styles={{
+                                                                        radio: { cursor: "pointer" }
+                                                                    }}
+                                                                />
+                                                                <Text
+                                                                    style={{
+                                                                        fontFamily:
+                                                                            "Crimson Text, Georgia, serif",
+                                                                        fontSize: "1rem",
+                                                                        color: rgba(RAW_GREY, 0.85),
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setExclusiveSelection(i, j)
+                                                                    }
+                                                                >
+                                                                    {option.summary || option.name}
+                                                                </Text>
+                                                            </Group>
                                                         ))}
                                                     </Stack>
-                                                </>
+                                                </Group>
                                             ) : (
                                                 <>
-                                                    <div className={classes.groupHead}>
-                                                        <span className={classes.groupTitle}>
-                                                            Distribute {totalPoints}{" "}
-                                                            {totalPoints === 1 ? "dot" : "dots"}
-                                                        </span>
-                                                        <span
-                                                            className={classes.remaining}
-                                                            data-done={
-                                                                totalPoints - spentPoints === 0 ||
-                                                                undefined
-                                                            }
-                                                        >
-                                                            {totalPoints - spentPoints} remaining
-                                                        </span>
-                                                    </div>
+                                                    <Text
+                                                        style={{
+                                                            fontFamily: "Cinzel, Georgia, serif",
+                                                            fontSize: "0.8rem",
+                                                            fontWeight: 700,
+                                                            textAlign: "right",
+                                                            color:
+                                                                totalPoints - spentPoints === 0
+                                                                    ? "rgba(160, 160, 170, 0.55)"
+                                                                    : cat.accentColor
+                                                        }}
+                                                    >
+                                                        {totalPoints - spentPoints} remaining
+                                                    </Text>
 
-                                                    <Stack gap={4}>
+                                                    <Stack gap="xs">
                                                         {options.map((option, j) => {
+                                                            if (false) {
+                                                                return null
+                                                            }
+
                                                             const { selectedPoints, maxLevel } =
                                                                 subPointStates[j]
                                                             return (
@@ -401,16 +629,25 @@ const PredatorTypeModal = ({
                                                                         label={upcase(
                                                                             option.summary
                                                                         )}
-                                                                        multiline
-                                                                        maw={280}
+                                                                        transitionProps={{
+                                                                            transition: "slide-up",
+                                                                            duration: 200
+                                                                        }}
                                                                         events={
                                                                             globals.tooltipTriggerEvents
                                                                         }
                                                                     >
                                                                         <Text
-                                                                            className={
-                                                                                classes.optionName
-                                                                            }
+                                                                            style={{
+                                                                                fontFamily:
+                                                                                    "Crimson Text, Georgia, serif",
+                                                                                fontSize: "1rem",
+                                                                                color: rgba(
+                                                                                    RAW_GREY,
+                                                                                    0.85
+                                                                                ),
+                                                                                minWidth: 140
+                                                                            }}
                                                                         >
                                                                             {option.name}
                                                                         </Text>
@@ -443,8 +680,12 @@ const PredatorTypeModal = ({
 
                 {!!predatorType.skillBonuses?.length && (
                     <div>
-                        <SectionDivider label="Skill Dots" />
-                        <Text className={classes.skillDots}>
+                        <SectionDivider
+                            label="Skill Dots"
+                            color={cat.accentColor}
+                            lineColor="rgba(80,80,90,.4)"
+                        />
+                        <Text>
                             {predatorType.skillBonuses
                                 .map((grant) => `+${grant.dots} ${upcase(grant.skill)}`)
                                 .join(" · ")}
@@ -452,21 +693,20 @@ const PredatorTypeModal = ({
                     </div>
                 )}
                 {predatorType.description && (
-                    <Text className={classes.description}>{predatorType.description}</Text>
+                    <Text style={{ whiteSpace: "pre-wrap" }}>{predatorType.description}</Text>
                 )}
                 {/* Skill Specialty */}
                 {predatorType.specialtyOptions.length > 0 && (
                     <div>
-                        <SectionDivider label="Skill Specialty" />
+                        <SectionDivider
+                            label="Skill Specialty"
+                            color={cat.accentColor}
+                            lineColor="rgba(80, 80, 90, 0.4)"
+                        />
                         <SegmentedControl
                             size={phoneScreen ? "sm" : "md"}
                             color={cat.mantineColor}
                             fullWidth
-                            orientation={
-                                phoneScreen && predatorType.specialtyOptions.length > 2
-                                    ? "vertical"
-                                    : "horizontal"
-                            }
                             value={specialty}
                             onChange={(value) => {
                                 setSpecialty(value)
@@ -488,9 +728,8 @@ const PredatorTypeModal = ({
                                     placeholder={selectedSpecialtyOption.customInput}
                                     value={customSpecialtyText}
                                     onChange={(e) => setCustomSpecialtyText(e.target.value)}
-                                    color={cat.mantineColor}
+                                    color={cat.accentColor}
                                     mt="xs"
-                                    data-autofocus
                                 />
                             ) : null
                         })()}
@@ -499,11 +738,14 @@ const PredatorTypeModal = ({
 
                 {/* Discipline */}
                 <div>
-                    <SectionDivider label="Bonus Discipline" />
+                    <SectionDivider
+                        label="Bonus Discipline"
+                        color={cat.accentColor}
+                        lineColor="rgba(80, 80, 90, 0.4)"
+                    />
                     <Tooltip
                         label={`${upcase(discipline)}: ${pickedDiscipline?.summary ?? ""}`}
-                        multiline
-                        maw={320}
+                        transitionProps={{ transition: "slide-up", duration: 200 }}
                         events={globals.tooltipTriggerEvents}
                     >
                         <SegmentedControl
@@ -521,20 +763,26 @@ const PredatorTypeModal = ({
                 </div>
 
                 {/* Actions */}
-                <div className={classes.actions}>
+                <Group justify="space-between" mt="md">
                     <Button
                         variant="subtle"
                         color="gray"
-                        leftSection={<IconChevronLeft size={16} />}
+                        leftSection={<FontAwesomeIcon icon={faChevronLeft} />}
                         onClick={closeModal}
+                        styles={{
+                            root: {
+                                color: rgba(RAW_GREY, 0.5),
+                                "&:hover": { color: rgba(RAW_GREY, 0.85) }
+                            }
+                        }}
                     >
                         Back
                     </Button>
 
-                    <GeneratorConfirmButton
+                    <Button
                         data-testid="predator-type-confirm-button"
+                        color={cat.mantineColor}
                         disabled={!canConfirm}
-                        disabledReason={canConfirm ? undefined : confirmDisabledReason}
                         onClick={async () => {
                             const pickedSpecialtyOption = predatorType.specialtyOptions.find(
                                 (s) => `${s.skill}_${s.name}` === specialty
@@ -639,9 +887,11 @@ const PredatorTypeModal = ({
                                 nextStep()
                             }
                         }}
-                    />
-                </div>
-            </div>
+                    >
+                        Confirm
+                    </Button>
+                </Group>
+            </Stack>
         </Modal>
     )
 }

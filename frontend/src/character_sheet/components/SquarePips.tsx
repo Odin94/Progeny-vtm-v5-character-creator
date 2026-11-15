@@ -1,6 +1,6 @@
+import { Group } from "@mantine/core"
 import { memo, useRef, useMemo, useEffect } from "react"
-import SimpleSquarePipButton, { type SquarePipShape } from "./SimpleSquarePipButton"
-import classes from "./pips.module.css"
+import SimpleSquarePipButton from "./SimpleSquarePipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
 
@@ -11,8 +11,6 @@ type SquarePipsProps = {
     groupSize?: number
     options?: SheetOptions
     field?: string
-    shape?: SquarePipShape
-    label?: string
 }
 
 const SquarePips = ({
@@ -21,9 +19,7 @@ const SquarePips = ({
     maxLevel = 5,
     groupSize,
     options,
-    field,
-    shape = "box",
-    label
+    field
 }: SquarePipsProps) => {
     const prevValueRef = useRef(value)
 
@@ -101,7 +97,7 @@ const SquarePips = ({
     }
 
     return (
-        <div className={classes.track}>
+        <Group gap={4}>
             {Array.from({ length: maxLevel }, (_, index) => (
                 <SimpleSquarePipButton
                     key={index}
@@ -110,14 +106,16 @@ const SquarePips = ({
                     firstChangingIndex={firstChangingIndex}
                     isFilling={isFilling}
                     onClick={() => handlePipClick(index)}
-                    groupEnd={!!groupSize && (index + 1) % groupSize === 0 && index < maxLevel - 1}
+                    style={
+                        groupSize && (index + 1) % groupSize === 0 && index < maxLevel - 1
+                            ? { marginRight: 8 }
+                            : undefined
+                    }
                     options={options}
                     disabledReason={getDisabledReason(index)}
-                    shape={shape}
-                    label={label}
                 />
             ))}
-        </div>
+        </Group>
     )
 }
 
@@ -134,8 +132,6 @@ export default memo(SquarePips, (prev, next) => {
         prev.maxLevel === next.maxLevel &&
         prev.groupSize === next.groupSize &&
         prev.field === next.field &&
-        prev.shape === next.shape &&
-        prev.label === next.label &&
         prev.setValue === next.setValue &&
         getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
     )

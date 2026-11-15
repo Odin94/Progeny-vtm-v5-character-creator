@@ -1,15 +1,16 @@
-import { Button, SimpleGrid, Skeleton, TextInput, Textarea } from "@mantine/core"
 import {
-    IconAlertTriangle,
-    IconEye,
-    IconNews,
-    IconPencil,
-    IconPhoto,
-    IconPlus,
-    IconRefresh,
-    IconSend,
-    IconTrash
-} from "@tabler/icons-react"
+    Button,
+    FileButton,
+    Group,
+    Paper,
+    SimpleGrid,
+    Stack,
+    Text,
+    TextInput,
+    Textarea,
+    Title
+} from "@mantine/core"
+import { IconPhoto, IconTrash } from "@tabler/icons-react"
 import { notifications } from "@mantine/notifications"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
@@ -17,18 +18,6 @@ import { api, type RecentChange } from "~/utils/api"
 import { composeRecentChangeBody, splitRecentChangeLayout } from "~/utils/recentChangeLayout"
 import RecentChangesModal from "~/components/RecentChangesModal"
 import ConfirmActionModal from "~/components/ConfirmActionModal"
-import FileDropZone from "~/components/FileDropZone"
-import {
-    DeleteIconButton,
-    DisabledReason,
-    EmptyState,
-    IconButton,
-    Panel,
-    SectionHeader,
-    useContextMenu,
-    type ContextMenuEntry
-} from "~/components/ui"
-import classes from "./AdminPanels.module.css"
 
 const formatDate = (date: string | null) =>
     date
@@ -39,12 +28,8 @@ const formatDate = (date: string | null) =>
           })
         : "Not published"
 
-const statusLabel = (change: RecentChange) =>
-    change.status === "published" ? "Published" : change.status === "deleted" ? "Deleted" : "Draft"
-
 const AdminRecentChangesPanel = () => {
     const queryClient = useQueryClient()
-    const contextMenu = useContextMenu()
     const [editingId, setEditingId] = useState<string | null>(null)
     const [previewChange, setPreviewChange] = useState<RecentChange | null>(null)
     const [deletionCandidate, setDeletionCandidate] = useState<{
@@ -227,354 +212,279 @@ const AdminRecentChangesPanel = () => {
           ? publishedChanges
           : [...publishedChanges, { ...previewChange, publishedAt: new Date().toISOString() }]
 
-    const saveBlockReason = isReadOnly
-        ? undefined
-        : !title.trim()
-          ? "Add a title first"
-          : !topSection.trim()
-            ? "Add the top section first"
-            : bodyOverLimit
-              ? "All sections together must be 10,000 characters or fewer"
-              : hasIncompleteLink
-                ? "Enter both link text and a URL, or leave both empty"
-                : undefined
-
-    const changeMenuEntries = (change: RecentChange): ContextMenuEntry[] => [
-        { type: "label", key: "label", label: change.title },
-        {
-            key: "edit",
-            label: change.status === "draft" ? "Edit" : "Open",
-            icon: <IconPencil size={14} />,
-            onClick: () => setEditingId(change.id)
-        },
-        ...(change.status !== "deleted"
-            ? [
-                  {
-                      key: "view",
-                      label: "View",
-                      icon: <IconEye size={14} />,
-                      onClick: () => setPreviewChange(change)
-                  }
-              ]
-            : []),
-        { type: "divider", key: "divider" },
-        {
-            key: "delete",
-            label: change.status === "deleted" ? "Delete permanently…" : "Delete…",
-            color: "red",
-            icon: <IconTrash size={14} />,
-            onClick: () =>
-                setDeletionCandidate({ change, permanently: change.status === "deleted" })
-        }
-    ]
-
     return (
-        <div className={classes.stack}>
-            <SectionHeader
-                title="Recent changes"
-                description="Draft and publish the update dialog shown to signed-in users."
-                actions={
-                    <Button size="xs" leftSection={<IconPlus size={14} />} onClick={createDraft}>
-                        New draft
-                    </Button>
-                }
-            />
+        <Stack gap="lg">
+            <Group justify="space-between" align="flex-end">
+                <Stack gap={4}>
+                    <Title order={1}>Recent changes</Title>
+                    <Text c="dimmed">
+                        Draft and publish the update dialog shown to signed-in users.
+                    </Text>
+                </Stack>
+                <Button onClick={createDraft}>New draft</Button>
+            </Group>
 
-            <div className={classes.split}>
-                <div className={classes.splitGrid}>
-                    <Panel p="lg">
-                        <div className={classes.stack}>
-                            <div className={classes.editorHead}>
-                                <h3 className={classes.editorTitle}>
-                                    {isPublished
-                                        ? "Published update"
-                                        : isDeleted
-                                          ? "Deleted update"
-                                          : "Draft editor"}
-                                </h3>
-                                {selectedChange ? (
-                                    <span
-                                        className={classes.status}
-                                        data-status={selectedChange.status}
-                                    >
-                                        {statusLabel(selectedChange)}
-                                    </span>
-                                ) : null}
-                            </div>
+            <Paper p="md" withBorder>
+                <Stack gap="md">
+                    <Text fw={600}>
+                        {isPublished
+                            ? "Published update"
+                            : isDeleted
+                              ? "Deleted update"
+                              : "Draft editor"}
+                    </Text>
+                    <TextInput
+                        label="Title"
+                        value={title}
+                        onChange={(event) => setTitle(event.currentTarget.value)}
+                        maxLength={160}
+                        disabled={isReadOnly}
+                        required
+                    />
+                    <Textarea
+                        label="Top section"
+                        description="Shown above the ornamental divider, beside the optional image. Markdown is supported."
+                        value={topSection}
+                        onChange={(event) => setTopSection(event.currentTarget.value)}
+                        minRows={5}
+                        maxLength={10_000}
+                        disabled={isReadOnly}
+                        required
+                    />
+                    <Stack gap="xs">
+                        <div>
+                            <Text fw={500} size="sm">
+                                Bottom columns
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                                Each field maps directly to its column below the divider. Leave
+                                fields empty to use fewer columns.
+                            </Text>
+                        </div>
+                        <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
+                            {(["Left column", "Center column", "Right column"] as const).map(
+                                (label, index) => (
+                                    <Textarea
+                                        key={label}
+                                        label={label}
+                                        value={bottomColumns[index]}
+                                        onChange={(event) =>
+                                            updateBottomColumn(index, event.currentTarget.value)
+                                        }
+                                        minRows={8}
+                                        maxLength={10_000}
+                                        disabled={isReadOnly}
+                                    />
+                                )
+                            )}
+                        </SimpleGrid>
+                        {bodyOverLimit ? (
+                            <Text size="sm" c="red">
+                                All sections together must be 10,000 characters or fewer.
+                            </Text>
+                        ) : null}
+                    </Stack>
+                    <Stack gap="xs">
+                        <div>
+                            <Text fw={500} size="sm">
+                                Optional link
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                                Displayed below the update content and above the footer.
+                            </Text>
+                        </div>
+                        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
                             <TextInput
-                                label="Title"
-                                value={title}
-                                onChange={(event) => setTitle(event.currentTarget.value)}
+                                label="Link text"
+                                value={linkText}
+                                onChange={(event) => setLinkText(event.currentTarget.value)}
                                 maxLength={160}
                                 disabled={isReadOnly}
-                                required
                             />
-                            <Textarea
-                                label="Top section"
-                                description="Shown above the ornamental divider, beside the optional image. Markdown is supported."
-                                value={topSection}
-                                onChange={(event) => setTopSection(event.currentTarget.value)}
-                                minRows={5}
-                                autosize
-                                maxLength={10_000}
+                            <TextInput
+                                label="Link URL"
+                                type="url"
+                                value={linkUrl}
+                                onChange={(event) => setLinkUrl(event.currentTarget.value)}
+                                maxLength={2_048}
                                 disabled={isReadOnly}
-                                required
                             />
-                            <div className={classes.fieldGroup}>
-                                <div>
-                                    <p className={classes.fieldLabel}>Bottom columns</p>
-                                    <p className={classes.fieldHint}>
-                                        Each field maps directly to its column below the divider.
-                                        Leave fields empty to use fewer columns.
-                                    </p>
-                                </div>
-                                <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
-                                    {(
-                                        ["Left column", "Center column", "Right column"] as const
-                                    ).map((label, index) => (
-                                        <Textarea
-                                            key={label}
-                                            label={label}
-                                            value={bottomColumns[index]}
-                                            onChange={(event) =>
-                                                updateBottomColumn(index, event.currentTarget.value)
-                                            }
-                                            minRows={8}
-                                            maxLength={10_000}
-                                            disabled={isReadOnly}
-                                        />
-                                    ))}
-                                </SimpleGrid>
-                                {bodyOverLimit ? (
-                                    <p className={classes.fieldError}>
-                                        All sections together must be 10,000 characters or fewer.
-                                    </p>
-                                ) : null}
-                            </div>
-                            <div className={classes.fieldGroup}>
-                                <div>
-                                    <p className={classes.fieldLabel}>Optional link</p>
-                                    <p className={classes.fieldHint}>
-                                        Displayed below the update content and above the footer.
-                                    </p>
-                                </div>
-                                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
-                                    <TextInput
-                                        label="Link text"
-                                        value={linkText}
-                                        onChange={(event) => setLinkText(event.currentTarget.value)}
-                                        maxLength={160}
-                                        disabled={isReadOnly}
-                                    />
-                                    <TextInput
-                                        label="Link URL"
-                                        type="url"
-                                        value={linkUrl}
-                                        onChange={(event) => setLinkUrl(event.currentTarget.value)}
-                                        maxLength={2_048}
-                                        disabled={isReadOnly}
-                                    />
-                                </SimpleGrid>
-                                {hasIncompleteLink ? (
-                                    <p className={classes.fieldError}>
-                                        Enter both link text and a URL, or leave both empty.
-                                    </p>
-                                ) : null}
-                            </div>
-                            <div className={classes.fieldGroup}>
-                                <div>
-                                    <p className={classes.fieldLabel}>Image</p>
-                                    <p className={classes.fieldHint}>
-                                        Optional. JPEG, PNG, or WebP, up to 3 MB. It is stored with
-                                        the update.
-                                    </p>
-                                </div>
-                                {isReadOnly ? (
-                                    <p className={classes.fieldHint}>
-                                        {selectedChange?.hasImage || selectedChange?.imageUrl
-                                            ? "This update includes an image."
-                                            : "This update has no image."}
-                                    </p>
-                                ) : editingId ? (
-                                    <div className={classes.imageRow}>
-                                        <FileDropZone
-                                            accept="image/jpeg,image/png,image/webp"
-                                            listenToPaste
-                                            disabled={imageUploadMutation.isPending}
-                                            onFile={(file) =>
-                                                imageUploadMutation.mutate({
-                                                    id: editingId,
-                                                    file
-                                                })
-                                            }
-                                            icon={<IconPhoto size={18} stroke={1.6} />}
-                                            title={
-                                                imageUploadMutation.isPending
-                                                    ? "Uploading…"
-                                                    : selectedChange?.hasImage
-                                                      ? "Replace image"
-                                                      : "Upload image"
-                                            }
-                                            hint="Drop an image here, paste it, or click to browse"
-                                        />
-                                        {selectedChange?.hasImage ? (
-                                            <DeleteIconButton
-                                                label="Remove image"
-                                                loading={removeImageMutation.isPending}
-                                                onClick={() =>
-                                                    removeImageMutation.mutate(editingId)
-                                                }
-                                            />
-                                        ) : null}
-                                    </div>
-                                ) : (
-                                    <p className={classes.fieldHint}>
-                                        Save the draft before uploading an image.
-                                    </p>
-                                )}
-                            </div>
-                            {isReadOnly ? (
-                                <p className={classes.readOnlyNote}>
-                                    {isDeleted
-                                        ? "Deleted updates are no longer shown to users or included in history."
-                                        : "Published updates are kept unchanged so the history remains accurate."}
-                                </p>
-                            ) : (
-                                <div className={classes.editorFooter}>
-                                    <DisabledReason reason={saveBlockReason}>
+                        </SimpleGrid>
+                        {hasIncompleteLink ? (
+                            <Text size="sm" c="red">
+                                Enter both link text and a URL, or leave both empty.
+                            </Text>
+                        ) : null}
+                    </Stack>
+                    <Stack gap={4}>
+                        <Text fw={500} size="sm">
+                            Image
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                            Optional. JPEG, PNG, or WebP, up to 3 MB. It is stored with the update.
+                        </Text>
+                        {isReadOnly ? (
+                            <Text size="sm" c="dimmed">
+                                {selectedChange?.hasImage || selectedChange?.imageUrl
+                                    ? "This update includes an image."
+                                    : "This update has no image."}
+                            </Text>
+                        ) : editingId ? (
+                            <Group gap="sm">
+                                <FileButton
+                                    onChange={(file) => {
+                                        if (file)
+                                            imageUploadMutation.mutate({ id: editingId, file })
+                                    }}
+                                    accept="image/jpeg,image/png,image/webp"
+                                    disabled={imageUploadMutation.isPending}
+                                >
+                                    {(props) => (
                                         <Button
-                                            variant="default"
-                                            onClick={() => saveMutation.mutate()}
-                                            loading={saveMutation.isPending}
-                                            disabled={!canSave}
+                                            {...props}
+                                            variant="light"
+                                            leftSection={<IconPhoto size={16} />}
+                                            loading={imageUploadMutation.isPending}
                                         >
-                                            Save draft
+                                            {selectedChange?.hasImage
+                                                ? "Replace image"
+                                                : "Upload image"}
                                         </Button>
-                                    </DisabledReason>
-                                    {editingId ? (
-                                        <DisabledReason reason={saveBlockReason}>
-                                            <Button
-                                                leftSection={<IconSend size={16} />}
-                                                onClick={() => publishMutation.mutate(editingId)}
-                                                loading={publishMutation.isPending}
-                                                disabled={!canSave}
-                                            >
-                                                Publish
-                                            </Button>
-                                        </DisabledReason>
-                                    ) : null}
-                                </div>
-                            )}
-                        </div>
-                    </Panel>
+                                    )}
+                                </FileButton>
+                                {selectedChange?.hasImage ? (
+                                    <Button
+                                        color="red"
+                                        variant="subtle"
+                                        leftSection={<IconTrash size={16} />}
+                                        onClick={() => removeImageMutation.mutate(editingId)}
+                                        loading={removeImageMutation.isPending}
+                                    >
+                                        Remove image
+                                    </Button>
+                                ) : null}
+                            </Group>
+                        ) : (
+                            <Text size="sm" c="dimmed">
+                                Save the draft before uploading an image.
+                            </Text>
+                        )}
+                    </Stack>
+                    {isReadOnly ? (
+                        <Text size="sm" c="dimmed">
+                            {isDeleted
+                                ? "Deleted updates are no longer shown to users or included in history."
+                                : "Published updates are kept unchanged so the history remains accurate."}
+                        </Text>
+                    ) : (
+                        <Group justify="flex-end">
+                            <Button
+                                variant="light"
+                                onClick={() => saveMutation.mutate()}
+                                loading={saveMutation.isPending}
+                                disabled={!canSave}
+                            >
+                                Save draft
+                            </Button>
+                            {editingId ? (
+                                <Button
+                                    onClick={() => publishMutation.mutate(editingId)}
+                                    loading={publishMutation.isPending}
+                                    disabled={!canSave}
+                                >
+                                    Publish
+                                </Button>
+                            ) : null}
+                        </Group>
+                    )}
+                </Stack>
+            </Paper>
 
-                    <div className={classes.list}>
-                        <p className={classes.listLabel}>All updates</p>
-                        <Panel p={0}>
-                            {changesQuery.isLoading ? (
-                                <div className={classes.items} aria-busy="true">
-                                    {Array.from({ length: 4 }, (_, index) => (
-                                        <div key={index} className={classes.skeletonItem}>
-                                            <Skeleton height={12} width="60%" radius="sm" />
-                                            <Skeleton height={10} width="35%" radius="sm" />
-                                        </div>
-                                    ))}
+            <Stack gap="sm">
+                <Title order={2} size="h3">
+                    All updates
+                </Title>
+                {changesQuery.isLoading ? (
+                    <Text c="dimmed">Loading updates…</Text>
+                ) : changesQuery.isError ? (
+                    <Text c="red">Could not load recent changes.</Text>
+                ) : changesQuery.data?.changes.length ? (
+                    changesQuery.data.changes.map((change) => (
+                        <Paper
+                            key={change.id}
+                            p="md"
+                            withBorder
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setEditingId(change.id)}
+                        >
+                            <Group justify="space-between" align="flex-start">
+                                <div>
+                                    <Text fw={600}>{change.title}</Text>
+                                    <Text size="sm" c="dimmed">
+                                        {change.status === "published"
+                                            ? `Published ${formatDate(change.publishedAt)}`
+                                            : change.status === "deleted"
+                                              ? "Deleted"
+                                              : "Draft"}
+                                    </Text>
                                 </div>
-                            ) : changesQuery.isError ? (
-                                <EmptyState
-                                    compact
-                                    icon={<IconAlertTriangle size={22} stroke={1.5} />}
-                                    title="Could not load recent changes."
-                                    actions={
+                                <Group gap="md">
+                                    <Text
+                                        size="sm"
+                                        c={
+                                            change.status === "published"
+                                                ? "green"
+                                                : change.status === "deleted"
+                                                  ? "red"
+                                                  : "yellow"
+                                        }
+                                    >
+                                        {change.status === "published"
+                                            ? "Published"
+                                            : change.status === "deleted"
+                                              ? "Deleted"
+                                              : "Draft"}
+                                    </Text>
+                                    {change.status !== "deleted" ? (
                                         <Button
                                             size="xs"
-                                            variant="default"
-                                            leftSection={<IconRefresh size={14} />}
-                                            loading={changesQuery.isFetching}
-                                            onClick={() => void changesQuery.refetch()}
+                                            variant="light"
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                setPreviewChange(change)
+                                            }}
                                         >
-                                            Retry
+                                            View
                                         </Button>
-                                    }
-                                />
-                            ) : changesQuery.data?.changes.length ? (
-                                <div className={classes.items}>
-                                    {changesQuery.data.changes.map((change) => (
-                                        <div
-                                            key={change.id}
-                                            className={classes.item}
-                                            data-selected={editingId === change.id || undefined}
-                                            onContextMenu={(event) =>
-                                                contextMenu.open(event, changeMenuEntries(change))
-                                            }
-                                        >
-                                            <button
-                                                type="button"
-                                                className={classes.itemMain}
-                                                onClick={() => setEditingId(change.id)}
-                                            >
-                                                <span className={classes.itemTitle}>
-                                                    {change.title}
-                                                </span>
-                                                <span className={classes.itemMeta}>
-                                                    <span
-                                                        className={classes.status}
-                                                        data-status={change.status}
-                                                    >
-                                                        {statusLabel(change)}
-                                                    </span>
-                                                    {change.status === "published"
-                                                        ? formatDate(change.publishedAt)
-                                                        : null}
-                                                </span>
-                                            </button>
-                                            <div className={classes.itemActions}>
-                                                {change.status !== "deleted" ? (
-                                                    <IconButton
-                                                        size="sm"
-                                                        label="View"
-                                                        icon={<IconEye size={15} />}
-                                                        onClick={() => setPreviewChange(change)}
-                                                    />
-                                                ) : null}
-                                                <DeleteIconButton
-                                                    size="sm"
-                                                    label={
-                                                        change.status === "deleted"
-                                                            ? "Delete permanently"
-                                                            : "Delete"
-                                                    }
-                                                    loading={
-                                                        deleteMutation.isPending &&
-                                                        deleteMutation.variables?.id === change.id
-                                                    }
-                                                    onClick={() =>
-                                                        setDeletionCandidate({
-                                                            change,
-                                                            permanently: change.status === "deleted"
-                                                        })
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <EmptyState
-                                    compact
-                                    icon={<IconNews size={22} stroke={1.5} />}
-                                    title="No recent changes yet."
-                                    actions={
-                                        <Button size="xs" variant="default" onClick={createDraft}>
-                                            New draft
-                                        </Button>
-                                    }
-                                />
-                            )}
-                        </Panel>
-                    </div>
-                </div>
-            </div>
+                                    ) : null}
+                                    <Button
+                                        size="xs"
+                                        color="red"
+                                        variant={change.status === "deleted" ? "filled" : "subtle"}
+                                        loading={
+                                            deleteMutation.isPending &&
+                                            deleteMutation.variables?.id === change.id
+                                        }
+                                        onClick={(event) => {
+                                            event.stopPropagation()
+                                            setDeletionCandidate({
+                                                change,
+                                                permanently: change.status === "deleted"
+                                            })
+                                        }}
+                                    >
+                                        {change.status === "deleted"
+                                            ? "Delete permanently"
+                                            : "Delete"}
+                                    </Button>
+                                </Group>
+                            </Group>
+                        </Paper>
+                    ))
+                ) : (
+                    <Text c="dimmed">No recent changes yet.</Text>
+                )}
+            </Stack>
 
             <RecentChangesModal
                 opened={!!previewChange}
@@ -605,8 +515,7 @@ const AdminRecentChangesPanel = () => {
                 loading={deleteMutation.isPending}
                 disabled={deleteMutation.isPending}
             />
-            {contextMenu.menu}
-        </div>
+        </Stack>
     )
 }
 

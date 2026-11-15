@@ -1,8 +1,14 @@
-import { Button, Modal } from "@mantine/core"
-import { IconLock, IconNotebook, IconPlus } from "@tabler/icons-react"
-import { Ornament } from "./ui/Ornament"
-import { ConfirmationModalStyle } from "./ConfirmActionModal"
-import classes from "./AppModals.module.css"
+import { Button, Divider, Group, Modal, Stack, Text } from "@mantine/core"
+import {
+    ConfirmationModalStyle,
+    confirmationModalBodyStyle,
+    confirmationModalHeadingStyle
+} from "./ConfirmActionModal"
+import {
+    generatorOutlineActionButtonStyles,
+    confirmationModalDangerConfirmButtonStyles
+} from "~/generator/components/sharedGeneratorConfirmButtonStyles"
+import { COLOR_MODAL_DIVIDER } from "~/theme/colors"
 
 type SharedCharacterCreatorModalProps = {
     opened: boolean
@@ -38,41 +44,40 @@ const SharedCharacterCreatorModal = ({
             withCloseButton={false}
             closeOnClickOutside={false}
             closeOnEscape={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
             styles={ConfirmationModalStyle(false)}
         >
-            <div className={classes.body}>
-                <div className={classes.intro}>
-                    <h2 className={classes.heading}>
-                        <IconLock size={18} stroke={1.6} className={classes.headingIcon} />
+            <Stack gap="md">
+                <Stack gap={6} align="center">
+                    <Text ta="center" style={confirmationModalHeadingStyle(false)}>
                         Shared Character Checked Out
-                    </h2>
-                    <Ornament className={classes.ornament} />
-                    <p className={classes.lede}>
+                    </Text>
+                    <Text ta="center" style={confirmationModalBodyStyle}>
                         You have {characterLabel} checked out. It&apos;s a shared character, so you
                         can&apos;t edit it in the character creator.
-                    </p>
-                </div>
+                    </Text>
+                </Stack>
 
-                <hr className={classes.rule} />
+                <Divider color={COLOR_MODAL_DIVIDER} />
 
-                <div className={classes.actions}>
+                <Group justify="space-between" gap="sm" wrap="nowrap">
                     <Button
-                        variant="default"
-                        leftSection={<IconNotebook size={16} />}
+                        color="red"
+                        variant="outline"
                         onClick={onGoToSheet}
-                        data-autofocus
+                        styles={generatorOutlineActionButtonStyles}
                     >
                         Go to Sheet
                     </Button>
                     <Button
                         color="red"
-                        leftSection={<IconPlus size={16} />}
                         onClick={onCreateNewCharacter}
+                        styles={confirmationModalDangerConfirmButtonStyles}
                     >
                         Create New Character
                     </Button>
-                </div>
-            </div>
+                </Group>
+            </Stack>
         </Modal>
     )
 }

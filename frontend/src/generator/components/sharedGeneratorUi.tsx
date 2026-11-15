@@ -1,40 +1,7 @@
-import { Box, Button, Stack, Text, VisuallyHidden, type ButtonProps } from "@mantine/core"
-import { IconArrowRight } from "@tabler/icons-react"
+import { Box, Stack, Text } from "@mantine/core"
 import { motion, useReducedMotion } from "framer-motion"
-import { createContext, useContext, type MouseEventHandler, type ReactNode } from "react"
-import { DisabledReason, Ornament } from "~/components/ui"
-import { motion as motionTokens } from "~/theme/tokens"
-import classes from "./sharedGeneratorUi.module.css"
-
-export { classes as generatorUiClasses }
-
-// ---------------------------------------------------------------------------
-// Step context: lets any step render "Step 3 of 10" without prop drilling.
-// Provided by Generator.tsx; absent in isolated renders (tests), where the eyebrow hides.
-// ---------------------------------------------------------------------------
-
-export type GeneratorStepInfo = {
-    /** Zero-based position in the visible step list. */
-    index: number
-    total: number
-    label: string
-}
-
-export const GeneratorStepContext = createContext<GeneratorStepInfo | null>(null)
-
-export const useGeneratorStepInfo = () => useContext(GeneratorStepContext)
-
-/** Small gold "Step 3 of 10" label. Renders nothing outside the generator. */
-export const GeneratorStepEyebrow = ({ children }: { children?: ReactNode }) => {
-    const step = useGeneratorStepInfo()
-    if (!children && !step) return null
-
-    return (
-        <span className={classes.eyebrow}>
-            {children ?? `Step ${step!.index + 1} of ${step!.total}`}
-        </span>
-    )
-}
+import { ReactNode } from "react"
+import { RAW_GOLD, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
 
 type GeneratorStepHeroProps = {
     leadText: string
@@ -42,20 +9,14 @@ type GeneratorStepHeroProps = {
     description?: ReactNode
     secondaryDescription?: ReactNode
     maxWidth?: number | string
-    /** @deprecated Titles use the shared type scale now; kept for API compatibility. */
     mobileTitleSize?: string
-    /** @deprecated Titles use the shared type scale now; kept for API compatibility. */
     desktopTitleSize?: string
     marginBottom?: number
-    /** Overrides the automatic "Step N of M" eyebrow. Pass `false` to hide it. */
-    eyebrow?: ReactNode | false
-    titleTestId?: string
 }
 
 type GeneratorSectionDividerProps = {
     label: string
     lineHeight?: 1 | 2
-    /** @deprecated The divider uses the gold border token now; kept for API compatibility. */
     accentAlpha?: 0.3 | 0.32 | 0.38
     titleSize?: "0.88rem" | "0.95rem" | "0.96rem"
     marginY?: "xs" | "sm" | "md" | "lg"
@@ -80,36 +41,34 @@ type GeneratorPhasePromptProps = {
     marginBottom?: string
 }
 
-const labelBase = {
-    fontFamily: "var(--pg-font-body)",
-    fontSize: "11px",
-    fontWeight: 600,
-    letterSpacing: "var(--pg-tracking-caps)",
-    textTransform: "uppercase" as const,
-    marginBottom: 8
-}
-
-/**
- * Field styles for generator forms. The inputs themselves come from the Mantine theme;
- * these only add the generator's caps labels. Keys are kept for backwards compatibility.
- */
 export const generatorFieldStyles = {
     goldLabel: {
-        ...labelBase,
-        color: "var(--pg-gold)"
+        fontFamily: "Cinzel, Georgia, serif",
+        fontSize: "0.9rem",
+        letterSpacing: "0.1em",
+        textTransform: "uppercase" as const,
+        color: rgba(RAW_GOLD, 1),
+        marginBottom: 8
     },
     mutedLabel: {
-        ...labelBase,
-        color: "var(--pg-ink-3)"
+        fontFamily: "Cinzel, Georgia, serif",
+        fontSize: "0.82rem",
+        letterSpacing: "0.1em",
+        textTransform: "uppercase" as const,
+        color: rgba(RAW_GREY, 0.72),
+        marginBottom: 8
     },
     description: {
-        fontFamily: "var(--pg-font-body)",
-        fontSize: "0.78rem",
-        color: "var(--pg-ink-3)",
-        marginBottom: 6
+        fontFamily: "Inter, Segoe UI, sans-serif",
+        fontSize: "0.76rem",
+        color: rgba(RAW_GREY, 0.7),
+        marginBottom: 4
     },
     input: {
-        fontFamily: "var(--pg-font-body)"
+        background: "rgba(20, 16, 18, 0.82)",
+        borderColor: "rgba(125, 91, 72, 0.4)",
+        color: "rgba(244, 236, 232, 0.95)",
+        fontFamily: "Inter, Segoe UI, sans-serif"
     }
 } as const
 
@@ -125,48 +84,101 @@ export const GeneratorStepHero = ({
     description,
     secondaryDescription,
     maxWidth,
-    marginBottom = 26,
-    eyebrow,
-    titleTestId
+    mobileTitleSize = "1.95rem",
+    desktopTitleSize = "2.35rem",
+    marginBottom = 26
 }: GeneratorStepHeroProps) => (
-    <Box className={classes.hero} maw={maxWidth ?? 680} mb={marginBottom}>
-        {eyebrow === false ? null : <GeneratorStepEyebrow>{eyebrow}</GeneratorStepEyebrow>}
-        <h2 className={classes.heroTitle} data-testid={titleTestId}>
-            {leadText} <span className={classes.heroAccent}>{accentText}</span>
-        </h2>
-        <Ornament className={classes.heroOrnament} />
-        {description ? <p className={classes.heroDescription}>{description}</p> : null}
-        {secondaryDescription ? (
-            <p className={classes.heroSecondary}>{secondaryDescription}</p>
+    <Stack gap={6} align="center" mb={marginBottom}>
+        <Text
+            ta="center"
+            maw={maxWidth}
+            style={{
+                fontFamily: "Crimson Text, Georgia, serif",
+                fontSize: `clamp(${mobileTitleSize}, 4vw, ${desktopTitleSize})`,
+                lineHeight: 1.1,
+                color: "rgba(244, 236, 232, 0.95)"
+            }}
+        >
+            {leadText}{" "}
+            <span
+                style={{
+                    fontFamily: "Cinzel, Georgia, serif",
+                    letterSpacing: "0.05em",
+                    color: rgba(RAW_RED, 1)
+                }}
+            >
+                {accentText}
+            </span>
+        </Text>
+        {description ? (
+            <Text
+                ta="center"
+                maw={maxWidth}
+                style={{
+                    fontFamily: "Inter, Segoe UI, sans-serif",
+                    fontSize: "clamp(0.82rem, 2vw, 0.9rem)",
+                    letterSpacing: "0.04em",
+                    color: rgba(RAW_GREY, 0.5)
+                }}
+            >
+                {description}
+            </Text>
         ) : null}
-    </Box>
+        {secondaryDescription ? (
+            <Text
+                ta="center"
+                maw={maxWidth}
+                style={{
+                    fontFamily: "Inter, Segoe UI, sans-serif",
+                    fontSize: "0.76rem",
+                    letterSpacing: "0.05em",
+                    color: rgba(RAW_GREY, 0.36)
+                }}
+            >
+                {secondaryDescription}
+            </Text>
+        ) : null}
+    </Stack>
 )
 
 export const GeneratorSectionDivider = ({
     label,
-    lineHeight = 1,
-    titleSize = "0.88rem",
+    lineHeight = 2,
+    accentAlpha = 0.3,
+    titleSize = "0.95rem",
     marginY = "lg"
 }: GeneratorSectionDividerProps) => (
-    <Box my={marginY} className={classes.divider} role="separator" aria-label={label}>
-        <span className={classes.dividerRule} data-weight={lineHeight} />
-        <span className={classes.dividerLabel} style={{ fontSize: titleSize }}>
-            {label}
-        </span>
-        <span className={classes.dividerRule} data-side="end" data-weight={lineHeight} />
-    </Box>
-)
-
-const LevelPips = ({ level }: { level: number }) => (
-    <span className={classes.promptLevel} aria-hidden="true">
-        {Array.from({ length: 5 }, (_, index) => (
-            <span
-                key={index}
-                className={classes.promptPip}
-                data-empty={index >= level || undefined}
+    <Box my={marginY}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div
+                style={{
+                    flex: 1,
+                    height: `${lineHeight}px`,
+                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, accentAlpha)} 50%, transparent 100%)`
+                }}
             />
-        ))}
-    </span>
+            <Text
+                style={{
+                    fontFamily: "Cinzel, Georgia, serif",
+                    fontSize: titleSize,
+                    fontWeight: 600,
+                    letterSpacing: titleSize === "0.88rem" ? "0.2em" : "0.22em",
+                    textTransform: "uppercase",
+                    color: rgba(RAW_RED, 1),
+                    whiteSpace: "nowrap"
+                }}
+            >
+                {label}
+            </Text>
+            <div
+                style={{
+                    flex: 1,
+                    height: `${lineHeight}px`,
+                    background: `linear-gradient(90deg, transparent 0%, ${rgba(RAW_RED, accentAlpha)} 50%, transparent 100%)`
+                }}
+            />
+        </div>
+    </Box>
 )
 
 export const GeneratorPhasePrompt = ({
@@ -186,9 +198,20 @@ export const GeneratorPhasePrompt = ({
         // "Pick N" counter and active-line switch). Browser page-translation (Chrome, Safari,
         // Edge) rewrites text nodes out from under React, so those re-renders would otherwise
         // crash the reconciler with a DOMException (insertBefore/removeChild NotFoundError).
-        <Stack gap={4} align="center" mb={marginBottom} className="notranslate" translate="no">
-            <GeneratorStepEyebrow />
-            {caption ? <Text className={classes.promptCaption}>{caption}</Text> : null}
+        <Stack gap={6} align="center" mb={marginBottom} className="notranslate" translate="no">
+            {caption ? (
+                <Text
+                    ta="center"
+                    style={{
+                        fontFamily: "Inter, Segoe UI, sans-serif",
+                        fontSize: "0.78rem",
+                        letterSpacing: "0.06em",
+                        color: rgba(RAW_GREY, 0.42)
+                    }}
+                >
+                    {caption}
+                </Text>
+            ) : null}
             {lines.map((line) => {
                 const isActive = activeKey === line.key
                 const isPast = line.done && !isActive
@@ -208,10 +231,10 @@ export const GeneratorPhasePrompt = ({
                                 transform: shouldReduceMotion ? "none" : "translateY(4px)"
                             }}
                             animate={{
-                                opacity: isPast ? 0.6 : isActive ? 1 : 0.78,
+                                opacity: isPast ? 0.28 : isActive ? 1 : 0.5,
                                 transform: "none"
                             }}
-                            transition={{ duration: 0.16, ease: motionTokens.curve.out }}
+                            transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
                             style={{
                                 position: "absolute",
                                 inset: 0,
@@ -222,30 +245,58 @@ export const GeneratorPhasePrompt = ({
                         >
                             <Text
                                 ta="center"
-                                className={classes.promptLine}
-                                data-active={isActive || undefined}
-                                data-past={isPast || undefined}
                                 style={{
+                                    fontFamily: "Crimson Text, Georgia, serif",
                                     fontSize: isActive
                                         ? phoneScreen
                                             ? "1.15rem"
                                             : "1.45rem"
                                         : phoneScreen
                                           ? "0.95rem"
-                                          : "1.02rem"
+                                          : "1rem",
+                                    lineHeight: 1.1,
+                                    color: isActive
+                                        ? "rgba(244, 236, 232, 0.95)"
+                                        : rgba(RAW_GREY, 0.56),
+                                    transition: "color 160ms cubic-bezier(0.23, 1, 0.32, 1)"
                                 }}
                             >
                                 {isActive && showChevron ? (
-                                    <span className={classes.promptChevron}>{"›"}</span>
+                                    <span
+                                        style={{
+                                            fontFamily: "Cinzel, Georgia, serif",
+                                            color: rgba(RAW_RED, 1),
+                                            marginRight: "0.4rem"
+                                        }}
+                                    >
+                                        {"›"}
+                                    </span>
                                 ) : null}
                                 {line.prompt}{" "}
-                                <span className={classes.promptBold}>{line.bold}</span>{" "}
+                                <span
+                                    style={{
+                                        fontFamily: "Cinzel, Georgia, serif",
+                                        letterSpacing: "0.05em",
+                                        color: isActive ? rgba(RAW_RED, 1) : "inherit",
+                                        textDecoration: isPast ? "line-through" : "none"
+                                    }}
+                                >
+                                    {line.bold}
+                                </span>{" "}
                                 {line.suffix}
                                 {line.level ? (
-                                    <>
-                                        <LevelPips level={line.level} />
-                                        <VisuallyHidden>lvl {line.level}</VisuallyHidden>
-                                    </>
+                                    <span
+                                        style={{
+                                            marginLeft: "0.45rem",
+                                            fontFamily: "Inter, Segoe UI, sans-serif",
+                                            fontSize: phoneScreen ? "0.68rem" : "0.72rem",
+                                            letterSpacing: "0.11em",
+                                            textTransform: "uppercase",
+                                            opacity: isActive ? 0.72 : 0.5
+                                        }}
+                                    >
+                                        lvl {line.level}
+                                    </span>
                                 ) : null}
                             </Text>
                         </motion.div>
@@ -258,73 +309,16 @@ export const GeneratorPhasePrompt = ({
                 aria-hidden={!hasFooterText}
                 data-testid="generator-phase-prompt-footer"
                 ta="center"
-                className={classes.promptFooter}
-                style={{ visibility: hasFooterText ? "visible" : "hidden" }}
+                style={{
+                    fontFamily: "Inter, Segoe UI, sans-serif",
+                    fontSize: "0.78rem",
+                    letterSpacing: "0.06em",
+                    color: rgba(RAW_GREY, 0.42),
+                    visibility: hasFooterText ? "visible" : "hidden"
+                }}
             >
-                {hasFooterText ? footerText : " "}
+                {hasFooterText ? footerText : "\u00a0"}
             </Text>
         </Stack>
     )
 }
-
-// ---------------------------------------------------------------------------
-// Confirm button + footer: the one "advance" action every step shares.
-// ---------------------------------------------------------------------------
-
-export type GeneratorConfirmButtonProps = Omit<ButtonProps, "children"> & {
-    children?: ReactNode
-    onClick?: MouseEventHandler<HTMLButtonElement>
-    /** Disables the button and explains why on hover/focus. */
-    disabledReason?: ReactNode
-    /** Hide the trailing arrow (e.g. for a final/"Done" action). */
-    hideIcon?: boolean
-    "data-testid"?: string
-    type?: "button" | "submit"
-}
-
-/**
- * The generator's primary "Confirm"/"Continue" button: blood-to-violet fill, Cinzel caps,
- * trailing arrow. When `disabledReason` is set the button is disabled and a tooltip says why.
- */
-export const GeneratorConfirmButton = ({
-    children = "Confirm",
-    disabledReason,
-    disabled,
-    hideIcon,
-    className,
-    classNames,
-    type = "button",
-    ...others
-}: GeneratorConfirmButtonProps) => {
-    const isDisabled = disabled || Boolean(disabledReason)
-
-    return (
-        <DisabledReason reason={isDisabled ? disabledReason : undefined}>
-            <Button
-                type={type}
-                color="red"
-                size="md"
-                disabled={isDisabled}
-                rightSection={
-                    hideIcon ? undefined : (
-                        <IconArrowRight size={17} stroke={1.8} className={classes.confirmIcon} />
-                    )
-                }
-                className={[classes.confirmButton, className].filter(Boolean).join(" ")}
-                classNames={{ label: classes.confirmLabel, ...(classNames as object) }}
-                {...others}
-            >
-                {children}
-            </Button>
-        </DisabledReason>
-    )
-}
-
-/** Centered action row under a step (secondary actions left of the confirm button). */
-export const GeneratorStepFooter = ({
-    children,
-    className
-}: {
-    children: ReactNode
-    className?: string
-}) => <div className={[classes.stepFooter, className].filter(Boolean).join(" ")}>{children}</div>

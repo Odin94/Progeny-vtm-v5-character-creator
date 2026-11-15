@@ -1,7 +1,5 @@
 import { CharacterOperationError } from "~/utils/characterOperationError"
-import { Alert, Button, Modal, TextInput } from "@mantine/core"
-import { IconAlertTriangle, IconRestore, IconTrash } from "@tabler/icons-react"
-import classes from "./AppModals.module.css"
+import { Alert, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
@@ -160,17 +158,16 @@ export default function DeletedCharacterDraftModal() {
             closeOnEscape={false}
             centered
         >
-            <div className={classes.body}>
-                <p className={classes.lede}>
+            <Stack>
+                <Text>
                     The saved character for “{character.name}” no longer exists. This browser still
                     has its draft.
-                </p>
-                <p className={classes.note}>
+                </Text>
+                <Text>
                     Restore it as a new saved copy, or delete the local draft to start fresh.
-                </p>
+                </Text>
                 {!character.name.trim() && (
                     <TextInput
-                        data-autofocus
                         label="Character name"
                         value={restoreName}
                         onChange={(event) => setRestoreName(event.currentTarget.value)}
@@ -179,30 +176,24 @@ export default function DeletedCharacterDraftModal() {
                     />
                 )}
                 {failure && (
-                    <Alert color="red" role="alert" icon={<IconAlertTriangle size={16} />}>
+                    <Alert color="red" role="alert">
                         {failure}
                     </Alert>
                 )}
-                <hr className={classes.rule} />
-                <div className={classes.actions}>
+                <Group justify="flex-end">
                     <Button
                         color="red"
-                        variant="light"
-                        leftSection={<IconTrash size={16} />}
+                        variant="outline"
                         disabled={pending}
                         onClick={() => recover("delete")}
                     >
                         Delete local draft
                     </Button>
-                    <Button
-                        leftSection={<IconRestore size={16} />}
-                        loading={pending}
-                        onClick={() => recover("restore")}
-                    >
+                    <Button loading={pending} onClick={() => recover("restore")}>
                         Restore character
                     </Button>
-                </div>
-            </div>
+                </Group>
+            </Stack>
         </Modal>
     )
 }

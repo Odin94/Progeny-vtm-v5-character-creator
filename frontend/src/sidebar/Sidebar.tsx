@@ -1,18 +1,19 @@
-import { Box, Button, FileButton, Modal, ScrollArea, Stack, Text } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
 import {
-    IconChevronRight,
-    IconDownload,
-    IconFilePlus,
-    IconFileUpload,
-    IconPlus,
-    IconUser
-} from "@tabler/icons-react"
-import { useEffect, useState, type CSSProperties } from "react"
-import { Panel, useContextMenu } from "~/components/ui"
-import { getPrimaryColor } from "~/character_sheet/utils/style"
-import { clans } from "../data/Clans"
-import classes from "./components/Dossier.module.css"
+    Box,
+    Button,
+    Center,
+    FileButton,
+    Group,
+    Modal,
+    Paper,
+    ScrollArea,
+    Stack,
+    Text
+} from "@mantine/core"
+import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { notifications } from "@mantine/notifications"
+import { IconChevronRight, IconFilePlus, IconFileUpload, IconUser } from "@tabler/icons-react"
+import { useEffect, useState } from "react"
 import { Character } from "../data/Character"
 import { notDefault } from "../generator/utils"
 import AttributesDisplay from "./components/AttributesDisplay"
@@ -43,6 +44,7 @@ const Sidebar = ({
     onLoadSavedCharacter,
     onCreateCharacter
 }: SidebarProps) => {
+    const height = globals.viewportHeightPx
     const phoneScreen = globals.isPhoneScreen
     const { isAuthenticated } = useAuth()
     const { data: characters, isLoading: charactersLoading } = useCharacters(isAuthenticated)
@@ -101,253 +103,293 @@ const Sidebar = ({
         }
     }
 
+    const actionButtonStyles = {
+        root: {
+            minHeight: 42,
+            justifyContent: "center",
+            borderColor: rgba(RAW_RED, 0.4),
+            background: rgba(RAW_RED, 0.08),
+            boxShadow: "none",
+            transition:
+                "background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            fontFamily: "Cinzel, Georgia, serif",
+            fontSize: "0.76rem",
+            color: "rgba(244, 236, 232, 0.95)",
+            "&:hover": {
+                borderColor: "rgba(250, 82, 82, 0.85)",
+                background: rgba(RAW_RED, 0.24),
+                boxShadow: `0 0 0 1px ${rgba(RAW_RED, 0.22)}, 0 0 18px ${rgba(RAW_RED, 0.18)}, 0 10px 24px ${rgba(RAW_RED, 0.18)}`,
+                transform: "translateY(-1px) scale(1.01)"
+            }
+        },
+        section: {
+            color: rgba(RAW_RED, 1)
+        },
+        label: {
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
+        }
+    } as const
+
     const activeCharacterLabel =
         characterOptions.find((candidate) => candidate.value === selectedCharacterId)?.label ||
         (character.name.trim() ? character.name : "Switch Character")
-
-    const contextMenu = useContextMenu()
-
-    const createCharacter = async () => {
-        try {
-            setIsLoadingSelectedCharacter(true)
-            await onCreateCharacter()
-            setSwitchCharacterModalOpened(false)
-        } catch (error) {
-            if (
-                !(
-                    error instanceof Error &&
-                    "alreadyNotified" in error &&
-                    error.alreadyNotified === true
-                )
-            ) {
-                notifications.show({
-                    title: "Error creating character",
-                    message:
-                        error instanceof Error ? error.message : "Failed to create a new character",
-                    color: "red"
-                })
-            }
-        } finally {
-            setIsLoadingSelectedCharacter(false)
-        }
-    }
-
-    const loadCharacter = async (characterId: string) => {
-        await handleSelectCharacter(characterId)
-        setSwitchCharacterModalOpened(false)
-    }
-
-    const clanName = character.homebrewClan?.name || character.clan
-    const officialClan = character.clan && !character.homebrewClan ? character.clan : null
-    const clanColor = officialClan
-        ? `var(--mantine-color-${getPrimaryColor(officialClan)}-${getPrimaryColor(officialClan) === "gray" ? 3 : 5})`
-        : "var(--mantine-color-grape-5)"
-    const hasName = character.name.trim() !== ""
 
     return (
         <>
             <Modal
                 opened={switchCharacterModalOpened}
                 onClose={() => setSwitchCharacterModalOpened(false)}
-                title="Switch Character"
+                title=""
                 centered
+                overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+                styles={{
+                    content: {
+                        border: "1px solid rgba(125, 91, 72, 0.38)",
+                        background:
+                            "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
+                        boxShadow:
+                            "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
+                    },
+                    body: {
+                        padding: phoneScreen ? "1.1rem" : "1.35rem"
+                    }
+                }}
             >
                 <Stack gap="md">
-                    <Text ta="center" c="dimmed" ff="var(--pg-font-lore)" fz="md">
-                        Choose one of your saved characters to load into the generator.
-                    </Text>
+                    <Stack gap={6} align="center">
+                        <Text
+                            ta="center"
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                fontSize: phoneScreen ? "1.2rem" : "1.35rem",
+                                letterSpacing: "0.08em",
+                                textTransform: "uppercase",
+                                color: "rgba(244, 236, 232, 0.95)"
+                            }}
+                        >
+                            Switch Character
+                        </Text>
+                        <Text
+                            ta="center"
+                            style={{
+                                fontFamily: "Inter, Segoe UI, sans-serif",
+                                fontSize: "0.9rem",
+                                color: rgba(RAW_GREY, 0.62)
+                            }}
+                        >
+                            Choose one of your saved characters to load into the generator.
+                        </Text>
+                    </Stack>
 
                     <ScrollArea.Autosize mah={phoneScreen ? 320 : 420} type="auto">
-                        <Stack gap="xs">
-                            <Panel tone="raised" p="sm">
-                                <div className={classes.characterRow}>
+                        <Stack gap="sm">
+                            <Paper
+                                p="sm"
+                                withBorder
+                                style={{
+                                    borderColor: "rgba(125, 91, 72, 0.32)",
+                                    background:
+                                        "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)"
+                                }}
+                            >
+                                <Group justify="space-between" align="center" wrap="nowrap">
                                     <Box style={{ minWidth: 0 }}>
-                                        <div className={classes.characterName}>New Character</div>
-                                        <div className={classes.characterMeta}>
+                                        <Text
+                                            style={{
+                                                fontFamily: "Cinzel, Georgia, serif",
+                                                fontSize: "0.92rem",
+                                                letterSpacing: "0.06em",
+                                                textTransform: "uppercase",
+                                                color: "rgba(244, 236, 232, 0.95)"
+                                            }}
+                                        >
+                                            New Character
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
                                             Start a fresh character at the clan step
-                                        </div>
+                                        </Text>
                                     </Box>
                                     <Button
                                         size="xs"
-                                        variant="default"
-                                        leftSection={<IconPlus size={14} />}
+                                        variant="outline"
+                                        color="red"
                                         disabled={isLoadingSelectedCharacter}
-                                        onClick={createCharacter}
+                                        onClick={async () => {
+                                            try {
+                                                setIsLoadingSelectedCharacter(true)
+                                                await onCreateCharacter()
+                                                setSwitchCharacterModalOpened(false)
+                                            } catch (error) {
+                                                if (
+                                                    !(
+                                                        error instanceof Error &&
+                                                        "alreadyNotified" in error &&
+                                                        error.alreadyNotified === true
+                                                    )
+                                                ) {
+                                                    notifications.show({
+                                                        title: "Error creating character",
+                                                        message:
+                                                            error instanceof Error
+                                                                ? error.message
+                                                                : "Failed to create a new character",
+                                                        color: "red"
+                                                    })
+                                                }
+                                            } finally {
+                                                setIsLoadingSelectedCharacter(false)
+                                            }
+                                        }}
+                                        styles={actionButtonStyles}
                                     >
                                         Create
                                     </Button>
-                                </div>
-                            </Panel>
+                                </Group>
+                            </Paper>
                             {characterOptions.map((option) => {
                                 const isActive = option.value === selectedCharacterId
 
                                 return (
-                                    <Panel
+                                    <Paper
                                         key={option.value}
-                                        tone="raised"
                                         p="sm"
-                                        selected={isActive}
-                                        onContextMenu={(event: React.MouseEvent) =>
-                                            contextMenu.open(event, [
-                                                {
-                                                    key: "load",
-                                                    label: isActive ? "Loaded" : "Load",
-                                                    icon: <IconDownload size={14} />,
-                                                    disabled:
-                                                        isActive || isLoadingSelectedCharacter,
-                                                    onClick: () => loadCharacter(option.value)
-                                                }
-                                            ])
-                                        }
+                                        withBorder
+                                        style={{
+                                            borderColor: isActive
+                                                ? rgba(RAW_RED, 0.45)
+                                                : "rgba(125, 91, 72, 0.32)",
+                                            background: isActive
+                                                ? "linear-gradient(180deg, rgba(58, 18, 22, 0.9) 0%, rgba(32, 14, 17, 0.96) 100%)"
+                                                : "linear-gradient(180deg, rgba(30, 21, 24, 0.78) 0%, rgba(18, 13, 16, 0.92) 100%)",
+                                            boxShadow: isActive
+                                                ? `0 12px 24px ${rgba(RAW_RED, 0.14)}`
+                                                : "none"
+                                        }}
                                     >
-                                        <div className={classes.characterRow}>
+                                        <Group justify="space-between" align="center" wrap="nowrap">
                                             <Box style={{ minWidth: 0 }}>
-                                                <div className={classes.characterName}>
+                                                <Text
+                                                    style={{
+                                                        fontFamily: "Cinzel, Georgia, serif",
+                                                        fontSize: "0.92rem",
+                                                        letterSpacing: "0.06em",
+                                                        textTransform: "uppercase",
+                                                        color: "rgba(244, 236, 232, 0.95)"
+                                                    }}
+                                                >
                                                     {option.label}
-                                                </div>
-                                                <div className={classes.characterMeta}>
+                                                </Text>
+                                                <Text size="xs" c="dimmed">
                                                     {isActive
                                                         ? "Currently loaded"
                                                         : "Load this character"}
-                                                </div>
+                                                </Text>
                                             </Box>
                                             <Button
                                                 size="xs"
-                                                variant={isActive ? "light" : "default"}
-                                                color={isActive ? "grape" : undefined}
+                                                variant={isActive ? "light" : "outline"}
+                                                color="red"
                                                 disabled={isLoadingSelectedCharacter}
                                                 loading={
                                                     isLoadingSelectedCharacter &&
                                                     option.value === selectedCharacterId
                                                 }
-                                                onClick={() => loadCharacter(option.value)}
+                                                onClick={async () => {
+                                                    await handleSelectCharacter(option.value)
+                                                    setSwitchCharacterModalOpened(false)
+                                                }}
+                                                styles={actionButtonStyles}
                                             >
                                                 {isActive ? "Loaded" : "Load"}
                                             </Button>
-                                        </div>
-                                    </Panel>
+                                        </Group>
+                                    </Paper>
                                 )
                             })}
                         </Stack>
                     </ScrollArea.Autosize>
                 </Stack>
-                {contextMenu.menu}
             </Modal>
 
-            <div className={classes.root}>
-                <div className={classes.actions}>
-                    <FileButton onChange={onLoadFromFile} accept="application/json">
-                        {(props) => (
+            <ScrollArea h={height - 60} type="never">
+                <Stack>
+                    <Stack gap="xs">
+                        <FileButton onChange={onLoadFromFile} accept="application/json">
+                            {(props) => (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    leftSection={<IconFileUpload size={16} />}
+                                    styles={actionButtonStyles}
+                                    {...props}
+                                >
+                                    Load From File
+                                </Button>
+                            )}
+                        </FileButton>
+                        {showCharacterSelect ? (
                             <Button
                                 size="sm"
-                                variant="default"
-                                fullWidth
-                                leftSection={<IconFileUpload size={16} />}
-                                {...props}
-                            >
-                                Load From File
-                            </Button>
-                        )}
-                    </FileButton>
-                    {showCharacterSelect ? (
-                        <Button
-                            size="sm"
-                            variant="default"
-                            fullWidth
-                            leftSection={
-                                characterOptions.length > 0 ? (
-                                    <IconUser size={16} />
-                                ) : (
-                                    <IconFilePlus size={16} />
-                                )
-                            }
-                            rightSection={<IconChevronRight size={14} />}
-                            disabled={charactersLoading || isLoadingSelectedCharacter}
-                            loading={charactersLoading}
-                            justify="space-between"
-                            styles={{
-                                label: {
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap"
+                                variant="outline"
+                                leftSection={
+                                    characterOptions.length > 0 ? (
+                                        <IconUser size={16} />
+                                    ) : (
+                                        <IconFilePlus size={16} />
+                                    )
                                 }
-                            }}
-                            onClick={() => setSwitchCharacterModalOpened(true)}
-                        >
-                            {activeCharacterLabel}
-                        </Button>
-                    ) : null}
-                </div>
-
-                <ScrollArea className={classes.scroll} type="hover" scrollbarSize={8}>
-                    <div className={classes.dossier}>
-                        {notDefault(character, "clan") || clanName ? (
-                            <div
-                                className={classes.identity}
-                                style={{ "--clan": clanColor } as CSSProperties}
+                                rightSection={<IconChevronRight size={14} />}
+                                disabled={charactersLoading || isLoadingSelectedCharacter}
+                                loading={charactersLoading}
+                                justify="space-between"
+                                styles={actionButtonStyles}
+                                onClick={() => setSwitchCharacterModalOpened(true)}
                             >
-                                {officialClan ? (
-                                    <span className={classes.sigilWrap}>
-                                        <span
-                                            className={classes.sigil}
-                                            style={
-                                                {
-                                                    "--sigil": `url("${clans[officialClan].logo}")`
-                                                } as CSSProperties
-                                            }
-                                            aria-hidden="true"
-                                        />
-                                    </span>
-                                ) : null}
-                                <span
-                                    className={classes.name}
-                                    data-placeholder={!hasName || undefined}
-                                >
-                                    {hasName ? character.name : "Unnamed"}
-                                </span>
-                                <span className={classes.lineage}>
-                                    <b>{clanName}</b>
-                                    {notDefault(character, "generation")
-                                        ? ` · ${character.generation}th gen.`
-                                        : null}
-                                    {notDefault(character, "predatorType")
-                                        ? ` · ${character.predatorType.name}`
-                                        : null}
-                                </span>
-                            </div>
-                        ) : (
-                            <Text className={classes.muted} ta="center" py="lg">
-                                Pick a clan to begin.
-                            </Text>
-                        )}
-                        {notDefault(character, "name") ? (
-                            <BasicsDisplay character={character} />
+                                {activeCharacterLabel}
+                            </Button>
                         ) : null}
-                        {notDefault(character, "attributes") ? (
-                            <AttributesDisplay attributes={character.attributes} />
-                        ) : null}
-                        {notDefault(character, "skills") ? (
-                            <SkillDisplay skills={character.skills} />
-                        ) : null}
-                        {notDefault(character, "disciplines") ? (
-                            <DisciplineDisplay
-                                powers={character.disciplines}
-                                rituals={character.rituals}
-                                ceremonies={character.ceremonies}
-                            />
-                        ) : null}
-                        {notDefault(character, "touchstones") ? (
-                            <TouchstoneDisplay touchstones={character.touchstones} />
-                        ) : null}
-                        {notDefault(character, "merits") || notDefault(character, "flaws") ? (
-                            <MeritsAndFlawsDisplay
-                                merits={character.merits}
-                                flaws={character.flaws}
-                            />
-                        ) : null}
-                    </div>
-                </ScrollArea>
-            </div>
+                    </Stack>
+                    {notDefault(character, "clan") ? (
+                        <Center>
+                            <Text fz="xl">{character.clan}</Text>
+                        </Center>
+                    ) : null}
+                    {notDefault(character, "name") ? <BasicsDisplay character={character} /> : null}
+                    {notDefault(character, "attributes") ? (
+                        <AttributesDisplay attributes={character.attributes} />
+                    ) : null}
+                    {notDefault(character, "skills") ? (
+                        <SkillDisplay skills={character.skills} />
+                    ) : null}
+                    {notDefault(character, "generation") ? (
+                        <Text>
+                            <b>Generation:</b> {character.generation}
+                        </Text>
+                    ) : null}
+                    {notDefault(character, "predatorType") ? (
+                        <Text>
+                            <b>Predator Type:</b> {character.predatorType.name}
+                        </Text>
+                    ) : null}
+                    {notDefault(character, "disciplines") ? (
+                        <DisciplineDisplay
+                            powers={character.disciplines}
+                            rituals={character.rituals}
+                            ceremonies={character.ceremonies}
+                        />
+                    ) : null}
+                    {notDefault(character, "touchstones") ? (
+                        <TouchstoneDisplay touchstones={character.touchstones} />
+                    ) : null}
+                    {notDefault(character, "merits") || notDefault(character, "flaws") ? (
+                        <MeritsAndFlawsDisplay merits={character.merits} flaws={character.flaws} />
+                    ) : null}
+                </Stack>
+            </ScrollArea>
         </>
     )
 }

@@ -1,5 +1,5 @@
+import { Group } from "@mantine/core"
 import { memo } from "react"
-import classes from "./pips.module.css"
 import { SheetOptions } from "../CharacterSheet"
 import SquarePipButton from "./SquarePipButton"
 
@@ -52,7 +52,7 @@ const HumanityStainsPips = ({
     const disabledReason = getDisabledReason()
 
     return (
-        <div className={classes.track} data-align="end">
+        <Group gap={4} justify="flex-end">
             {Array.from({ length: maxLevel }, (_, index) => {
                 const reversedIndex = maxLevel - 1 - index
                 const isFilled = reversedIndex < value
@@ -62,13 +62,12 @@ const HumanityStainsPips = ({
                         key={index}
                         onClick={disabledReason ? undefined : () => handlePipClick(index)}
                         damageState={isFilled ? "superficial" : "none"}
-                        color="red"
+                        color={options?.primaryColor || "grape"}
                         disabledReason={disabledReason}
-                        label={`Stain ${reversedIndex + 1}`}
                     />
                 )
             })}
-        </div>
+        </Group>
     )
 }
 

@@ -1,4 +1,4 @@
-import { Button, CloseButton, Group, Text } from "@mantine/core"
+import { Button, CloseButton, Group, Paper, Text } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import posthog from "posthog-js"
@@ -17,8 +17,6 @@ import {
     type SupportConversationSource
 } from "~/utils/supportConversations"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { Panel } from "./ui/Panel"
-import classes from "./CookiesBanner.module.css"
 
 const LEARN_MORE_HREF = "https://odin-matthias.de/datenschutzerklaerung"
 
@@ -123,34 +121,38 @@ export const CookiesBanner = () => {
                         opacity: 0,
                         transform: shouldReduceMotion
                             ? "translateX(-50%)"
-                            : "translateX(-50%) translateY(12px)",
-                        transition: { duration: 0.14, ease: [0.55, 0.055, 0.675, 0.19] }
+                            : "translateX(-50%) translateY(12px)"
                     }}
                     transition={{
                         duration: shouldReduceMotion ? 0.12 : 0.18,
                         ease: [0.23, 1, 0.32, 1]
                     }}
-                    className={classes.root}
-                    data-mobile={isMobile || undefined}
+                    style={{
+                        position: "fixed",
+                        bottom: "1rem",
+                        left: isMobile ? "50%" : "25%",
+                        zIndex: 2500,
+                        maxWidth: "400px",
+                        width: "calc(100% - 2rem)"
+                    }}
                 >
-                    <Panel tone="ornate" p="lg" radius="lg" grain>
-                        <Group justify="space-between" align="flex-start" wrap="nowrap" mb={6}>
-                            <Group gap={10} align="center" wrap="nowrap">
-                                <IconCookie size={22} stroke={1.5} className={classes.icon} />
-                                <Text className={classes.title}>
+                    <Paper withBorder p="lg" radius="md" shadow="md">
+                        <Group justify="space-between" mb="xs">
+                            <Group gap="xs" align="center">
+                                <Text fz="md" fw={500}>
                                     Sink your fangs into some cookies!
                                 </Text>
+                                <IconCookie size={25} />
                             </Group>
                             <CloseButton
-                                mr={-8}
-                                mt={-6}
-                                size="sm"
+                                mr={-9}
+                                mt={-9}
                                 aria-label="Close cookie banner"
                                 data-testid="cookie-banner-close"
                                 onClick={handleClose}
                             />
                         </Group>
-                        <Text className={classes.body}>
+                        <Text c="dimmed" fz="xs">
                             I use cookies to get better insights on usage patterns, which helps me
                             improve Progeny for everyone.
                             <br /> More info:{" "}
@@ -158,21 +160,21 @@ export const CookiesBanner = () => {
                                 href={LEARN_MORE_HREF}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={classes.link}
+                                className="text-primary underline underline-offset-4 hover:no-underline"
                             >
                                 privacy policy
                             </a>
                             .
                         </Text>
-                        <Group justify="flex-end" mt="md" gap="sm">
-                            <Button variant="default" size="sm" onClick={handleDecline}>
+                        <Group justify="space-between" mt="lg" gap={"xl"}>
+                            <Button variant="light" size="sm" color="gray" onClick={handleDecline}>
                                 Decline
                             </Button>
                             <Button variant="filled" size="sm" color="grape" onClick={handleAccept}>
                                 Accept
                             </Button>
                         </Group>
-                    </Panel>
+                    </Paper>
                 </motion.div>
             ) : null}
         </AnimatePresence>

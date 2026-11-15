@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { lazy, Suspense } from "react"
-import { RouteFallback } from "~/components/ui/RouteFallback"
 import RenderProfiler from "~/components/RenderProfiler"
 
 const CoteriePage = lazy(() => import("~/pages/CoteriePage"))
@@ -14,7 +13,7 @@ function Coterie() {
 
     return (
         <RenderProfiler id="CoteriePage">
-            <Suspense fallback={<RouteFallback />}>
+            <Suspense fallback={null}>
                 <CoteriePage coterieId={coterieId} />
             </Suspense>
         </RenderProfiler>

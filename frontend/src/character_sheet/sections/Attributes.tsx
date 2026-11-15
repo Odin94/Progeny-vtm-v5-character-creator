@@ -1,4 +1,4 @@
-import { Group } from "@mantine/core"
+import { Box, Grid, Group, Paper, Text, Title } from "@mantine/core"
 import { memo } from "react"
 import { attributesKeySchema, AttributesKey } from "~/data/Attributes"
 import { upcase } from "~/generator/utils"
@@ -7,8 +7,8 @@ import { SheetOptions } from "../CharacterSheet"
 import { useCharacterSheetStore } from "../stores/characterSheetStore"
 import { useDiceRollModalStore } from "../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import { sheetSurfaceStyle } from "../utils/style"
 import { getAvailableXP } from "../utils/xp"
-import classes from "../sheet.module.css"
 
 type AttributesProps = {
     options: SheetOptions
@@ -17,9 +17,16 @@ type AttributesProps = {
 type AttributeRowProps = {
     attribute: AttributesKey
     options: SheetOptions
+    textStyle: React.CSSProperties
 }
 
-const AttributeRow = ({ attribute, options }: AttributeRowProps) => {
+const attributeTextStyle: React.CSSProperties = {
+    fontFamily: "Inter, Segoe UI, sans-serif",
+    fontWeight: 600,
+    fontSize: "0.95rem"
+}
+
+const AttributeRow = ({ attribute, options, textStyle }: AttributeRowProps) => {
     const { character } = options
     const { isSelected, updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
@@ -77,38 +84,41 @@ const AttributeRow = ({ attribute, options }: AttributeRowProps) => {
     }
 
     return (
-        // Mantine Group (restyled as a grid by `.traitRow`) keeps the row addressable as a
-        // `.mantine-Group-root`, which the e2e pip-feedback specs rely on.
         <Group
-            gap={0}
-            wrap="nowrap"
-            className={classes.traitRow}
-            data-selected={isSelected || undefined}
+            justify="space-between"
+            mb="xs"
+            style={{
+                width: "100%",
+                minWidth: 0,
+                padding: "0.4rem 0.5rem",
+                cursor: "pointer",
+                borderRadius: "var(--mantine-radius-sm)",
+                backgroundColor: isSelected
+                    ? `var(--mantine-color-${options.primaryColor}-light)`
+                    : "transparent",
+                transition: "background-color 0.2s"
+            }}
             onClick={() => {
                 if (useDiceRollModalStore.getState().opened) {
                     handleAttributeClick(attribute)
                 }
             }}
         >
-            <p
-                className={classes.traitName}
+            <Text
+                style={{ ...textStyle, cursor: "pointer" }}
                 onClick={(event) => {
                     event.stopPropagation()
                     handleAttributeClick(attribute)
                 }}
             >
                 {upcase(attribute)}
-            </p>
-            <span className={classes.leader} aria-hidden="true" />
-            <div className={classes.traitPips}>
-                <Pips
-                    level={character.attributes[attribute]}
-                    minLevel={1}
-                    options={options}
-                    field={`attributes.${attribute}`}
-                    label={upcase(attribute)}
-                />
-            </div>
+            </Text>
+            <Pips
+                level={character.attributes[attribute]}
+                minLevel={1}
+                options={options}
+                field={`attributes.${attribute}`}
+            />
         </Group>
     )
 }
@@ -130,30 +140,55 @@ const MemoizedAttributeRow = memo(AttributeRow, (prev, next) => {
     )
 })
 
-const attributeGroups: Array<{ title: string; attributes: string[] }> = [
-    { title: "Physical", attributes: ["strength", "dexterity", "stamina"] },
-    { title: "Social", attributes: ["charisma", "manipulation", "composure"] },
-    { title: "Mental", attributes: ["intelligence", "wits", "resolve"] }
-]
+const Attributes = ({ options }: AttributesProps) => {
+    const renderAttributeRow = (attribute: AttributesKey) => {
+        return (
+            <MemoizedAttributeRow
+                key={attribute}
+                attribute={attribute}
+                options={options}
+                textStyle={attributeTextStyle}
+            />
+        )
+    }
 
-const Attributes = ({ options }: AttributesProps) => (
-    <div className={classes.triad}>
-        {attributeGroups.map(({ title, attributes }) => (
-            <div key={title} className={classes.column}>
-                <h3 className={classes.columnTitle}>{title}</h3>
-                {attributes
-                    .map((a) => attributesKeySchema.parse(a))
-                    .map((attribute) => (
-                        <MemoizedAttributeRow
-                            key={attribute}
-                            attribute={attribute}
-                            options={options}
-                        />
-                    ))}
-            </div>
-        ))}
-    </div>
-)
+    return (
+        <Box>
+            <Grid>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
+                        <Title order={4} mb={3} c="dimmed">
+                            PHYSICAL
+                        </Title>
+                        {["strength", "dexterity", "stamina"]
+                            .map((a) => attributesKeySchema.parse(a))
+                            .map(renderAttributeRow)}
+                    </Paper>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
+                        <Title order={4} mb={3} c="dimmed">
+                            SOCIAL
+                        </Title>
+                        {["charisma", "manipulation", "composure"]
+                            .map((a) => attributesKeySchema.parse(a))
+                            .map(renderAttributeRow)}
+                    </Paper>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Paper p="md" style={{ ...sheetSurfaceStyle, border: "none" }}>
+                        <Title order={4} mb={3} c="dimmed">
+                            MENTAL
+                        </Title>
+                        {["intelligence", "wits", "resolve"]
+                            .map((a) => attributesKeySchema.parse(a))
+                            .map(renderAttributeRow)}
+                    </Paper>
+                </Grid.Col>
+            </Grid>
+        </Box>
+    )
+}
 
 export default memo(Attributes, (prev, next) => {
     return (

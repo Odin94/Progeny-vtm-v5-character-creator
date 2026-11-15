@@ -1,15 +1,13 @@
-import { Burger, Button, Kbd, Text, Tooltip, UnstyledButton } from "@mantine/core"
+import { Anchor, Box, Burger, Button, Container, Group, Text } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
-import { IconLogout, IconSearch, IconUserShield } from "@tabler/icons-react"
+import { IconLogout, IconUserShield } from "@tabler/icons-react"
 import { Link, useLocation, useNavigate } from "@tanstack/react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { RAW_GREY, rgba } from "~/theme/colors"
 import { useAuth } from "~/hooks/useAuth"
 import { globals } from "~/globals"
 import { api, type AdminUser } from "~/utils/api"
 import { refreshIdentityBoundQueries } from "~/utils/impersonation"
-import { quickNavigator } from "./QuickNavigator"
-import { BrandMark } from "./ui/BrandMark"
-import classes from "./AppTopbar.module.css"
 
 export type AppTopbarProps = {
     asideBar?: {
@@ -21,9 +19,6 @@ export type AppTopbarProps = {
 const getUserLabel = (user: AdminUser) =>
     user.nickname || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
 
-const isMacPlatform = () =>
-    typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "")
-
 const AppTopbar = ({ asideBar }: AppTopbarProps) => {
     const navigate = useNavigate()
     const location = useLocation()
@@ -33,6 +28,9 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
     const impersonation = user?.impersonation
     const isImpersonating = !!impersonation?.active
     const canUseAdminTools = user?.actorIsSuperadmin && !isImpersonating
+    const navTextColor = isImpersonating
+        ? "#261700"
+        : "var(--landing-text, rgba(244, 236, 232, 0.9))"
 
     const stopMutation = useMutation({
         mutationFn: () => api.stopImpersonation(),
@@ -53,12 +51,17 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
         }
     })
 
+    const navLinkStyle = {
+        fontFamily: "Inter, Segoe UI, sans-serif",
+        fontSize: "0.78rem",
+        letterSpacing: "0.08em",
+        textTransform: "uppercase" as const,
+        color: navTextColor
+    }
     const isSheetPage = location.pathname === "/sheet"
     const creatorNavLink = isSheetPage
         ? ({ to: "/create", label: "Generator" } as const)
         : ({ to: "/sheet", label: "Sheet" } as const)
-    const isAccountPage = location.pathname === "/me"
-    const isAdminPage = location.pathname.startsWith("/admin")
 
     const handleAccountClick = (e: React.MouseEvent) => {
         e.preventDefault()
@@ -70,94 +73,104 @@ const AppTopbar = ({ asideBar }: AppTopbarProps) => {
     }
 
     return (
-        <div className={classes.bar} data-impersonating={isImpersonating || undefined}>
-            <div className={classes.inner}>
-                <Link to="/" className={classes.brand} aria-label="Progeny home">
-                    <BrandMark size={22} className={classes.brandMark} />
-                    <span className={classes.wordmark}>Progeny</span>
-                </Link>
-
-                <nav className={classes.nav} aria-label="Main">
-                    <Link to={creatorNavLink.to} className={classes.navLink}>
-                        {creatorNavLink.label}
-                    </Link>
-                    <a
-                        href="#"
-                        onClick={handleAccountClick}
-                        aria-disabled={isSigningIn}
-                        className={classes.navLink}
-                        data-active={isAccountPage || undefined}
-                        data-pending={isSigningIn || undefined}
-                    >
-                        {isAuthenticated ? "Account" : isSigningIn ? "Signing in…" : "Sign in"}
-                    </a>
-                    {canUseAdminTools ? (
-                        <Link
-                            to="/admin"
-                            search={{ tab: "users" }}
-                            className={classes.navLink}
-                            data-active={isAdminPage || undefined}
-                        >
-                            Admin
-                        </Link>
-                    ) : null}
-
-                    {impersonation?.active ? (
-                        <div className={classes.impersonation}>
-                            {!smallScreen ? (
-                                <Text size="xs" fw={700} className={classes.impersonationLabel}>
-                                    <IconUserShield size={14} />
-                                    {getUserLabel(impersonation.impersonatedUser)}
-                                </Text>
-                            ) : null}
-                            <Button
-                                size="xs"
-                                variant="filled"
-                                color="dark"
-                                leftSection={<IconLogout size={14} />}
-                                loading={stopMutation.isPending}
-                                onClick={() => stopMutation.mutate()}
-                                className={classes.stopButton}
-                            >
-                                Stop
-                            </Button>
-                        </div>
-                    ) : null}
-
-                    <Tooltip
-                        label={
-                            <span className={classes.searchTooltip}>
-                                Quick navigation <Kbd>{isMacPlatform() ? "⌘" : "Ctrl"}</Kbd>
-                                <Kbd>K</Kbd>
-                            </span>
-                        }
-                        position="bottom-end"
-                    >
-                        <UnstyledButton
-                            className={classes.searchTrigger}
-                            onClick={() => quickNavigator.open()}
-                            aria-label="Open quick navigation"
-                        >
-                            <IconSearch size={16} stroke={1.8} />
-                            <span className={classes.searchKbd} aria-hidden="true">
-                                {isMacPlatform() ? "⌘K" : "Ctrl K"}
-                            </span>
-                        </UnstyledButton>
-                    </Tooltip>
-
-                    {asideBar && smallScreen && (
-                        <Burger
-                            opened={asideBar.show}
-                            onClick={asideBar.onToggle}
-                            aria-label={asideBar.show ? "Close side bar" : "Open side bar"}
+        <Box h="100%" bg={isImpersonating ? "#f2c94c" : "transparent"}>
+            <Container size="lg" py="md" px="md" h="100%">
+                <Group justify="space-between" align="center" h="100%" wrap="nowrap">
+                    <Anchor component={Link} to="/" underline="never">
+                        <Text
                             size="sm"
-                            color={isImpersonating ? "#261700" : "var(--pg-ink-2)"}
-                            className={classes.burger}
-                        />
-                    )}
-                </nav>
-            </div>
-        </div>
+                            style={{
+                                fontFamily: "Cinzel, Georgia, serif",
+                                letterSpacing: "0.18em",
+                                textTransform: "uppercase",
+                                color: navTextColor
+                            }}
+                        >
+                            Progeny
+                        </Text>
+                    </Anchor>
+
+                    <Group gap="md" align="center" wrap="nowrap">
+                        <Anchor
+                            component={Link}
+                            to={creatorNavLink.to}
+                            underline="never"
+                            style={navLinkStyle}
+                        >
+                            {creatorNavLink.label}
+                        </Anchor>
+                        <Anchor
+                            href="#"
+                            underline="never"
+                            onClick={handleAccountClick}
+                            aria-disabled={isSigningIn}
+                            style={
+                                isSigningIn
+                                    ? { ...navLinkStyle, opacity: 0.6, pointerEvents: "none" }
+                                    : navLinkStyle
+                            }
+                        >
+                            {isAuthenticated ? "Account" : isSigningIn ? "Signing in…" : "Sign in"}
+                        </Anchor>
+                        {canUseAdminTools ? (
+                            <Anchor
+                                component={Link}
+                                to="/admin"
+                                underline="never"
+                                style={navLinkStyle}
+                            >
+                                Admin
+                            </Anchor>
+                        ) : null}
+                        {impersonation?.active ? (
+                            <Group gap="xs" wrap="nowrap">
+                                {!smallScreen ? (
+                                    <Text
+                                        size="xs"
+                                        fw={700}
+                                        style={{
+                                            color: navTextColor,
+                                            fontFamily: "Inter, Segoe UI, sans-serif",
+                                            textTransform: "uppercase",
+                                            whiteSpace: "nowrap"
+                                        }}
+                                    >
+                                        <IconUserShield size={14} style={{ verticalAlign: -2 }} />{" "}
+                                        {getUserLabel(impersonation.impersonatedUser)}
+                                    </Text>
+                                ) : null}
+                                <Button
+                                    size="xs"
+                                    variant="filled"
+                                    color="dark"
+                                    leftSection={<IconLogout size={14} />}
+                                    loading={stopMutation.isPending}
+                                    onClick={() => stopMutation.mutate()}
+                                    styles={{
+                                        root: {
+                                            color: "#f7d76a",
+                                            borderRadius: 4
+                                        }
+                                    }}
+                                >
+                                    Stop
+                                </Button>
+                            </Group>
+                        ) : null}
+
+                        {asideBar && smallScreen && (
+                            <Burger
+                                opened={asideBar.show}
+                                onClick={asideBar.onToggle}
+                                aria-label={asideBar.show ? "Close side bar" : "Open side bar"}
+                                size="sm"
+                                color={isImpersonating ? navTextColor : rgba(RAW_GREY, 0.7)}
+                            />
+                        )}
+                    </Group>
+                </Group>
+            </Container>
+        </Box>
     )
 }
 

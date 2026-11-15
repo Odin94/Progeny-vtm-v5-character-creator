@@ -2,18 +2,18 @@ import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
 import { useMediaQuery } from "@mantine/hooks"
 import { Button, Divider, Group, Modal, ModalStylesNames, Stack, Text } from "@mantine/core"
 import { CSSProperties, ReactNode } from "react"
-import { COLOR_MODAL_DIVIDER } from "~/theme/colors"
+import { COLOR_MODAL_DIVIDER, RAW_GREY, rgba } from "~/theme/colors"
 import { confirmationModalDangerConfirmButtonStyles } from "~/generator/components/sharedGeneratorConfirmButtonStyles"
-import { Ornament } from "./ui/Ornament"
 
-/**
- * Surface, border, shadow and scale-in/out transition come from the Modal theme
- * (src/theme/modal.ts). These helpers only keep the historical paddings so existing
- * callers render the same layout.
- */
 export const ConfirmationModalStyle = (
     phoneScreen: boolean
 ): Partial<Record<ModalStylesNames, CSSProperties>> => ({
+    content: {
+        border: "1px solid rgba(125, 91, 72, 0.38)",
+        background:
+            "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
+        boxShadow: "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
+    },
     body: {
         padding: phoneScreen ? "1.1rem" : "1.35rem"
     }
@@ -30,28 +30,25 @@ export const confirmationModalWithHeaderStyles = (
     title: confirmationModalHeadingStyle(phoneScreen)
 })
 
-const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
-    fontFamily: "var(--pg-font-display)",
-    fontWeight: 600,
-    fontSize: phoneScreen ? "1.15rem" : "1.3rem",
+export const confirmationModalHeadingStyle = (phoneScreen: boolean) => ({
+    fontFamily: "Cinzel, Georgia, serif",
+    fontSize: phoneScreen ? "1.2rem" : "1.35rem",
     letterSpacing: "0.08em",
     textTransform: "uppercase" as const,
-    color: "var(--pg-ink)"
+    color: "rgba(244, 236, 232, 0.95)"
 })
 
-const confirmationModalBodyStyle = {
-    fontFamily: "var(--pg-font-body)",
+export const confirmationModalBodyStyle = {
+    fontFamily: "Inter, Segoe UI, sans-serif",
     fontSize: "0.9rem",
-    lineHeight: 1.55,
-    color: "var(--pg-ink-3)",
-    textWrap: "pretty"
+    color: rgba(RAW_GREY, 0.62)
 } as const
 
 export const confirmationModalCancelButtonStyles = {
     root: {
         letterSpacing: "0.08em",
         textTransform: "uppercase" as const,
-        fontFamily: "var(--pg-font-display)"
+        fontFamily: "Cinzel, Georgia, serif"
     }
 } as const
 
@@ -69,8 +66,6 @@ type ConfirmActionModalProps = {
     children?: ReactNode
     footer?: ReactNode
     size?: string | number
-    /** Raise above fixed overlays such as the docked coterie chat. */
-    zIndex?: number
 }
 
 const ConfirmActionModal = ({
@@ -86,8 +81,7 @@ const ConfirmActionModal = ({
     disabled = false,
     children,
     footer,
-    size,
-    zIndex
+    size
 }: ConfirmActionModalProps) => {
     const fileSaveOpen = useFileSavePromptOpen()
     const phoneScreen = useMediaQuery("(max-width: 48em)")
@@ -99,28 +93,18 @@ const ConfirmActionModal = ({
             aria-hidden={fileSaveOpen || undefined}
             closeOnEscape={!fileSaveOpen}
             size={size}
-            zIndex={zIndex}
             onClose={onClose}
             title=""
             centered
             withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
             styles={ConfirmationModalStyle(phoneScreen)}
         >
             <Stack gap="md">
-                <Stack gap={8} align="center">
+                <Stack gap={6} align="center">
                     <Text ta="center" style={confirmationModalHeadingStyle(phoneScreen)}>
                         {title}
                     </Text>
-                    <Ornament
-                        style={{
-                            width: 120,
-                            height: 10,
-                            color:
-                                confirmColor === "red"
-                                    ? "var(--pg-blood-bright)"
-                                    : "var(--pg-gold-dim)"
-                        }}
-                    />
                     <Text ta="center" style={confirmationModalBodyStyle}>
                         {body}
                     </Text>

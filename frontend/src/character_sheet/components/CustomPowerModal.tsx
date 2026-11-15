@@ -1,4 +1,5 @@
-import { Alert, Button, NumberInput, TextInput, Textarea } from "@mantine/core"
+import { Alert, Button, Group, Modal, NumberInput, Stack, TextInput, Textarea } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { useEffect, useState } from "react"
 import { Power } from "~/data/Disciplines"
 import { getDisciplineLevel, increaseDisciplineLevelForPower } from "~/data/Character"
@@ -15,7 +16,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { getDisciplineCost } from "../utils/xp"
 import type { HomebrewSource } from "~/data/Homebrew"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
-import { SheetModal, selectModalClasses as formClasses } from "./selectModalParts"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type CustomPowerModalProps = {
     opened: boolean
@@ -37,6 +38,7 @@ const CustomPowerModal = ({
     editingPower
 }: CustomPowerModalProps) => {
     const { character, setCharacter, mode, primaryColor } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [dicePool, setDicePool] = useState("")
@@ -128,15 +130,6 @@ const CustomPowerModal = ({
             }
         }
     }, [opened, editingPower, disciplineName, disciplineHomebrewSource, character.disciplineLevels])
-
-    // Show each validation message on the field it is about.
-    const errorField = !error
-        ? null
-        : error.startsWith("Power name")
-          ? "name"
-          : error.startsWith("Rouse")
-            ? "rouse"
-            : "level"
 
     const handleSave = () => {
         if (!name.trim()) {
@@ -240,29 +233,24 @@ const CustomPowerModal = ({
     }
 
     return (
-        <SheetModal
+        <Modal
             opened={opened}
             onClose={onClose}
             title={editingPower ? "Edit Custom Power" : "Create Custom Power"}
-            size="lg"
-            fullScreenOnPhone={false}
+            size="md"
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
-            <form
-                noValidate
-                className={formClasses.form}
-                onSubmit={(event) => {
-                    event.preventDefault()
-                    handleSave()
-                }}
-            >
+            <Stack gap="md">
                 <TextInput
                     label="Power Name"
                     placeholder="e.g., Time Stop"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    error={errorField === "name" ? error : undefined}
+                    error={error}
                     required
-                    data-autofocus
                     color={primaryColor}
                 />
                 <Textarea
@@ -271,7 +259,6 @@ const CustomPowerModal = ({
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
                     rows={2}
-                    resize="vertical"
                     color={primaryColor}
                 />
                 <TextInput
@@ -291,37 +278,34 @@ const CustomPowerModal = ({
                         {dicePoolWarning}
                     </Alert>
                 ) : null}
-                <div className={`${formClasses.formRow} ${formClasses.formRowTight}`}>
-                    <NumberInput
-                        label="Level"
-                        value={level}
-                        onChange={setLevel}
-                        min={1}
-                        max={5}
-                        error={errorField === "level" ? error : undefined}
-                        required
-                        color={primaryColor}
-                    />
-                    <NumberInput
-                        label="Rouse Checks"
-                        value={rouseChecks}
-                        onChange={setRouseChecks}
-                        min={0}
-                        error={errorField === "rouse" ? error : undefined}
-                        required
-                        color={primaryColor}
-                    />
-                </div>
-                <div className={formClasses.formFooter}>
-                    <Button variant="subtle" color="gray" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" color={primaryColor} ml="auto">
-                        Save
-                    </Button>
-                </div>
-            </form>
-        </SheetModal>
+                <NumberInput
+                    label="Level"
+                    value={level}
+                    onChange={setLevel}
+                    min={1}
+                    max={5}
+                    required
+                    color={primaryColor}
+                />
+                <NumberInput
+                    label="Rouse Checks"
+                    value={rouseChecks}
+                    onChange={setRouseChecks}
+                    min={0}
+                    required
+                />
+                <Group justify="flex-end">
+                    <Group>
+                        <Button variant="subtle" onClick={onClose} color={primaryColor}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSave} color={primaryColor}>
+                            Save
+                        </Button>
+                    </Group>
+                </Group>
+            </Stack>
+        </Modal>
     )
 }
 

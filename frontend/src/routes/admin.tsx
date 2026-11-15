@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { lazy, Suspense } from "react"
-import { RouteFallback } from "~/components/ui/RouteFallback"
 import RenderProfiler from "~/components/RenderProfiler"
 
 const AdminImpersonationPage = lazy(() => import("~/pages/AdminImpersonationPage"))
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/admin")({
 function AdminImpersonation() {
     return (
         <RenderProfiler id="AdminImpersonationPage">
-            <Suspense fallback={<RouteFallback />}>
+            <Suspense fallback={null}>
                 <AdminImpersonationPage />
             </Suspense>
         </RenderProfiler>

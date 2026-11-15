@@ -18,8 +18,8 @@ import {
     useCharacterNotesController
 } from "~/character_sheet/hooks/useCharacterNotesController"
 import { memo } from "react"
+import { RAW_GOLD, RAW_RED, rgba } from "~/theme/colors"
 import { formatPrivateNoteWordCount } from "~/utils/privateNotes"
-import { IconButton } from "~/components/ui"
 
 type CharacterNotesControlProps = {
     characterId: string
@@ -83,11 +83,13 @@ const CharacterNotesControl = memo(
 
         return (
             <>
-                <Tooltip label={disabledReason ?? "Private notes"} withArrow>
-                    <span style={{ display: "inline-flex" }}>
+                <Tooltip label={disabledReason ?? "Private notes"} position="left" withArrow>
+                    <span>
                         <ActionIcon
-                            size="lg"
-                            variant="default"
+                            size="xl"
+                            variant="light"
+                            color={disabledReason ? "gray" : primaryColor}
+                            radius="xl"
                             disabled={!!disabledReason}
                             aria-label={
                                 disabledReason
@@ -95,8 +97,9 @@ const CharacterNotesControl = memo(
                                     : "Open private notes"
                             }
                             onClick={openNotes}
+                            style={{ boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)" }}
                         >
-                            <IconNotebook size={19} stroke={1.7} />
+                            <IconNotebook size={24} />
                         </ActionIcon>
                     </span>
                 </Tooltip>
@@ -117,7 +120,7 @@ const CharacterNotesControl = memo(
                             }}
                         >
                             <Group gap="sm" style={{ flex: "1 1 auto", minWidth: 0 }}>
-                                <IconNotebook size={20} color="var(--pg-gold)" />
+                                <IconNotebook size={20} color={rgba(RAW_GOLD, 0.92)} />
                                 <Text fw={700}>Private Notes</Text>
                                 {showSavePill ? (
                                     <Badge
@@ -141,23 +144,28 @@ const CharacterNotesControl = memo(
                                     marginRight: "0.75rem"
                                 }}
                             >
-                                <IconButton
+                                <ActionIcon
                                     color={primaryColor}
                                     variant="light"
-                                    label="Version history"
-                                    icon={<IconVersions size={18} />}
-                                    disabled={notesLoading}
-                                    disabledReason={
-                                        notesError && !notesLoading
-                                            ? "Notes could not be loaded"
-                                            : undefined
-                                    }
+                                    aria-label="Version history"
+                                    title="Version history"
+                                    disabled={notesLoading || notesError}
                                     onClick={openHistory}
-                                />
+                                >
+                                    <IconVersions size={18} />
+                                </ActionIcon>
                             </Box>
                         </Box>
                     }
                     styles={{
+                        content: {
+                            background: "rgba(9, 8, 10, 0.98)",
+                            border: `1px solid ${rgba(RAW_GOLD, 0.22)}`
+                        },
+                        header: {
+                            background: "rgba(9, 8, 10, 0.98)",
+                            borderBottom: `1px solid ${rgba(RAW_GOLD, 0.14)}`
+                        },
                         title: { flex: 1, minWidth: 0 }
                     }}
                 >
@@ -205,10 +213,15 @@ const CharacterNotesControl = memo(
                                 maxRows={24}
                                 autosize
                                 placeholder="Plans, clues, debts, boons, suspicions..."
-                                error={noteBytes > CHARACTER_NOTE_MAX_BYTES}
-                                color={primaryColor}
                                 styles={{
                                     input: {
+                                        background: "rgba(18, 14, 17, 0.92)",
+                                        borderColor:
+                                            noteBytes > CHARACTER_NOTE_MAX_BYTES
+                                                ? rgba(RAW_RED, 0.8)
+                                                : rgba(RAW_GOLD, 0.28),
+                                        color: "rgba(244, 236, 232, 0.94)",
+                                        fontFamily: "Inter, Segoe UI, sans-serif",
                                         lineHeight: 1.6,
                                         fontSize: "0.95rem"
                                     }
@@ -247,13 +260,23 @@ const CharacterNotesControl = memo(
                     onClose={closeHistory}
                     title={
                         <Group gap="sm">
-                            <IconVersions size={20} color="var(--pg-gold)" />
+                            <IconVersions size={20} color={rgba(RAW_GOLD, 0.92)} />
                             <Text fw={700}>Version history</Text>
                         </Group>
                     }
                     centered
                     size="sm"
                     zIndex={NOTES_HISTORY_MODAL_Z_INDEX}
+                    styles={{
+                        content: {
+                            background: "rgba(9, 8, 10, 0.98)",
+                            border: `1px solid ${rgba(RAW_GOLD, 0.22)}`
+                        },
+                        header: {
+                            background: "rgba(9, 8, 10, 0.98)",
+                            borderBottom: `1px solid ${rgba(RAW_GOLD, 0.14)}`
+                        }
+                    }}
                 >
                     <Stack gap="xs">
                         {versions.slice(1).length > 0 ? (

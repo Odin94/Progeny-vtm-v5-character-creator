@@ -75,15 +75,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [wrapperMinHeight, setWrapperMinHeight] = useState<number | undefined>(undefined)
     const slideVariants = {
-        enter: (dir: number) => ({
-            transform: `translateX(${shouldReduceMotion ? 0 : dir * 32}px)`,
-            opacity: 0
-        }),
-        center: { transform: "translateX(0px)", opacity: 1 },
-        exit: (dir: number) => ({
-            transform: `translateX(${shouldReduceMotion ? 0 : dir * -32}px)`,
-            opacity: 0
-        })
+        enter: (dir: number) => ({ x: shouldReduceMotion ? 0 : dir * 40, opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (dir: number) => ({ x: shouldReduceMotion ? 0 : dir * -40, opacity: 0 })
     }
 
     const navigateTo = (nextView: MenuView) => {
@@ -251,9 +245,6 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         view === "menu" ? (
             <div>
                 <Text className="sheet-menu__title">Character sheet</Text>
-                {character.name ? (
-                    <Text className="sheet-menu__subtitle">{character.name}</Text>
-                ) : null}
             </div>
         ) : (
             <Button
@@ -271,13 +262,19 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         <>
             <ActionIcon
                 aria-label="Open character sheet menu"
-                size={48}
-                variant="default"
+                size="xl"
+                variant="light"
+                color={primaryColor}
                 radius="xl"
                 onClick={openMenu}
-                className="sheet-menu__fab"
+                style={{
+                    position: "fixed",
+                    bottom: "2rem",
+                    right: "2rem",
+                    zIndex: 100
+                }}
             >
-                <IconMenu2 size={22} stroke={1.7} />
+                <IconMenu2 size={24} />
             </ActionIcon>
 
             <Modal
@@ -363,8 +360,8 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                 exit="exit"
                                 transition={{
                                     type: "tween",
-                                    duration: 0.2,
-                                    ease: [0.23, 1, 0.32, 1]
+                                    duration: 0.18,
+                                    ease: [0.77, 0, 0.175, 1]
                                 }}
                             >
                                 {view === "menu" ? (
@@ -685,7 +682,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                     title="Download Error"
                     centered
                 >
-                    <ErrorDetails error={downloadError} linkColor="var(--pg-accent-bright)" />
+                    <ErrorDetails error={downloadError} linkColor="#9c36b5" />
                 </Modal>
             ) : null}
 

@@ -1,6 +1,4 @@
-import { Alert, Button, Modal } from "@mantine/core"
-import { IconAlertTriangle, IconCopy } from "@tabler/icons-react"
-import classes from "./AppModals.module.css"
+import { Alert, Button, Group, Modal, Stack, Text } from "@mantine/core"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { characterPersistence } from "~/modules/characterPersistence"
@@ -83,39 +81,25 @@ export default function SaveCharacterCopyModal({
             closeOnEscape={!create.isPending}
             withCloseButton={!create.isPending}
         >
-            <div className={classes.body}>
-                <p className={classes.lede}>
+            <Stack>
+                <Text>
                     {source?.classification === "shared"
                         ? "You're viewing somebody else's character and can't save changes to the original."
                         : "We couldn't verify this character's saved copy, so your changes will be saved as a new character."}
-                </p>
-                <p className={classes.note}>
+                </Text>
+                <Text size="sm">
                     Save as copy creates a character in your account and opens it for editing.
-                </p>
-                {error && (
-                    <Alert color="red" icon={<IconAlertTriangle size={16} />}>
-                        {error}
-                    </Alert>
-                )}
-                <hr className={classes.rule} />
-                <div className={classes.actions}>
-                    <Button
-                        variant="subtle"
-                        color="gray"
-                        onClick={close}
-                        disabled={create.isPending}
-                    >
+                </Text>
+                {error && <Alert color="red">{error}</Alert>}
+                <Group justify="flex-end">
+                    <Button variant="default" onClick={close} disabled={create.isPending}>
                         OK
                     </Button>
-                    <Button
-                        leftSection={<IconCopy size={16} />}
-                        onClick={saveCopy}
-                        loading={create.isPending}
-                    >
+                    <Button onClick={saveCopy} loading={create.isPending}>
                         Save as copy
                     </Button>
-                </div>
-            </div>
+                </Group>
+            </Stack>
         </Modal>
     )
 }

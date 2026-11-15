@@ -1,0 +1,38 @@
+.pip-blocked-warning {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0;
+    z-index: 1;
+    width: max-content;
+    max-width: 260px;
+    margin: 0;
+    line-height: 1.2;
+    pointer-events: none;
+    animation: pipBlockedWarning 2.5s ease-out forwards;
+}
+
+@keyframes pipBlockedWarning {
+    0% {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    12% {
+        opacity: 1;
+    }
+
+    78% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-18px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pip-blocked-warning {
+        animation: none;
+    }
+}

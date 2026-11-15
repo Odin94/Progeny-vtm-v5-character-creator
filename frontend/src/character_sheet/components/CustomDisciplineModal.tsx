@@ -1,9 +1,10 @@
-import { Button, TextInput, Textarea } from "@mantine/core"
+import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { useState, useEffect } from "react"
 import { DisciplineName } from "~/data/NameSchemas"
 import { CustomDiscipline, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { SheetOptions } from "../CharacterSheet"
-import { SheetModal, selectModalClasses as formClasses } from "./selectModalParts"
+import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 
 type CustomDisciplineModalProps = {
     opened: boolean
@@ -21,6 +22,7 @@ const CustomDisciplineModal = ({
     onSave
 }: CustomDisciplineModalProps) => {
     const { character, setCharacter, primaryColor } = options
+    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [summary, setSummary] = useState("")
     const [logo, setLogo] = useState("")
@@ -94,32 +96,24 @@ const CustomDisciplineModal = ({
     }
 
     return (
-        <SheetModal
+        <Modal
             opened={opened}
             onClose={onClose}
             title={editingDisciplineName ? "Edit Custom Discipline" : "Create Custom Discipline"}
             size="md"
-            fullScreenOnPhone={false}
+            centered
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
+            styles={confirmationModalWithHeaderStyles(phoneScreen)}
         >
-            <form
-                noValidate
-                className={formClasses.form}
-                onSubmit={(event) => {
-                    event.preventDefault()
-                    handleSave()
-                }}
-            >
+            <Stack gap="md">
                 <TextInput
                     label="Discipline Name"
                     placeholder="e.g., Chronomancy"
                     value={name}
-                    onChange={(e) => {
-                        setName(e.target.value)
-                        if (error) setError(null)
-                    }}
+                    onChange={(e) => setName(e.target.value)}
                     error={error}
                     required
-                    data-autofocus
                     color={primaryColor}
                 />
                 <Textarea
@@ -128,39 +122,29 @@ const CustomDisciplineModal = ({
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
                     rows={3}
-                    resize="vertical"
                     color={primaryColor}
                 />
                 <TextInput
                     label="Logo URL (optional)"
-                    placeholder="https://…"
+                    placeholder="URL to an image for the discipline logo"
                     value={logo}
                     onChange={(e) => setLogo(e.target.value)}
                     error={logoError}
                     description="Only http:// and https:// image URLs are allowed."
                     color={primaryColor}
-                    rightSection={
-                        sanitizedLogo ? (
-                            <img
-                                src={sanitizedLogo}
-                                alt=""
-                                width={22}
-                                height={22}
-                                style={{ objectFit: "contain" }}
-                            />
-                        ) : null
-                    }
                 />
-                <div className={formClasses.formFooter}>
-                    <Button variant="subtle" color="gray" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" color={primaryColor} ml="auto">
-                        Save
-                    </Button>
-                </div>
-            </form>
-        </SheetModal>
+                <Group justify="flex-end">
+                    <Group>
+                        <Button variant="subtle" onClick={onClose} color={primaryColor}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSave} color={primaryColor}>
+                            Save
+                        </Button>
+                    </Group>
+                </Group>
+            </Stack>
+        </Modal>
     )
 }
 

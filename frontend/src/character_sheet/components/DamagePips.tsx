@@ -1,6 +1,6 @@
+import { Group } from "@mantine/core"
 import { memo } from "react"
 import SquarePipButton from "~/character_sheet/components/SquarePipButton"
-import classes from "./pips.module.css"
 
 type DamagePipsProps = {
     maxValue: number
@@ -9,7 +9,6 @@ type DamagePipsProps = {
     onChange: (superficial: number, aggravated: number) => void
     color?: string
     disabledReason?: string
-    label?: string
 }
 
 const DamagePips = ({
@@ -17,9 +16,8 @@ const DamagePips = ({
     superficial,
     aggravated,
     onChange,
-    color,
-    disabledReason,
-    label
+    color = "grape",
+    disabledReason
 }: DamagePipsProps) => {
     const getPipState = (pipIndex: number): "none" | "superficial" | "aggravated" => {
         const pipNumber = pipIndex + 1
@@ -58,7 +56,7 @@ const DamagePips = ({
     }
 
     return (
-        <div className={classes.track}>
+        <Group gap={4}>
             {Array.from({ length: maxValue }, (_, index) => {
                 const pipState = getPipState(index)
                 return (
@@ -66,14 +64,17 @@ const DamagePips = ({
                         key={index}
                         onClick={() => handlePipClick(index)}
                         damageState={pipState}
-                        groupEnd={(index + 1) % 5 === 0 && index < maxValue - 1}
+                        style={
+                            (index + 1) % 5 === 0 && index < maxValue - 1
+                                ? { marginRight: 8 }
+                                : undefined
+                        }
                         color={color}
                         disabledReason={disabledReason}
-                        label={label ? `${label} ${index + 1}` : undefined}
                     />
                 )
             })}
-        </div>
+        </Group>
     )
 }
 
@@ -84,7 +85,6 @@ export default memo(DamagePips, (previous, next) => {
         previous.aggravated === next.aggravated &&
         previous.onChange === next.onChange &&
         previous.color === next.color &&
-        previous.disabledReason === next.disabledReason &&
-        previous.label === next.label
+        previous.disabledReason === next.disabledReason
     )
 })

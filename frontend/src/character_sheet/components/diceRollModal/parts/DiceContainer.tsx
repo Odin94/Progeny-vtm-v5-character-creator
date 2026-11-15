@@ -4,10 +4,7 @@ import { memo, useEffect, useRef, useState } from "react"
 import Die from "./Die"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
-
-// Regular dice read as obsidian, Hunger dice as blood (matching the 3D dice and pool glyphs).
-const REGULAR_DIE_COLOR = "#3a2e33"
-const HUNGER_DIE_COLOR = "#b01e2f"
+import { vtmRed } from "~/character_sheet/utils/style"
 
 export type DieResult = {
     id: number
@@ -17,7 +14,6 @@ export type DieResult = {
 }
 
 type DiceContainerProps = {
-    /** Kept for callers; dice use the fixed obsidian/blood palette. */
     primaryColor: string
     onDieClick?: (dieId: number, isBloodDie: boolean) => void
     selectedDiceIds?: Set<number>
@@ -25,6 +21,7 @@ type DiceContainerProps = {
 }
 
 const DiceContainer = ({
+    primaryColor,
     onDieClick,
     selectedDiceIds = new Set(),
     isMobile = false
@@ -65,7 +62,7 @@ const DiceContainer = ({
                             key={die.id}
                             value={die.value}
                             isRolling={die.isRolling}
-                            primaryColor={die.isBloodDie ? HUNGER_DIE_COLOR : REGULAR_DIE_COLOR}
+                            primaryColor={die.isBloodDie ? vtmRed : primaryColor}
                             onClick={() => onDieClick?.(die.id, die.isBloodDie)}
                             isSelected={selectedDiceIds.has(die.id)}
                             isSelectable={
@@ -195,9 +192,7 @@ const DiceContainer = ({
                                 <Die
                                     value={die.value}
                                     isRolling={die.isRolling}
-                                    primaryColor={
-                                        die.isBloodDie ? HUNGER_DIE_COLOR : REGULAR_DIE_COLOR
-                                    }
+                                    primaryColor={die.isBloodDie ? vtmRed : primaryColor}
                                     animationDelay={randomDelay}
                                     seed={seed}
                                     onClick={() => onDieClick?.(die.id, die.isBloodDie)}
