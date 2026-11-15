@@ -110,6 +110,8 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                             setCharacter({
                                 ...character,
                                 clan,
+                                generation: clan === "Thin-blood" ? 14 : character.generation,
+                                bloodPotency: clan === "Thin-blood" ? 0 : character.bloodPotency,
                                 homebrewClan: undefined,
                                 disciplines: [],
                                 disciplineLevels: {},
@@ -124,6 +126,8 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                             setCharacter({
                                 ...character,
                                 clan,
+                                generation: clan === "Thin-blood" ? 14 : character.generation,
+                                bloodPotency: clan === "Thin-blood" ? 0 : character.bloodPotency,
                                 homebrewClan: undefined,
                                 availableDisciplineNames: clans[clan].nativeDisciplines,
                                 ...replacePredatorSkillBonuses(character, predatorType),

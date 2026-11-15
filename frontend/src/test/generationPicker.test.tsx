@@ -33,6 +33,30 @@ globalThis.ResizeObserver = class {
 }
 
 describe("GenerationPicker", () => {
+    it("sets Thin-bloods to generation 14 despite an earlier generation draft", () => {
+        const character = {
+            ...getBasicTestCharacter(),
+            clan: "Thin-blood" as const,
+            generation: 13
+        }
+        const setCharacter = vi.fn()
+        render(
+            <MantineProvider>
+                <GenerationPicker
+                    character={character}
+                    setCharacter={setCharacter}
+                    nextStep={vi.fn()}
+                    generation="13"
+                    setGeneration={vi.fn()}
+                />
+            </MantineProvider>
+        )
+        expect(screen.getByRole("combobox")).toHaveValue("14th Gen - Childer")
+        expect(setCharacter).toHaveBeenCalledWith(
+            expect.objectContaining({ generation: 14, bloodPotency: 0 })
+        )
+    })
+
     it("shows the displayed default in the Select", () => {
         const character = getBasicTestCharacter()
         character.generation = 0

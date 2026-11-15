@@ -97,11 +97,12 @@ const GenerationPicker = ({
 
     const isThinBlood = character.clan === "Thin-blood"
     const defaultGeneration = isThinBlood ? "14" : "13"
-    const selectedGenerationValue =
-        generation ??
-        (character.generation !== getEmptyCharacter().generation
-            ? character.generation.toString()
-            : defaultGeneration)
+    const selectedGenerationValue = isThinBlood
+        ? "14"
+        : (generation ??
+          (character.generation !== getEmptyCharacter().generation
+              ? character.generation.toString()
+              : defaultGeneration))
 
     const availableOptions = useMemo(
         () =>
