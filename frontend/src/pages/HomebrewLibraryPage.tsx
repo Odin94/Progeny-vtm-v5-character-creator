@@ -183,12 +183,14 @@ const HomebrewLibraryPage = () => {
                         <Paper withBorder p="md" bg="rgba(0,0,0,.4)">
                             <Group grow align="flex-end" className="homebrew-library__filters">
                                 <TextInput
+                                    data-analytics-autocapture="homebrew-search"
                                     label="Search"
                                     placeholder="Collection, author, or tag"
                                     value={query}
                                     onChange={(event) => setQuery(event.currentTarget.value)}
                                 />
                                 <Select
+                                    data-analytics-autocapture="homebrew-filter"
                                     label="Contains"
                                     clearable
                                     value={kind}
@@ -200,6 +202,7 @@ const HomebrewLibraryPage = () => {
                                     classNames={homebrewDropdownClassNames}
                                 />
                                 <Select
+                                    data-analytics-autocapture="homebrew-sort"
                                     label="Sort by"
                                     value={sort}
                                     data={[

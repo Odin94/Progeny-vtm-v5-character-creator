@@ -763,6 +763,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                             Merits & Flaws
                                         </Tabs.Tab>
                                         <Tabs.Tab
+                                            data-analytics-autocapture="browse-loresheets"
                                             value="loresheets"
                                             style={
                                                 activeTab === "loresheets"
@@ -781,6 +782,7 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
                                         </Tabs.Tab>
                                     </Tabs.List>
                                     <Button
+                                        data-analytics-autocapture="browse-merits"
                                         data-testid="toggle-all-merits-button"
                                         variant="outline"
                                         color="red"

@@ -152,6 +152,7 @@ export default function ThreeDice(props: Props) {
                 </Menu.Target>
                 <Menu.Dropdown aria-label="Die actions" aria-labelledby="">
                     <Menu.Item
+                        data-analytics-autocapture="sort-3d-dice"
                         leftSection={<IconSortDescending size={14} />}
                         onClick={() => {
                             renderer.current?.sort()

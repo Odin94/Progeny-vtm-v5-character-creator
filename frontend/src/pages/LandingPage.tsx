@@ -274,6 +274,7 @@ export default function LandingPage() {
                             </Text>
                             <Group gap="md" justify="center" className="landing-page__cta-group">
                                 <Button
+                                    data-analytics-autocapture="start-character"
                                     size="lg"
                                     radius="md"
                                     px="xl"

@@ -86,6 +86,12 @@ const posthogOptions: Partial<PostHogConfig> = {
     api_host: "https://info.odin-matthias.com",
     ui_host: "https://eu.posthog.com",
     defaults: "2025-05-24",
+    // Only retain discovery/utility interactions without dedicated analytics events.
+    // Mark the control itself, never a whole editor, to avoid capturing every pip.
+    autocapture: {
+        css_selector_allowlist: ["[data-analytics-autocapture]"],
+        dom_event_allowlist: ["click", "change", "submit"]
+    },
     capture_exceptions: true,
     cookieless_mode: "on_reject",
     cookie_expiration: POSTHOG_CONSENT_RETENTION_DAYS,

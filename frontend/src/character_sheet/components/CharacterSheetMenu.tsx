@@ -399,6 +399,7 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                 >
                                                     {(props) => (
                                                         <Button
+                                                            data-analytics-autocapture="import-character"
                                                             leftSection={<IconUpload size={22} />}
                                                             {...props}
                                                             className="sheet-menu__action"

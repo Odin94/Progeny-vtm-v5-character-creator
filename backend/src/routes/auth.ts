@@ -407,19 +407,6 @@ export async function authRoutes(fastify: FastifyInstance) {
                 const user = request.user!
                 const actorUser = request.actorUser ?? user
 
-                await trackEvent(
-                    "auth_me_success",
-                    {
-                        endpoint: "/auth/me",
-                        method: "GET",
-                        userId: user.id,
-                        actorUserId: actorUser.id,
-                        impersonating: !!request.impersonation?.active
-                    },
-                    actorUser.id,
-                    request
-                )
-
                 reply.header("Cache-Control", "no-store")
                 reply.send({
                     id: user.id,
