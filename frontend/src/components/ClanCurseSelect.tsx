@@ -30,6 +30,7 @@ export default function ClanCurseSelect({
 }) {
     return (
         <Select
+            color="red"
             label="Clan Curse bane"
             placeholder="Select a clan bane"
             data={Object.keys(clans)
