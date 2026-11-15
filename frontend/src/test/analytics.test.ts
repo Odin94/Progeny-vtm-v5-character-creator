@@ -10,6 +10,7 @@ import {
 
 vi.mock("posthog-js", () => ({
     default: {
+        config: {},
         capture: vi.fn(),
         identify: vi.fn(),
         setIdentity: vi.fn(),
@@ -131,5 +132,31 @@ describe("support account identity", () => {
             supportIdentityHash: "signed-hash"
         })
         expect(posthog.setIdentity).toHaveBeenCalledWith("account-1", "signed-hash")
+    })
+})
+
+describe("support identity refresh", () => {
+    it("does not reset an open conversation when the same account is identified again", () => {
+        vi.mocked(posthog.setIdentity).mockClear()
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
+        posthog.config.identity_distinct_id = "same-account"
+        posthog.config.identity_hash = "same-signature"
+        try {
+            identifyPostHogUser({
+                id: "same-account",
+                email: "test@example.com",
+                supportIdentityHash: "same-signature"
+            })
+            expect(posthog.setIdentity).not.toHaveBeenCalled()
+            identifyPostHogUser({
+                id: "same-account",
+                email: "test@example.com",
+                supportIdentityHash: "rotated-signature"
+            })
+            expect(posthog.setIdentity).toHaveBeenCalledWith("same-account", "rotated-signature")
+        } finally {
+            delete posthog.config.identity_distinct_id
+            delete posthog.config.identity_hash
+        }
     })
 })

@@ -104,6 +104,29 @@ sudo systemctl status pm2-progeny
 - `PORT`: Server port (default: 3001)
 - `HOST`: Server host (default: 0.0.0.0)
 
+### PostHog Support account identity
+
+Support needs a server-signed identity so signed-in users can access their tickets after logout/login and across browsers and devices. Analytics identification alone does not restore ticket access.
+
+1. In the correct PostHog project, open **Support > Settings** and find **Identity verification secret**. Generate a secret if none exists, then copy it. See [PostHog identity verification setup](https://posthog.com/docs/support/widget#find-your-identity-verification-secret).
+2. Add the secret to **`backend/.env`** (production: `/opt/progeny/backend/.env`):
+
+    ```dotenv
+    POSTHOG_SUPPORT_IDENTITY_SECRET=<paste-the-identity-verification-secret-here>
+    ```
+
+    Use the Support identity verification secret, not a project token or personal API key. Keep it backend-only; do not commit it or use a `VITE_` variable.
+
+3. Deploy the backend and frontend account-identity implementation together. After changing `.env`, restart only the Progeny backend so it loads the new value:
+
+    ```bash
+    sudo -iu progeny pm2 restart progeny-backend --update-env
+    ```
+
+4. Sign in, send a test support message, sign out, reply in PostHog, then sign in again. Confirm the conversation and reply appear. Repeat in another browser signed into the same account. Support currently requires granted cookie consent.
+
+`GET /auth/me` returns an HMAC-SHA256 signature for the authenticated account ID, and the frontend supplies it to `posthog.setIdentity`. The signing secret stays on the server. Logout clears local support access to isolate accounts; logging back in restores access using the account identity. Impersonation does not issue support credentials. Without this environment variable, support remains tied to the browser session. Past widget tickets whose distinct IDs belong to the account's PostHog person can also appear through verified identity, including linked anonymous IDs. Unlinked anonymous tickets require **Recover my tickets**; do not grant ownership merely because a widget visitor typed the account email.
+
 ## API Endpoints
 
 ### Characters

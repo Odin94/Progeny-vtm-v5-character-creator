@@ -11,7 +11,12 @@ export const identifyPostHogUser = (user: {
     if (posthog.get_explicit_consent_status() !== "granted") return
 
     if (user.supportIdentityHash) {
-        posthog.setIdentity(user.id, user.supportIdentityHash)
+        if (
+            posthog.config?.identity_distinct_id !== user.id ||
+            posthog.config?.identity_hash !== user.supportIdentityHash
+        ) {
+            posthog.setIdentity(user.id, user.supportIdentityHash)
+        }
     } else if (posthog.config?.identity_distinct_id) {
         posthog.clearIdentity()
     }
