@@ -1,3 +1,4 @@
+import { getClanBaneText } from "~/data/VariantClanBanes"
 import type { Character } from "../data/Character"
 import type { AttributesKey } from "../data/Attributes"
 import type { SkillsKey } from "../data/Skills"
@@ -237,9 +238,11 @@ const createBiography = (character: Character): string => {
         .map((t) => `${t.name} (${t.conviction})${t.description ? `: ${t.description}` : ""}`)
         .join("\n")
 
-    // TODO: Figure out how Inconnu handles variant clan banes and include them in export.
     const biography = [
         character.clan ? `Clan: ${character.clan}` : "",
+        character.clan === "Thin-blood" && getClanBaneText(character, 1)
+            ? `Clan Curse: ${getClanBaneText(character, 1)}`
+            : "",
         character.predatorType?.name ? `Predator Type: ${character.predatorType.name}` : "",
         character.sect ? `Sect: ${character.sect}` : "",
         character.chronicle ? `Chronicle: ${character.chronicle}` : "",
@@ -367,7 +370,12 @@ export const createInconnuJson = (character: Character): InconnuCreationBody => 
 
     for (const meritFlaw of getResolvedMeritFlawList(character).map(({ meritFlaw }) => meritFlaw)) {
         addTrait({
-            name: toTraitIdentifier(getMeritFlawDisplayName(meritFlaw), "Trait"),
+            name: toTraitIdentifier(
+                meritFlaw.name === "Clan Curse" && meritFlaw.clanCurse
+                    ? `Clan Curse ${meritFlaw.clanCurse}`
+                    : getMeritFlawDisplayName(meritFlaw),
+                "Trait"
+            ),
             rating: nonNegativeInt(meritFlaw.level),
             type: "custom",
             subtraits: []

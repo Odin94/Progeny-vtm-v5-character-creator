@@ -73,6 +73,12 @@ export const formatBaneText = (text: string, baneSeverity: number) =>
     text.replace(/BANE_SEVERITY/g, `${baneSeverity} (bane severity)`)
 
 export const getClanBaneText = (character: Character, baneSeverity: number) => {
+    if (character.clan === "Thin-blood") {
+        const curse = character.flaws.find(
+            (flaw) => flaw.name === "Clan Curse" && !flaw.homebrewSource
+        )
+        return curse?.clanCurse ? formatBaneText(clans[curse.clanCurse].bane, 1) : ""
+    }
     if (character.homebrewClan) {
         return formatBaneText(character.homebrewClan.bane, baneSeverity)
     }
@@ -85,6 +91,15 @@ export const getClanBaneText = (character: Character, baneSeverity: number) => {
 }
 
 export const getClanCompulsionText = (character: Character) =>
-    character.homebrewClan?.compulsion ?? clans[character.clan]?.compulsion ?? ""
+    character.clan === "Thin-blood"
+        ? ""
+        : (character.homebrewClan?.compulsion ?? clans[character.clan]?.compulsion ?? "")
 
 export const hasVariantClanBane = (clan: ClanName) => variantClanBanes[clan] !== null
+
+export const getBaneSeverity = (character: Character, severity: number) =>
+    character.clan === "Thin-blood"
+        ? character.flaws.some((f) => f.name === "Clan Curse" && !f.homebrewSource)
+            ? 1
+            : 0
+        : severity

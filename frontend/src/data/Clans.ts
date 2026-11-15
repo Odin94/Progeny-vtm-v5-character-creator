@@ -36,7 +36,7 @@ export const clans: Record<ClanName, Clan> = {
         name: "Brujah",
         description: "Rebels who always fight against the power, easy to anger",
         logo: brujahLogo,
-        bane: "Violent Temper: All difficulties to resist Frenzy are increased by 2 (max of 10).",
+        bane: "Violent Temper: Subtract BANE_SEVERITY dice from rolls to resist Fury Frenzy.",
         compulsion:
             "Rebellion: Rebel against orders or expectations of an authority or change somebody's mind (by force if necessary). Until then, receive two-dice penalty on all rolls.",
         nativeDisciplines: ["celerity", "potence", "presence"]
@@ -186,8 +186,8 @@ export const clans: Record<ClanName, Clan> = {
         name: "Thin-blood",
         description: "Half Vampire, half Human. Despised by all.",
         logo: thinbloodLogo,
-        bane: "Outcast: Increasing discipline levels costs XP equal to 6x the new level. (instead of 5x)",
-        compulsion: "Caitiffs have no compulsion",
+        bane: "",
+        compulsion: "",
         nativeDisciplines: ["thin-blood alchemy"]
     },
 
