@@ -3,12 +3,18 @@ import posthog from "posthog-js"
 /** Cookieless events cannot create or update person profiles. */
 export const identifyPostHogUser = (user: {
     id: string
+    supportIdentityHash?: string
     email: string
     firstName?: string | null
     lastName?: string | null
 }) => {
     if (posthog.get_explicit_consent_status() !== "granted") return
 
+    if (user.supportIdentityHash) {
+        posthog.setIdentity(user.id, user.supportIdentityHash)
+    } else if (posthog.config?.identity_distinct_id) {
+        posthog.clearIdentity()
+    }
     posthog.identify(user.id, {
         email: user.email,
         firstName: user.firstName,

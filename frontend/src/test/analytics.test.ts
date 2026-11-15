@@ -12,6 +12,7 @@ vi.mock("posthog-js", () => ({
     default: {
         capture: vi.fn(),
         identify: vi.fn(),
+        setIdentity: vi.fn(),
         get_explicit_consent_status: vi.fn(),
         opt_in_capturing: vi.fn(),
         opt_out_capturing: vi.fn(),
@@ -118,5 +119,17 @@ describe("identifyPostHogUser", () => {
             firstName: user.firstName,
             lastName: user.lastName
         })
+    })
+})
+
+describe("support account identity", () => {
+    it("sets verified support identity when identifying a signed-in account", () => {
+        vi.mocked(posthog.get_explicit_consent_status).mockReturnValue("granted")
+        identifyPostHogUser({
+            id: "account-1",
+            email: "test@example.com",
+            supportIdentityHash: "signed-hash"
+        })
+        expect(posthog.setIdentity).toHaveBeenCalledWith("account-1", "signed-hash")
     })
 })

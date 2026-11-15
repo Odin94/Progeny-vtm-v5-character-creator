@@ -24,6 +24,7 @@ const envSchema = z.object({
     // PostHog (optional)
     PUBLIC_POSTHOG_KEY: z.string().optional(),
     PUBLIC_POSTHOG_HOST: z.url().default("https://eu.i.posthog.com").optional(),
+    POSTHOG_SUPPORT_IDENTITY_SECRET: z.string().min(1).optional(),
     POSTHOG_MANAGEMENT_HOST: z.url().default("https://eu.posthog.com"),
     POSTHOG_MANAGEMENT_API_KEY: z.string().optional(),
     POSTHOG_MANAGEMENT_PROJECT_ID: z.string().regex(/^\d+$/).default("95399"),

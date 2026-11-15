@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto"
 import { FastifyInstance } from "fastify"
 import { eq } from "drizzle-orm"
 import { db, schema } from "../db/index.js"
@@ -419,6 +420,7 @@ export async function authRoutes(fastify: FastifyInstance) {
                     request
                 )
 
+                reply.header("Cache-Control", "no-store")
                 reply.send({
                     id: user.id,
                     email: user.email,
@@ -429,6 +431,12 @@ export async function authRoutes(fastify: FastifyInstance) {
                     nameTagEnabled: user.nameTagEnabled,
                     nameTagVisible: user.nameTagVisible,
                     actorIsSuperadmin: actorUser.isSuperadmin,
+                    supportIdentityHash:
+                        env.POSTHOG_SUPPORT_IDENTITY_SECRET && !request.impersonation?.active
+                            ? createHmac("sha256", env.POSTHOG_SUPPORT_IDENTITY_SECRET)
+                                  .update(user.id)
+                                  .digest("hex")
+                            : undefined,
                     impersonation: serializeImpersonationState(request)
                 })
             } catch (error) {

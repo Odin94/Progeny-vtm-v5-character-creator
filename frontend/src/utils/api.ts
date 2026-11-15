@@ -215,6 +215,7 @@ type UserPreferences = {
 }
 
 export type CurrentUser = {
+    supportIdentityHash?: string
     id: string
     email: string
     firstName?: string

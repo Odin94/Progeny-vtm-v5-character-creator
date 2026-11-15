@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto"
+import { env } from "./config/env.js"
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 import { sql, eq } from "drizzle-orm"
 import { buildApp } from "./app.js"
@@ -158,6 +160,26 @@ describe("superadmin impersonation", () => {
                 lastName: "User"
             }
         ])
+    })
+
+    it("issues account-scoped support credentials from the authenticated session", async () => {
+        const previousSecret = env.POSTHOG_SUPPORT_IDENTITY_SECRET
+        env.POSTHOG_SUPPORT_IDENTITY_SECRET = "test-support-secret"
+        try {
+            setWorkosUser(ADMIN_ID, ADMIN_EMAIL)
+            const response = await app.inject({
+                method: "GET",
+                url: "/auth/me",
+                headers: csrfHeaders
+            })
+            expect(response.statusCode).toBe(200)
+            expect(response.headers["cache-control"]).toBe("no-store")
+            expect(response.json().supportIdentityHash).toBe(
+                createHmac("sha256", "test-support-secret").update(ADMIN_ID).digest("hex")
+            )
+        } finally {
+            env.POSTHOG_SUPPORT_IDENTITY_SECRET = previousSecret
+        }
     })
 
     it("rejects admin routes for non-superadmins", async () => {

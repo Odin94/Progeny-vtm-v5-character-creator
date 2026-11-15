@@ -75,3 +75,7 @@ Copied collection detail responses resolve the immediate source entry and public
 ### Character save revision preconditions
 
 `PUT /characters/:id` and `character_update` socket messages require a nonnegative `characterVersion` representing the last acknowledged save. The database update atomically matches ID, owner, and that revision, returning 409 on divergence. The document `version` remains its schema version. Successful writes increment the save revision in both stored JSON and the character row. Socket updates apply the REST schema and cookie-based ownership rules.
+
+## Support account identity
+
+`GET /auth/me` returns `supportIdentityHash` when `POSTHOG_SUPPORT_IDENTITY_SECRET` is configured. Set this backend-only variable to the Identity verification secret from PostHog Support settings. The server signs the authenticated account ID with HMAC-SHA256; the frontend passes it to `posthog.setIdentity` after consent. Logout still resets PostHog to isolate accounts; the next login restores account ticket access through the signed identity. Impersonation does not issue support credentials. Existing browser-only tickets may require the email recovery flow once. Never expose the signing secret in frontend environment variables.
