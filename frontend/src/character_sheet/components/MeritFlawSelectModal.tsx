@@ -829,6 +829,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                     {isEditable ? <Tabs.Tab value="custom">Custom</Tabs.Tab> : null}
                                 </Tabs.List>
                                 <Button
+                                    data-analytics-autocapture="browse-sheet-merits"
                                     data-testid="toggle-advanced-merits-flaws-button"
                                     variant="outline"
                                     color={primaryColor}

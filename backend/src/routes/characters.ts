@@ -191,20 +191,6 @@ export async function characterRoutes(fastify: FastifyInstance) {
                 data: JSON.parse(c.data)
             }))
 
-            await trackEvent(
-                "characters_listed",
-                {
-                    endpoint: "/characters",
-                    method: "GET",
-                    userId,
-                    ownedCount: ownedCharacters.length,
-                    sharedCount: sharedCharacters.length,
-                    totalCount: allCharacters.length
-                },
-                userId,
-                request
-            )
-
             reply.send(allCharacters)
         }
     )

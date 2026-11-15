@@ -201,6 +201,7 @@ const Intro = ({ setCharacter, nextStep, setSelectedStep }: IntroProps) => {
                                 >
                                     {(props) => (
                                         <Button
+                                            data-analytics-autocapture="import-character"
                                             leftSection={<FontAwesomeIcon icon={faFileArrowUp} />}
                                             size="md"
                                             variant="outline"

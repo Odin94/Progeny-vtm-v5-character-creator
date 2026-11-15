@@ -1155,6 +1155,7 @@ const DiceRollModal = ({
                 <Group justify="space-between">
                     {useThreeDice && (
                         <Button
+                            data-analytics-autocapture="sort-dice"
                             variant="subtle"
                             color="gray"
                             size="xs"

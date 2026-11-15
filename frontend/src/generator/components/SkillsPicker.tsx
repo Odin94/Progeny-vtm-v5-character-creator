@@ -569,7 +569,12 @@ const SkillsPicker = ({
             />
             {hasConfirmedSkills ? (
                 <Group justify="center" mt="md">
-                    <Button variant="outline" color="red" onClick={resetSkills}>
+                    <Button
+                        data-analytics-autocapture="reset-skills"
+                        variant="outline"
+                        color="red"
+                        onClick={resetSkills}
+                    >
                         Reset skills
                     </Button>
                     <Button
