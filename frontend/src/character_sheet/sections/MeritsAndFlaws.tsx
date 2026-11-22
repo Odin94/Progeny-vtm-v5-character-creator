@@ -311,6 +311,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                                     >
                                         <Center style={{ height: "100%" }}>
                                             <Button
+                                                data-analytics-autocapture="open-merit-picker"
                                                 size="sm"
                                                 variant="light"
                                                 color={primaryColor}

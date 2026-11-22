@@ -158,6 +158,7 @@ const CharactersSection = ({
                             >
                                 {(props) => (
                                     <Menu.Item
+                                        data-analytics-autocapture="import-character"
                                         leftSection={<IconFileUpload size={16} />}
                                         {...props}
                                     >
@@ -228,6 +229,7 @@ const CharactersSection = ({
                                                     </Button>
                                                 ) : null}
                                                 <Button
+                                                    data-analytics-autocapture="load-character"
                                                     size="sm"
                                                     color="red"
                                                     variant="light"
@@ -317,6 +319,7 @@ const CharactersSection = ({
                                         ) : (
                                             <>
                                                 <Button
+                                                    data-analytics-autocapture="load-character"
                                                     size="sm"
                                                     color="red"
                                                     variant="light"

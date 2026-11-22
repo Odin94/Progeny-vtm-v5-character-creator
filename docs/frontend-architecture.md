@@ -64,3 +64,21 @@ Use fixed operation/reason codes and optional character IDs/HTTP status. Never f
 The landing “Save and start new” action pairs `character_save_attempt` with `character_save_outcome` using `operation_id`. Outcomes distinguish success, refusal, failure and cancellation; missing outcomes can indicate an interrupted page/session or missing telemetry delivery. These lifecycle events include only static operation/outcome/reason codes and a random ID, and do not replace error/warning reporting.
 
 Homebrew predator types use `src/data/predatorTypeOptions.ts` to resolve official definitions, enabled collections, and the saved `predatorType.homebrew` snapshot. The snapshot carries specialty and Discipline choices, fixed/optional Merits and Flaws, skill grants, and Humanity/Blood Potency changes. `pickedDisciplineRef` keeps bonus powers tied to the correct official or Homebrew Discipline. `appliedSkillBonuses` tracks only granted dots that fit under the skill cap; replacing/skipping a type removes those dots before applying the next grants. Generator skill allocation uses the base skills with those grants removed. Keep frontend `PredatorTypeRules.ts` and the backend character schema aligned.
+
+
+### Analytics ingestion scope
+
+Interaction autocapture in `src/routes/__root.tsx` is opt-in through
+`data-analytics-autocapture` on individual controls. Keep it for discovery and
+utility actions without dedicated events: landing CTAs, resets, picker openings,
+merit/loresheet browsing, dice sorting, character loading/import, and library
+filters. Do not mark whole editors or containers: descendants would also qualify
+and duplicate explicit pip/selection events. Pageviews, explicit product events,
+errors, and replay retain their independent configuration. New controls need an
+explicit event or an allowlisted attribute if their usage matters.
+
+Successful routine API reads (`characters_listed`, `coteries_listed`,
+`auth_me_success`) are intentionally not ingested. Keep meaningful outcomes and
+failure events. After deployment, compare a full week of ingestion against the
+1M monthly allowance; the allowlist budget is roughly 90K interactions/month at
+the November 2026 baseline.

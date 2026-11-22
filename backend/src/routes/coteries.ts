@@ -656,20 +656,6 @@ export async function coterieRoutes(fastify: FastifyInstance) {
                 )
             )
 
-            await trackEvent(
-                "coteries_listed",
-                {
-                    endpoint: "/coteries",
-                    method: "GET",
-                    userId,
-                    ownedCount: ownedCoteries.length,
-                    joinedCount: playerMemberships.length,
-                    totalCount: allCoteries.length
-                },
-                userId,
-                request
-            )
-
             reply.send(allCoteries)
         }
     )

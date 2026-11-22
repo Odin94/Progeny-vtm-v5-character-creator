@@ -118,6 +118,7 @@ const XpAddButton = ({
         <Stack gap={4} align="center">
             <Tooltip label={canAfford ? `${cost} XP` : blockedReason} withArrow>
                 <Button
+                    data-analytics-autocapture="open-discipline-picker"
                     size={large ? "md" : "sm"}
                     radius="md"
                     variant="light"
@@ -772,6 +773,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             />
                                                         ) : (
                                                             <Button
+                                                                data-analytics-autocapture="open-power-picker"
                                                                 size="sm"
                                                                 radius="md"
                                                                 variant="light"
@@ -848,6 +850,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             })()
                                         ) : (
                                             <Button
+                                                data-analytics-autocapture="open-discipline-picker"
                                                 size="md"
                                                 variant="light"
                                                 color={primaryColor}
