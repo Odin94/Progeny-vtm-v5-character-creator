@@ -12,6 +12,7 @@ import {
 import { useMediaQuery } from "@mantine/hooks"
 import { IconArrowBackUp, IconArrowForwardUp, IconArrowsMaximize } from "@tabler/icons-react"
 import { memo, useState } from "react"
+import classes from "../sheet.module.css"
 import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import type { SheetOptions } from "../CharacterSheet"
@@ -55,34 +56,29 @@ const CharacterDescription = memo(
 
         return (
             <>
-                <Box miw={0}>
-                    <Group gap="xs" wrap="nowrap" align="flex-start">
-                        <Text
-                            lineClamp={2}
-                            style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}
+                <div className={classes.description}>
+                    <div className={classes.descriptionText}>
+                        <span className={classes.label}>Description</span>
+                        <p
+                            className={classes.descriptionBody}
+                            data-empty={!hasDescription || undefined}
                         >
-                            <Text component="span" fw={700}>
-                                Description:
-                            </Text>{" "}
                             {hasDescription ? description.value : "—"}
-                        </Text>
-                        <Tooltip label="Expand description & appearance" withArrow>
-                            <ActionIcon
-                                variant="subtle"
-                                color="gray"
-                                c="dimmed"
-                                size={phoneScreen ? 44 : 28}
-                                radius="sm"
-                                aria-label="Expand description & appearance"
-                                aria-haspopup="dialog"
-                                onClick={() => setOpened(true)}
-                                style={{ flexShrink: 0 }}
-                            >
-                                <IconArrowsMaximize size={14} stroke={1.5} />
-                            </ActionIcon>
-                        </Tooltip>
-                    </Group>
-                </Box>
+                        </p>
+                    </div>
+                    <Tooltip label="Expand description & appearance" withArrow>
+                        <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            size={phoneScreen ? 44 : 32}
+                            aria-label="Expand description & appearance"
+                            aria-haspopup="dialog"
+                            onClick={() => setOpened(true)}
+                        >
+                            <IconArrowsMaximize size={16} stroke={1.6} />
+                        </ActionIcon>
+                    </Tooltip>
+                </div>
                 <Modal
                     opened={opened}
                     onClose={close}

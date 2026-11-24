@@ -1,0 +1,284 @@
+/* Shared layout for the app's small dialogs (load/reset/save/recovery). Tokens: src/index.css */
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-4);
+}
+
+.lede {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--pg-ink-2);
+    text-wrap: pretty;
+}
+
+.note {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--pg-ink-3);
+    text-wrap: pretty;
+}
+
+.centered {
+    text-align: center;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+}
+
+.field {
+    padding: var(--pg-space-3) var(--pg-space-4);
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-sunken);
+    border: 1px solid var(--pg-border-faint);
+}
+
+.fieldLabel {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.fieldValue {
+    font-family: var(--pg-font-display);
+    font-size: 1.0625rem;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+}
+
+.rule {
+    height: 1px;
+    border: 0;
+    margin: var(--pg-space-1) 0 0;
+    background: linear-gradient(90deg, transparent, var(--pg-border-gold), transparent);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-2) var(--pg-space-3);
+}
+
+.actionsEnd {
+    justify-content: flex-end;
+}
+
+.actionGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--pg-space-2);
+    margin-left: auto;
+}
+
+@media (max-width: 30em) {
+    .actions > * {
+        flex: 1 1 auto;
+    }
+
+    .actionGroup > * {
+        flex: 1 1 auto;
+    }
+}
+
+.list {
+    margin: 0;
+    padding-left: var(--pg-space-5);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--pg-ink-2);
+}
+
+.list li + li {
+    margin-top: 6px;
+}
+
+.list li {
+    overflow-wrap: anywhere;
+}
+
+.list li::marker {
+    color: var(--pg-warning);
+}
+
+.code {
+    margin: 0;
+    padding: var(--pg-space-3);
+    max-height: 220px;
+    overflow: auto;
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-sunken);
+    border: 1px solid var(--pg-border-faint);
+    font-family: var(--pg-font-mono);
+    font-size: 0.75rem;
+    line-height: 1.55;
+    color: var(--pg-ink-3);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.versionGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--pg-space-2);
+}
+
+@media (max-width: 30em) {
+    .versionGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.versionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--pg-space-3);
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-sunken);
+    border: 1px solid var(--pg-border-faint);
+    font-size: 0.875rem;
+}
+
+.versionCardLabel {
+    font-weight: 600;
+    color: var(--pg-ink);
+}
+
+.versionCardValue {
+    color: var(--pg-ink-3);
+}
+
+.caption {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--pg-ink-3);
+}
+
+.sectionLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+}
+
+.fileRow {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-3);
+    min-width: 0;
+}
+
+.fileIcon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--pg-radius-md);
+    background: var(--pg-sunken);
+    border: 1px solid var(--pg-border);
+    color: var(--pg-gold);
+}
+
+.fileName {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--pg-ink);
+    overflow-wrap: anywhere;
+}
+
+.links {
+    margin: 0;
+    font-size: 0.8125rem;
+    text-align: center;
+    color: var(--pg-ink-3);
+}
+
+/* Centered dialog heading used by ConfirmActionModal-style dialogs */
+.intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--pg-space-2);
+    text-align: center;
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--pg-space-2);
+    margin: 0;
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pg-ink);
+    text-wrap: balance;
+}
+
+@media (max-width: 48em) {
+    .heading {
+        font-size: 1.15rem;
+    }
+}
+
+.headingIcon {
+    flex: none;
+    color: var(--pg-gold);
+}
+
+.ornament {
+    width: 120px;
+    height: 10px;
+    color: var(--pg-gold-dim);
+}
+
+.ornament[data-tone="danger"] {
+    color: var(--pg-blood-bright);
+}
+
+.chevron {
+    transition: transform var(--pg-dur-base) var(--ease-out);
+}
+
+.chevron[data-open] {
+    transform: rotate(180deg);
+}
+
+.code[data-spaced] {
+    margin-top: var(--pg-space-2);
+}
+
+.centerRow {
+    display: flex;
+    justify-content: center;
+}
+
+.code[data-spaced] {
+    animation: app-modal-fade-in var(--pg-dur-base) var(--ease-out);
+}
+
+@keyframes app-modal-fade-in {
+    from {
+        opacity: 0;
+    }
+}

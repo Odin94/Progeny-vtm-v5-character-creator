@@ -1,11 +1,14 @@
-import { Text } from "@mantine/core"
+import { IconAlertTriangle } from "@tabler/icons-react"
 import "./ContentWarning.css"
 
 const ContentWarning = ({ children }: { children: React.ReactNode }) => (
     <aside className="content-warning" aria-label="Content warning">
         <div className="content-warning__body">
-            <Text className="content-warning__title">Content warning</Text>
-            <Text className="content-warning__text">{children}</Text>
+            <p className="content-warning__title">
+                <IconAlertTriangle size={15} stroke={1.8} aria-hidden="true" />
+                Content warning
+            </p>
+            <p className="content-warning__text">{children}</p>
         </div>
     </aside>
 )

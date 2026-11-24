@@ -1,13 +1,15 @@
-import { Box, Group, Stack, Text, useMantineTheme, ActionIcon, Tooltip, Badge } from "@mantine/core"
-import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
+import { Button, Tooltip } from "@mantine/core"
 import { IconRefresh } from "@tabler/icons-react"
+import type { CSSProperties } from "react"
 import successIcon from "~/resources/diceResults/success.svg"
 import criticalIcon from "~/resources/diceResults/critical.svg"
 import bloodSuccessIcon from "~/resources/diceResults/blood-success.svg"
 import bloodCriticalIcon from "~/resources/diceResults/blood-critical.svg"
 import bestialFailureIcon from "~/resources/diceResults/bestial-failure.svg"
 import { globals } from "~/globals"
+import type { RollOutcome } from "../rollOutcome"
+import { RollEffect, RollVignette } from "./RollEffects"
+import classes from "../diceRoller.module.css"
 
 type SuccessResult = {
     type: "success" | "critical" | "blood-success" | "blood-critical" | "bestial-failure"
@@ -19,10 +21,29 @@ type SuccessResultsProps = {
     results: SuccessResult[]
     totalSuccesses: number
     primaryColor: string
+    outcome: RollOutcome
     onReroll?: () => void
     canReroll?: boolean
     selectedDiceCount?: number
     rerollDisabledReason?: string
+    availableWillpower?: number
+    maxWillpower?: number
+}
+
+const iconFor: Record<SuccessResult["type"], string> = {
+    success: successIcon,
+    critical: criticalIcon,
+    "blood-success": bloodSuccessIcon,
+    "blood-critical": bloodCriticalIcon,
+    "bestial-failure": bestialFailureIcon
+}
+
+const labelFor: Record<SuccessResult["type"], string> = {
+    success: "Success",
+    critical: "Critical",
+    "blood-success": "Hunger success",
+    "blood-critical": "Messy critical",
+    "bestial-failure": "Bestial failure"
 }
 
 const SuccessResults = ({
@@ -30,206 +51,138 @@ const SuccessResults = ({
     results,
     totalSuccesses,
     primaryColor,
+    outcome,
     onReroll,
     canReroll = false,
     selectedDiceCount = 0,
-    rerollDisabledReason
+    rerollDisabledReason,
+    availableWillpower,
+    maxWillpower
 }: SuccessResultsProps) => {
-    const theme = useMantineTheme()
-    const shouldReduceMotion = useReducedMotion()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
-    const totalSuccessesRef = useRef<HTMLDivElement>(null)
-    const containerRef = useRef<HTMLDivElement>(null)
-    const [showCountInHeadline, setShowCountInHeadline] = useState(false)
-
-    useEffect(() => {
-        const checkVisibility = () => {
-            if (!totalSuccessesRef.current || !containerRef.current) return
-
-            const containerRect = containerRef.current.getBoundingClientRect()
-            const totalSuccessesRect = totalSuccessesRef.current.getBoundingClientRect()
-
-            const isVisible =
-                totalSuccessesRect.top >= containerRect.top &&
-                totalSuccessesRect.bottom <= containerRect.bottom
-
-            setShowCountInHeadline(!isVisible)
-        }
-
-        checkVisibility()
-        const observer = new ResizeObserver(checkVisibility)
-        const mutationObserver = new MutationObserver(checkVisibility)
-
-        if (containerRef.current) {
-            observer.observe(containerRef.current)
-            mutationObserver.observe(containerRef.current, {
-                childList: true,
-                subtree: true
-            })
-        }
-
-        window.addEventListener("scroll", checkVisibility, true)
-        window.addEventListener("resize", checkVisibility)
-
-        return () => {
-            observer.disconnect()
-            mutationObserver.disconnect()
-            window.removeEventListener("scroll", checkVisibility, true)
-            window.removeEventListener("resize", checkVisibility)
-        }
-    }, [results])
+    const noWillpower = rerollDisabledReason === "No willpower left to reroll"
+    const awaitingSelection = rerollDisabledReason === "Select up to 3 regular dice to reroll"
+    const countState = noWillpower
+        ? "empty"
+        : awaitingSelection
+          ? "hint"
+          : selectedDiceCount > 0
+            ? "selected"
+            : undefined
+    const countLabel = noWillpower
+        ? "No WP left"
+        : awaitingSelection
+          ? "Tap dice"
+          : selectedDiceCount > 0
+            ? `${selectedDiceCount}/3`
+            : null
 
     return (
-        <motion.div
-            initial={{
-                opacity: 0,
-                y: shouldReduceMotion ? 0 : 20,
-                scale: shouldReduceMotion ? 1 : 0.95
-            }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{
-                opacity: 0,
-                y: shouldReduceMotion ? 0 : -20,
-                scale: shouldReduceMotion ? 1 : 0.95
-            }}
-            transition={
-                shouldReduceMotion
-                    ? { duration: 0.12 }
-                    : {
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 25,
-                          duration: 0.5
-                      }
-            }
-            style={{ flexShrink: 0, marginTop: "auto" }}
+        <section
+            className={classes.results}
+            data-outcome={outcome.kind}
+            data-compact={compact || undefined}
+            aria-label="Roll result"
         >
-            <Box
-                ref={containerRef}
-                style={{
-                    border: `1px solid ${colorValue}`,
-                    borderRadius: "8px",
-                    padding: compact ? "0.5rem" : "1rem",
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    minHeight: compact ? "120px" : "150px",
-                    maxHeight: compact ? "120px" : "150px",
-                    display: "flex",
-                    flexDirection: "column",
-                    flexShrink: 0,
-                    overflow: "hidden"
-                }}
-            >
-                <Stack gap={compact ? "xs" : "sm"} style={{ flex: 1 }}>
-                    <Group justify="space-between" align="center" wrap="nowrap">
-                        <Text fw={700} fz="md" c={primaryColor} style={{ flex: 1 }}>
-                            Successes{showCountInHeadline ? `: ${totalSuccesses}` : ":"}
-                        </Text>
-                        {onReroll ? (
-                            <Group gap="xs" wrap="nowrap">
-                                {rerollDisabledReason === "No willpower left to reroll" ? (
-                                    <Badge size="sm" variant="outline" color="gray">
-                                        No WP left
-                                    </Badge>
-                                ) : rerollDisabledReason ===
-                                  "Select up to 3 regular dice to reroll" ? (
-                                    <Badge size="sm" variant="outline" color={primaryColor}>
-                                        Tap dice
-                                    </Badge>
-                                ) : selectedDiceCount > 0 ? (
-                                    <Badge size="sm" variant="filled" color={primaryColor}>
-                                        {selectedDiceCount}/3
-                                    </Badge>
-                                ) : null}
-                                <Tooltip
-                                    label={
-                                        rerollDisabledReason ??
-                                        (selectedDiceCount > 0
-                                            ? `Reroll ${selectedDiceCount} dice (1 willpower)`
-                                            : "Select up to 3 regular dice to reroll (1 willpower)")
-                                    }
-                                    zIndex={2100}
-                                    events={globals.tooltipTriggerEvents}
+            <RollEffect kind={outcome.kind} />
+            <RollVignette kind={outcome.kind} />
+
+            <div className={classes.resultsTop}>
+                <div className={classes.total} aria-hidden="true">
+                    <span className={classes.totalNumber}>{totalSuccesses}</span>
+                    <span className={classes.totalUnit}>
+                        {totalSuccesses === 1 ? "success" : "successes"}
+                    </span>
+                </div>
+                {outcome.label ? (
+                    <div className={classes.outcome}>
+                        <div className={classes.outcomeLabel}>{outcome.label}</div>
+                    </div>
+                ) : null}
+            </div>
+            {outcome.detail && !compact ? (
+                <div className={classes.outcomeDetail}>{outcome.detail}</div>
+            ) : null}
+            <span className="pg-visually-hidden" aria-live="polite">
+                Total Successes: {totalSuccesses}
+            </span>
+
+            {results.length > 0 ? (
+                <div className={classes.resultIcons}>
+                    {results.map((result, index) => (
+                        <img
+                            key={index}
+                            src={iconFor[result.type]}
+                            alt={labelFor[result.type]}
+                            title={labelFor[result.type]}
+                            className={classes.resultIcon}
+                            style={{ "--i": index } as CSSProperties}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className={classes.noSuccesses}>No successes</div>
+            )}
+
+            {onReroll ? (
+                <div className={classes.reroll}>
+                    <div className={classes.rerollText}>
+                        <span className={classes.rerollTitle}>
+                            Willpower reroll
+                            {maxWillpower ? (
+                                <span
+                                    className={classes.willpowerDots}
+                                    role="img"
+                                    aria-label={`${availableWillpower ?? 0} of ${maxWillpower} willpower left`}
                                 >
-                                    <span style={{ display: "inline-flex" }}>
-                                        <ActionIcon
-                                            aria-label="Reroll selected dice with willpower"
-                                            color={primaryColor}
-                                            variant={canReroll ? "filled" : "outline"}
-                                            onClick={onReroll}
-                                            disabled={!canReroll}
-                                            size="sm"
-                                            style={
-                                                !canReroll ? { pointerEvents: "none" } : undefined
-                                            }
-                                        >
-                                            <IconRefresh size={16} />
-                                        </ActionIcon>
-                                    </span>
-                                </Tooltip>
-                            </Group>
-                        ) : null}
-                    </Group>
-                    {results.length > 0 ? (
-                        <>
-                            <Group gap="xs" wrap="wrap">
-                                {results.map((result, index) => {
-                                    let iconSrc: string
-                                    switch (result.type) {
-                                        case "success":
-                                            iconSrc = successIcon
-                                            break
-                                        case "critical":
-                                            iconSrc = criticalIcon
-                                            break
-                                        case "blood-success":
-                                            iconSrc = bloodSuccessIcon
-                                            break
-                                        case "blood-critical":
-                                            iconSrc = bloodCriticalIcon
-                                            break
-                                        case "bestial-failure":
-                                            iconSrc = bestialFailureIcon
-                                            break
-                                    }
-                                    return (
-                                        <motion.img
+                                    {Array.from({ length: maxWillpower }, (_, index) => (
+                                        <span
                                             key={index}
-                                            src={iconSrc}
-                                            alt={result.type}
-                                            style={{
-                                                width: compact ? "32px" : "40px",
-                                                height: compact ? "32px" : "40px"
-                                            }}
-                                            initial={{
-                                                opacity: 0,
-                                                scale: shouldReduceMotion ? 1 : 0.95,
-                                                rotate: shouldReduceMotion ? 0 : -180
-                                            }}
-                                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                                            transition={
-                                                shouldReduceMotion
-                                                    ? { duration: 0.12 }
-                                                    : {
-                                                          type: "spring",
-                                                          stiffness: 400,
-                                                          damping: 20,
-                                                          delay: index * 0.05
-                                                      }
+                                            className={classes.willpowerDot}
+                                            data-filled={
+                                                index < (availableWillpower ?? 0) || undefined
                                             }
                                         />
-                                    )
-                                })}
-                            </Group>
-                            <Text ref={totalSuccessesRef} fw={600} fz={compact ? "md" : "lg"}>
-                                Total Successes: {totalSuccesses}
-                            </Text>
-                        </>
-                    ) : (
-                        <Text c="dimmed">No successes</Text>
-                    )}
-                </Stack>
-            </Box>
-        </motion.div>
+                                    ))}
+                                </span>
+                            ) : null}
+                        </span>
+                        {!compact ? (
+                            <span className={classes.rerollSub}>Up to 3 regular dice</span>
+                        ) : null}
+                    </div>
+                    {countLabel ? (
+                        <span className={classes.rerollCount} data-state={countState}>
+                            {countLabel}
+                        </span>
+                    ) : null}
+                    <Tooltip
+                        label={
+                            rerollDisabledReason ??
+                            (selectedDiceCount > 0
+                                ? `Reroll ${selectedDiceCount} dice (1 willpower)`
+                                : "Select up to 3 regular dice to reroll (1 willpower)")
+                        }
+                        zIndex={2100}
+                        events={globals.tooltipTriggerEvents}
+                    >
+                        <span style={{ display: "inline-flex" }}>
+                            <Button
+                                aria-label="Reroll selected dice with willpower"
+                                color={canReroll ? "gold" : primaryColor}
+                                variant={canReroll ? "filled" : "default"}
+                                size="xs"
+                                onClick={onReroll}
+                                disabled={!canReroll}
+                                leftSection={<IconRefresh size={14} />}
+                                style={!canReroll ? { pointerEvents: "none" } : undefined}
+                            >
+                                Reroll
+                            </Button>
+                        </span>
+                    </Tooltip>
+                </div>
+            ) : null}
+        </section>
     )
 }
 

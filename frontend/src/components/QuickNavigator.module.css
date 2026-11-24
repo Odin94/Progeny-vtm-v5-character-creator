@@ -1,0 +1,101 @@
+.content {
+    border: 1px solid var(--pg-border-gold);
+    background:
+        radial-gradient(120% 50% at 50% 0%, rgba(120, 18, 32, 0.16), transparent 70%),
+        linear-gradient(180deg, rgba(30, 23, 28, 0.98), rgba(16, 12, 15, 0.98));
+    box-shadow:
+        var(--pg-shadow-4),
+        inset 0 1px 0 rgba(255, 238, 228, 0.06);
+}
+
+.search {
+    --input-bg: transparent;
+    --input-bd: transparent;
+    height: 56px;
+    font-size: 1rem;
+    color: var(--pg-ink);
+    box-shadow: none !important;
+    border-radius: 0;
+}
+
+.search::placeholder {
+    color: var(--pg-ink-4);
+    font-family: var(--pg-font-lore);
+    font-style: italic;
+    font-size: 1.0625rem;
+}
+
+.actionsList {
+    padding: 6px;
+    border-color: var(--pg-border) !important;
+}
+
+.actionsGroup {
+    margin-top: 6px;
+}
+
+.actionsGroup::before {
+    content: var(--spotlight-label);
+    color: var(--pg-gold-dim);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    padding: 8px 10px 4px;
+}
+
+.action {
+    border-radius: var(--pg-radius-md);
+    padding: 8px 10px;
+    color: var(--pg-ink-2);
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        color var(--pg-dur-fast) var(--ease-out);
+}
+
+.action:where([data-selected]) {
+    background-color: var(--pg-accent-soft);
+    color: var(--pg-ink);
+    box-shadow: inset 2px 0 0 var(--pg-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .action:where(:not([data-selected])):hover {
+        background-color: rgba(242, 220, 210, 0.05);
+    }
+}
+
+.actionLabel {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.actionLabel mark {
+    background: transparent;
+    color: var(--pg-gold);
+    font-weight: 600;
+}
+
+.actionDescription {
+    color: var(--pg-ink-3);
+    font-size: 0.75rem;
+}
+
+.actionSection {
+    color: var(--pg-ink-3);
+}
+
+.action:where([data-selected]) .actionSection {
+    color: var(--pg-accent-bright);
+}
+
+.empty {
+    color: var(--pg-ink-3);
+    font-family: var(--pg-font-lore);
+    font-style: italic;
+    padding: 24px;
+}
+
+.footer {
+    border-top: 1px solid var(--pg-border);
+}

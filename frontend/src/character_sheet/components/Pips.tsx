@@ -1,8 +1,16 @@
-import { Group, Stack, Text } from "@mantine/core"
+import { Text } from "@mantine/core"
 import { useMediaQuery } from "@mantine/hooks"
-import { memo, startTransition, useRef, useMemo, useEffect, useState } from "react"
+import {
+    memo,
+    startTransition,
+    useRef,
+    useMemo,
+    useEffect,
+    useState,
+    type CSSProperties
+} from "react"
 import posthog from "posthog-js"
-import "./Pips.css"
+import classes from "./pips.module.css"
 import PipButton from "./PipButton"
 import { SheetOptions } from "../CharacterSheet"
 import { Character } from "~/data/Character"
@@ -26,6 +34,8 @@ type PipsProps = {
     instant?: boolean
     mobileColumns?: number
     onLevelChange?: (level: number) => void
+    /** Accessible name prefix for each pip, e.g. "Strength" → "Strength 3". */
+    label?: string
 }
 
 const BLOCKED_WARNING_DURATION_MS = 2_500
@@ -39,7 +49,8 @@ const Pips = ({
     readOnly = false,
     instant = false,
     mobileColumns,
-    onLevelChange
+    onLevelChange,
+    label
 }: PipsProps) => {
     const phoneScreen = useMediaQuery("(max-width: 48em)")
     const blockedWarningIdRef = useRef(0)
@@ -322,17 +333,15 @@ const Pips = ({
         })
     }
 
+    const useColumns = phoneScreen && !!mobileColumns
+
     return (
-        <Stack gap={2} style={{ position: "relative", overflow: "visible" }}>
-            <Group
-                gap={4}
+        <div className={classes.wrapper}>
+            <div
+                className={classes.track}
+                data-columns={useColumns || undefined}
                 style={
-                    phoneScreen && mobileColumns
-                        ? {
-                              display: "grid",
-                              gridTemplateColumns: `repeat(${mobileColumns}, max-content)`
-                          }
-                        : undefined
+                    useColumns ? ({ "--track-columns": mobileColumns } as CSSProperties) : undefined
                 }
             >
                 {Array.from({ length: maxLevel }, (_, index) => (
@@ -343,34 +352,27 @@ const Pips = ({
                         firstChangingIndex={firstChangingIndex}
                         isFilling={isFilling}
                         onClick={readOnly ? undefined : () => handlePipClick(index)}
-                        style={
-                            !(phoneScreen && mobileColumns) &&
-                            (index + 1) % 5 === 0 &&
-                            index < maxLevel - 1
-                                ? { marginRight: 8 }
-                                : undefined
-                        }
+                        groupEnd={!useColumns && (index + 1) % 5 === 0 && index < maxLevel - 1}
                         options={options}
                         disabledReason={readOnly ? undefined : getDisabledReason(index)}
                         hardDisabled={readOnly || (!!options && !options.canEdit)}
                         xpCost={readOnly ? undefined : getXPCost(index)}
                         instant={instant}
+                        label={label}
                     />
                 ))}
-            </Group>
+            </div>
             {blockedWarning ? (
                 <Text
                     key={blockedWarning.id}
-                    className="pip-blocked-warning"
+                    className={classes.blockedWarning}
                     role="status"
                     aria-live="polite"
-                    size="xs"
-                    c="red.4"
                 >
                     {blockedWarning.reason}
                 </Text>
             ) : null}
-        </Stack>
+        </div>
     )
 }
 
@@ -398,6 +400,7 @@ export default memo(Pips, (prev, next) => {
         prev.instant === next.instant &&
         prev.mobileColumns === next.mobileColumns &&
         prev.onLevelChange === next.onLevelChange &&
+        prev.label === next.label &&
         getMemoCharacterKey(prev.options) === getMemoCharacterKey(next.options)
     )
 })

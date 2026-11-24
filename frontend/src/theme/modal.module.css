@@ -1,20 +1,38 @@
 .body {
     padding: 1.35rem;
 }
+
 .header {
-    padding: 1.35rem 1.35rem 0;
+    padding: 1.35rem 3rem 0;
+    min-height: 0;
 }
+
 .title {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
+    text-align: center;
+    flex: 1;
 }
+
+/* Pinned to the corner so the title stays optically centered in the modal. */
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
 @media (max-width: 48em) {
     .body {
         padding: 1.1rem;
+        padding-bottom: calc(1.1rem + var(--pg-safe-bottom));
     }
     .header {
-        padding: 1.1rem 1.1rem 0;
+        padding: 1.1rem 2.75rem 0;
+    }
+    .close {
+        top: 0.8rem;
+        right: 0.8rem;
     }
     .title {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
     }
 }

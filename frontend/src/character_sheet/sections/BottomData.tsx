@@ -1,4 +1,3 @@
-import { Grid, Group, Paper, Stack, Text } from "@mantine/core"
 import { memo, useCallback } from "react"
 import DamagePips from "~/character_sheet/components/DamagePips"
 import HumanityStainsPips from "~/character_sheet/components/HumanityStainsPips"
@@ -7,14 +6,19 @@ import RemorseTestButton from "~/character_sheet/components/RemorseTestButton"
 import RouseCheckButton from "~/character_sheet/components/RouseCheckButton"
 import SquarePips from "~/character_sheet/components/SquarePips"
 import { SheetOptions } from "../CharacterSheet"
-import { sheetSurfaceStyle } from "../utils/style"
+import classes from "../sheet.module.css"
 
 type BottomDataProps = {
     options: SheetOptions
 }
 
+// Boxes still unmarked, matching how DamagePips draws a track (aggravated is a subset of the
+// marked boxes, but tolerate data where it is not).
+const remainingBoxes = (max: number, superficial: number, aggravated: number) =>
+    Math.max(0, max - Math.max(superficial, aggravated))
+
 const BottomData = ({ options }: BottomDataProps) => {
-    const { character, setCharacter, primaryColor } = options
+    const { character, setCharacter, primaryColor, mode } = options
     const {
         superficialDamage,
         aggravatedDamage,
@@ -24,6 +28,13 @@ const BottomData = ({ options }: BottomDataProps) => {
         humanityStains
     } = character.ephemeral
     const emptyHumanityPips = 10 - character.humanity
+    const showMaxTracks = mode === "free"
+    const healthLeft = remainingBoxes(character.maxHealth, superficialDamage, aggravatedDamage)
+    const willpowerLeft = remainingBoxes(
+        character.willpower,
+        superficialWillpowerDamage,
+        aggravatedWillpowerDamage
+    )
     const updateHealthDamage = useCallback(
         (newSuperficial: number, newAggravated: number) =>
             setCharacter((current) => ({
@@ -50,112 +61,139 @@ const BottomData = ({ options }: BottomDataProps) => {
     )
 
     return (
-        <Grid justify="space-between">
-            <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" style={sheetSurfaceStyle}>
-                    <Text fw={700} mb="xs">
-                        Health
-                    </Text>
-                    <Stack gap="xs">
-                        <Group gap="xs">
+        <div className={classes.vitals}>
+            <div className={classes.vital}>
+                <div className={classes.vitalHead}>
+                    <h3 className={classes.vitalTitle}>Health</h3>
+                    <span className={classes.vitalValue} aria-label="Health remaining">
+                        {healthLeft}
+                        <small> / {character.maxHealth}</small>
+                    </span>
+                </div>
+                <div className={classes.vitalTrack}>
+                    {showMaxTracks ? (
+                        <div className={classes.vitalCaption}>
+                            <span className={classes.label}>Max</span>
                             <Pips
                                 level={character.maxHealth}
                                 maxLevel={10}
                                 options={options}
                                 field="maxHealth"
+                                label="Max health"
                             />
-                        </Group>
-                        <DamagePips
-                            maxValue={character.maxHealth}
-                            superficial={superficialDamage}
-                            aggravated={aggravatedDamage}
-                            onChange={updateHealthDamage}
-                            color={options.primaryColor}
-                            disabledReason={options.editDisabledReason}
-                        />
-                    </Stack>
-                </Paper>
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" style={sheetSurfaceStyle}>
-                    <Text fw={700} mb="xs">
-                        Willpower
-                    </Text>
-                    <Stack gap="xs">
-                        <Group gap="xs">
+                        </div>
+                    ) : null}
+                    <DamagePips
+                        maxValue={character.maxHealth}
+                        superficial={superficialDamage}
+                        aggravated={aggravatedDamage}
+                        onChange={updateHealthDamage}
+                        disabledReason={options.editDisabledReason}
+                        label="Health"
+                    />
+                    {character.maxHealth > 0 && healthLeft === 0 ? (
+                        <p className={classes.vitalStatus}>Impaired</p>
+                    ) : null}
+                </div>
+            </div>
+
+            <div className={classes.vital}>
+                <div className={classes.vitalHead}>
+                    <h3 className={classes.vitalTitle}>Willpower</h3>
+                    <span className={classes.vitalValue} aria-label="Willpower remaining">
+                        {willpowerLeft}
+                        <small> / {character.willpower}</small>
+                    </span>
+                </div>
+                <div className={classes.vitalTrack}>
+                    {showMaxTracks ? (
+                        <div className={classes.vitalCaption}>
+                            <span className={classes.label}>Max</span>
                             <Pips
                                 level={character.willpower}
                                 maxLevel={10}
                                 options={options}
                                 field="willpower"
+                                label="Max willpower"
                             />
-                        </Group>
-                        <DamagePips
-                            maxValue={character.willpower}
-                            superficial={superficialWillpowerDamage}
-                            aggravated={aggravatedWillpowerDamage}
-                            onChange={updateWillpowerDamage}
-                            color={options.primaryColor}
-                            disabledReason={options.editDisabledReason}
-                        />
-                    </Stack>
-                </Paper>
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" style={sheetSurfaceStyle}>
-                    <Group gap="xs" mb="xs" justify="space-between">
-                        <Text fw={700}>Humanity</Text>
-                        <RemorseTestButton
-                            character={character}
-                            setCharacter={setCharacter}
-                            primaryColor={primaryColor}
-                            size="sm"
-                            iconSize={16}
-                            disabledReason={options.editDisabledReason}
-                        />
-                    </Group>
-                    <Stack gap="xs" style={{ width: "fit-content" }}>
-                        <SquarePips
-                            value={character.humanity}
-                            options={options}
-                            field="humanity"
-                            maxLevel={10}
-                            groupSize={5}
-                        />
-                        {emptyHumanityPips > 0 ? (
+                        </div>
+                    ) : null}
+                    <DamagePips
+                        maxValue={character.willpower}
+                        superficial={superficialWillpowerDamage}
+                        aggravated={aggravatedWillpowerDamage}
+                        onChange={updateWillpowerDamage}
+                        disabledReason={options.editDisabledReason}
+                        label="Willpower"
+                    />
+                    {character.willpower > 0 && willpowerLeft === 0 ? (
+                        <p className={classes.vitalStatus}>Impaired</p>
+                    ) : null}
+                </div>
+            </div>
+
+            <div className={classes.vital}>
+                <div className={classes.vitalHead}>
+                    <h3 className={classes.vitalTitle}>Humanity</h3>
+                    <span className={classes.vitalValue}>{character.humanity}</span>
+                    <RemorseTestButton
+                        character={character}
+                        setCharacter={setCharacter}
+                        primaryColor={primaryColor}
+                        size="md"
+                        iconSize={18}
+                        disabledReason={options.editDisabledReason}
+                    />
+                </div>
+                <div className={classes.vitalTrack} style={{ width: "fit-content" }}>
+                    <SquarePips
+                        value={character.humanity}
+                        options={options}
+                        field="humanity"
+                        maxLevel={10}
+                        groupSize={5}
+                        label="Humanity"
+                    />
+                    {emptyHumanityPips > 0 ? (
+                        <div className={classes.stainsRow}>
+                            <span className={classes.label}>Stains</span>
                             <HumanityStainsPips
                                 value={humanityStains}
                                 maxLevel={emptyHumanityPips}
                                 filledHumanity={character.humanity}
                                 options={options}
                             />
-                        ) : null}
-                    </Stack>
-                </Paper>
-            </Grid.Col>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
 
-            <Grid.Col span={{ base: 12, md: 3 }}>
-                <Paper p="sm" style={sheetSurfaceStyle}>
-                    <Group gap="xs" mb="xs" justify="space-between">
-                        <Text fw={700}>Hunger</Text>
-                        <RouseCheckButton
-                            character={character}
-                            setCharacter={setCharacter}
-                            primaryColor={primaryColor}
-                            size="sm"
-                            iconSize={16}
-                            disabledReason={options.editDisabledReason}
-                        />
-                    </Group>
-                    <SquarePips
-                        value={hunger}
-                        options={options}
-                        field="ephemeral.hunger"
-                        maxLevel={5}
+            <div className={classes.vital} data-tone="blood">
+                <div className={classes.vitalHead}>
+                    <h3 className={classes.vitalTitle}>Hunger</h3>
+                    <span className={classes.vitalValue}>
+                        {hunger}
+                        <small> / 5</small>
+                    </span>
+                    <RouseCheckButton
+                        character={character}
+                        setCharacter={setCharacter}
+                        primaryColor={primaryColor}
+                        size="md"
+                        iconSize={18}
+                        disabledReason={options.editDisabledReason}
                     />
-                </Paper>
-            </Grid.Col>
-        </Grid>
+                </div>
+                <SquarePips
+                    value={hunger}
+                    options={options}
+                    field="ephemeral.hunger"
+                    maxLevel={5}
+                    shape="drop"
+                    label="Hunger"
+                />
+            </div>
+        </div>
     )
 }
 

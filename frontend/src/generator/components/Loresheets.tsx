@@ -1,20 +1,7 @@
-import {
-    Badge,
-    Box,
-    Button,
-    Card,
-    Grid,
-    Group,
-    ScrollArea,
-    Stack,
-    Text,
-    TextInput
-} from "@mantine/core"
-import { RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
-import { IconChevronLeft, IconSearch } from "@tabler/icons-react"
-import { useMemo, useState } from "react"
+import { Button, CloseButton, TextInput } from "@mantine/core"
+import { IconChevronLeft, IconChevronRight, IconCircleCheck, IconSearch } from "@tabler/icons-react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { essentialLoresheets, Loresheet, MeritOrFlaw } from "../../data/MeritsAndFlaws"
-import { globals } from "../../globals"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
 import { useProgressiveRendering } from "./useProgressiveRendering"
@@ -22,6 +9,10 @@ import { GeneratorSectionDivider } from "./sharedGeneratorUi"
 import type { HomebrewCollection, HomebrewLoresheet, HomebrewSource } from "~/data/Homebrew"
 import { getHomebrewSource } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
+import { IconButton } from "~/components/ui"
+import { useReducedMotion } from "framer-motion"
+import { Dots } from "./generatorCardParts"
+import classes from "./generatorCards.module.css"
 
 type DisplayMerit = MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
 type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMerit[] }
@@ -41,6 +32,8 @@ export const Loresheets = ({
 }: LoresheetProps) => {
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const [loresheetQuery, setLoresheetQuery] = useState("")
+    const rootRef = useRef<HTMLDivElement>(null)
+    const shouldReduceMotion = useReducedMotion()
     const availableLoresheets: DisplayLoresheet[] = [
         ...essentialLoresheets,
         ...homebrewCollections.flatMap((collection) =>
@@ -89,188 +82,136 @@ export const Loresheets = ({
     const visibleHomebrewLoresheets = visibleLoresheets.filter(
         (loresheet) => loresheet.merits[0]?.homebrewSource
     )
+    const pickedNames = pickedMeritsAndFlaws.map((m) => m.name)
 
-    const getLoresheetCol = (loresheet: DisplayLoresheet) => {
-        const sheetPicked =
-            intersection(
-                pickedMeritsAndFlaws.map((m) => m.name),
-                loresheet.merits.map((m) => m.name)
-            ).length > 0
+    // Opening or closing a sheet swaps a long grid for a short page (or back); bring the top of
+    // the panel into view so the reader doesn't land mid-way down an unrelated scroll position.
+    const hasMounted = useRef(false)
+    useEffect(() => {
+        if (!hasMounted.current) {
+            hasMounted.current = true
+            return
+        }
+        rootRef.current?.scrollIntoView({
+            block: "start",
+            behavior: shouldReduceMotion ? "auto" : "smooth"
+        })
+    }, [openLoresheetTitle, shouldReduceMotion])
+
+    const renderLoresheetCard = (loresheet: DisplayLoresheet) => {
+        const pickedTiers = intersection(
+            pickedNames,
+            loresheet.merits.map((m) => m.name)
+        ).length
+        const sheetPicked = pickedTiers > 0
 
         return (
-            <Grid.Col span={smallScreen ? 12 : 4} key={loresheet.title}>
-                <Card
-                    padding="lg"
-                    radius="lg"
-                    h={330}
-                    style={{
-                        background: sheetPicked
-                            ? "linear-gradient(180deg, rgba(27, 58, 41, 0.72), rgba(14, 15, 18, 0.96))"
-                            : "linear-gradient(180deg, rgba(28, 28, 33, 0.92), rgba(12, 13, 16, 0.96))",
-                        border: `1px solid ${sheetPicked ? "rgba(63, 192, 120, 0.34)" : "rgba(255, 255, 255, 0.07)"}`,
-                        boxShadow: "0 20px 48px rgba(0, 0, 0, 0.22)"
-                    }}
-                >
-                    <Stack justify="space-between" h="100%" gap="md">
-                        <ScrollArea
-                            type="always"
-                            scrollbarSize={6}
-                            styles={{
-                                scrollbar: {
-                                    background: "transparent"
-                                },
-                                thumb: {
-                                    background: rgba(RAW_RED, 0.22),
-                                    borderRadius: "999px"
-                                }
-                            }}
-                        >
-                            <Group justify="space-between" align="flex-start" mb="sm">
-                                <Text
-                                    ta="left"
-                                    style={{
-                                        fontFamily: "Cinzel, Georgia, serif",
-                                        fontSize: smallScreen ? "1.02rem" : "1.12rem",
-                                        fontWeight: 600,
-                                        color: "rgba(244, 236, 232, 0.95)",
-                                        lineHeight: 1.3,
-                                        flex: 1
-                                    }}
-                                >
-                                    {loresheet.title}
-                                </Text>
-                                {sheetPicked ? (
-                                    <Badge color="teal" variant="light">
-                                        picked
-                                    </Badge>
-                                ) : null}
-                                {loresheet.merits[0]?.homebrewSource ? (
-                                    <HomebrewBadge source={loresheet.merits[0].homebrewSource} />
-                                ) : null}
-                            </Group>
-                            <Text
-                                style={{
-                                    fontFamily: "Crimson Text, Georgia, serif",
-                                    fontSize: "1rem",
-                                    lineHeight: 1.45,
-                                    color: rgba(RAW_GREY, 0.82)
-                                }}
-                            >
-                                {loresheet.summary}
-                            </Text>
-                        </ScrollArea>
-
-                        <Button
-                            variant="light"
-                            color={sheetPicked ? "teal" : "red"}
-                            fullWidth
-                            radius="md"
-                            onClick={() => setOpenLoresheetTitle(loresheet.title)}
-                            styles={{
-                                label: {
-                                    fontFamily: "Cinzel, Georgia, serif",
-                                    letterSpacing: "0.08em",
-                                    textTransform: "uppercase"
-                                }
-                            }}
-                        >
-                            Open
-                        </Button>
-                    </Stack>
-                </Card>
-            </Grid.Col>
+            <button
+                type="button"
+                key={loresheet.title}
+                className={`${classes.loreCard} ${classes.enter}`}
+                data-picked={sheetPicked || undefined}
+                onClick={() => setOpenLoresheetTitle(loresheet.title)}
+            >
+                <span className={classes.loreSource}>
+                    <span>{loresheet.source}</span>
+                    {loresheet.merits[0]?.homebrewSource ? (
+                        <HomebrewBadge source={loresheet.merits[0].homebrewSource} />
+                    ) : null}
+                </span>
+                <span className={classes.loreTitle}>{loresheet.title}</span>
+                <span className={classes.loreSummary}>{loresheet.summary}</span>
+                <span className={classes.loreFooter}>
+                    {sheetPicked ? (
+                        <span className={`${classes.loreOpen} ${classes.pickedMark}`}>
+                            <IconCircleCheck size={13} stroke={1.8} />
+                            Picked
+                        </span>
+                    ) : (
+                        <Dots filled={0} total={loresheet.merits.length} />
+                    )}
+                    <span className={classes.loreOpen}>
+                        Open
+                        <IconChevronRight size={13} stroke={2} />
+                    </span>
+                </span>
+            </button>
         )
     }
 
-    const smallScreen = globals.isSmallScreen
     return (
-        <Box
-            style={{
-                padding: smallScreen ? "14px" : "18px",
-                borderRadius: 20,
-                background: "rgba(14, 15, 18, 0.66)",
-                border: "1px solid rgba(255, 255, 255, 0.05)",
-                boxShadow: "0 24px 60px rgba(0, 0, 0, 0.24)"
-            }}
-        >
+        <div ref={rootRef} className={classes.loreRoot}>
             {openLoresheet ? (
-                <Grid w={"100%"} m={0} gap="lg">
-                    <OpenedLoresheet
-                        loresheet={openLoresheet}
-                        getMeritOrFlawLine={getMeritOrFlawLine}
-                        setOpenLoresheetTitle={setOpenLoresheetTitle}
-                    />
-                </Grid>
+                <OpenedLoresheet
+                    loresheet={openLoresheet}
+                    getMeritOrFlawLine={getMeritOrFlawLine}
+                    setOpenLoresheetTitle={setOpenLoresheetTitle}
+                />
             ) : (
-                <Stack gap="lg">
+                <div className={classes.loreDetail}>
                     <TextInput
                         aria-label="Search loresheets"
-                        leftSection={<IconSearch size={16} />}
+                        leftSection={<IconSearch size={16} stroke={1.7} />}
+                        rightSection={
+                            loresheetQuery ? (
+                                <CloseButton
+                                    size="sm"
+                                    aria-label="Clear search"
+                                    onClick={() => setLoresheetQuery("")}
+                                />
+                            ) : null
+                        }
                         placeholder="Search loresheets by title"
                         value={loresheetQuery}
                         onChange={(event) => setLoresheetQuery(event.currentTarget.value)}
-                        styles={{
-                            input: {
-                                background: "rgba(255, 255, 255, 0.04)",
-                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                                color: "rgba(244, 236, 232, 0.94)"
-                            }
-                        }}
+                        mb="sm"
                     />
                     {filteredLoresheets.length > 0 ? (
-                        <Stack gap="md">
+                        <>
                             {visibleOfficialLoresheets.length > 0 ? (
                                 <>
                                     <GeneratorSectionDivider
                                         label="Loresheets"
-                                        accentAlpha={0.32}
-                                        titleSize="0.96rem"
                                         lineHeight={1}
                                         marginY="xs"
                                     />
-                                    <Grid w="100%" m={0} gap="lg">
-                                        {visibleOfficialLoresheets.map(getLoresheetCol)}
-                                    </Grid>
+                                    <div className={classes.loreGrid}>
+                                        {visibleOfficialLoresheets.map(renderLoresheetCard)}
+                                    </div>
                                 </>
                             ) : null}
                             {visibleHomebrewLoresheets.length > 0 ? (
                                 <>
                                     <GeneratorSectionDivider
                                         label="Homebrew"
-                                        accentAlpha={0.32}
-                                        titleSize="0.96rem"
                                         lineHeight={1}
                                         marginY="xs"
                                     />
-                                    <Grid w="100%" m={0} gap="lg">
-                                        {visibleHomebrewLoresheets.map(getLoresheetCol)}
-                                    </Grid>
+                                    <div className={classes.loreGrid}>
+                                        {visibleHomebrewLoresheets.map(renderLoresheetCard)}
+                                    </div>
                                 </>
                             ) : null}
-                        </Stack>
+                        </>
                     ) : (
-                        <Grid w="100%" m={0} gap="lg">
-                            <Grid.Col span={12}>
-                                <Text
-                                    ta="center"
-                                    py="xl"
-                                    style={{
-                                        fontFamily: "Crimson Text, Georgia, serif",
-                                        fontSize: "1.05rem",
-                                        color: rgba(RAW_GREY, 0.72)
-                                    }}
-                                >
-                                    No loresheets match that title.
-                                </Text>
-                            </Grid.Col>
-                        </Grid>
+                        <div className={classes.empty}>
+                            <p className={classes.emptyText}>No loresheets match that title.</p>
+                            <Button
+                                variant="subtle"
+                                color="gray"
+                                size="compact-sm"
+                                onClick={() => setLoresheetQuery("")}
+                            >
+                                Reset search
+                            </Button>
+                        </div>
                     )}
                     {visibleCount < filteredLoresheets.length ? (
                         <div ref={sentinelRef} aria-hidden="true" />
                     ) : null}
-                </Stack>
+                </div>
             )}
-        </Box>
+        </div>
     )
 }
 
@@ -282,79 +223,35 @@ const OpenedLoresheet = ({
     loresheet: DisplayLoresheet
     getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => React.JSX.Element
     setOpenLoresheetTitle: (t: string) => void
-}) => {
-    const smallScreen = globals.isSmallScreen
+}) => (
+    <article className={`${classes.loreDetail} ${classes.enter}`}>
+        <header className={classes.loreDetailHead}>
+            <IconButton
+                className={classes.loreBack}
+                variant="default"
+                label="Back"
+                tooltipPosition="right"
+                icon={<IconChevronLeft size={16} stroke={2} />}
+                onClick={() => setOpenLoresheetTitle("")}
+            />
+            {loresheet.source ? <span className="pg-eyebrow">{loresheet.source}</span> : null}
+            <h3 className={classes.loreDetailTitle}>{loresheet.title}</h3>
+            <p className={classes.loreDetailSummary}>{loresheet.summary}</p>
+        </header>
 
-    return (
-        <Grid.Col span={12}>
-            <Stack gap="md" p={smallScreen ? "xs" : "md"}>
-                <div>
-                    <Group justify="flex-start" mb="sm">
-                        <Button
-                            variant="subtle"
-                            color="yellow"
-                            px={8}
-                            aria-label="Back"
-                            onClick={() => setOpenLoresheetTitle("")}
-                            styles={{
-                                root: {
-                                    background: "rgba(255, 255, 255, 0.03)",
-                                    border: "1px solid rgba(255, 255, 255, 0.05)",
-                                    minWidth: 0,
-                                    height: 34
-                                },
-                                inner: {
-                                    justifyContent: "center"
-                                }
-                            }}
-                        >
-                            <IconChevronLeft size={16} stroke={2.2} />
-                        </Button>
-                    </Group>
-                    <Text
-                        ta={"center"}
-                        style={{
-                            fontFamily: "Cinzel, Georgia, serif",
-                            fontSize: smallScreen ? "1.45rem" : "1.75rem",
-                            color: "rgba(244, 236, 232, 0.95)"
-                        }}
-                    >
-                        {loresheet.title}
-                    </Text>
-                    <Text
-                        ta="center"
-                        mt={8}
-                        style={{
-                            fontFamily: "Crimson Text, Georgia, serif",
-                            fontSize: "1.02rem",
-                            color: rgba(RAW_GREY, 0.82)
-                        }}
-                    >
-                        {loresheet.summary}
-                    </Text>
-                </div>
+        <GeneratorSectionDivider label="Tiers" lineHeight={1} marginY="xs" />
+        <div className={classes.loreTiers}>
+            {loresheet.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+        </div>
 
-                {loresheet.merits.map((merit) => {
-                    return getMeritOrFlawLine(merit, "merit")
-                })}
-
-                <Group justify="center" mt="sm">
-                    <Button
-                        variant="outline"
-                        color="yellow"
-                        onClick={() => setOpenLoresheetTitle("")}
-                        styles={{
-                            label: {
-                                fontFamily: "Cinzel, Georgia, serif",
-                                letterSpacing: "0.08em",
-                                textTransform: "uppercase"
-                            }
-                        }}
-                    >
-                        Back
-                    </Button>
-                </Group>
-            </Stack>
-        </Grid.Col>
-    )
-}
+        <div className={classes.loreDetailFooter}>
+            <Button
+                variant="default"
+                leftSection={<IconChevronLeft size={15} stroke={2} />}
+                onClick={() => setOpenLoresheetTitle("")}
+            >
+                All loresheets
+            </Button>
+        </div>
+    </article>
+)

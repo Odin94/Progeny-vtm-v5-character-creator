@@ -1,15 +1,20 @@
-import { Button, ScrollArea, Stack, Text, Textarea, TextInput } from "@mantine/core"
-import { RAW_RED, RAW_GOLD, RAW_GRAPE, RAW_GREY, rgba } from "~/theme/colors"
+import { ScrollArea, SimpleGrid, Stack, Textarea, TextInput } from "@mantine/core"
 import { useState } from "react"
+import { Panel } from "~/components/ui"
 import { Character } from "../../data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { globals } from "../../globals"
-import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
+    GeneratorConfirmButton,
+    GeneratorStepFooter,
     GeneratorStepHero,
-    generatorFieldStyles,
     getGeneratorFieldStyles
 } from "./sharedGeneratorUi"
+import {
+    generatorScrollableAreaStyle,
+    generatorScrollableContentStyle,
+    generatorScrollableShellStyle
+} from "./sharedGeneratorScrollableLayout"
 import { nightfallScrollAreaStyles, nightfallScrollbarSize } from "./sharedScrollAreaStyles"
 
 type BasicsPickerProps = {
@@ -20,34 +25,10 @@ type BasicsPickerProps = {
 
 type BasicsFields = Pick<Character, "name" | "sire" | "ambition" | "desire" | "description">
 
-const inputStyles = {
-    ...getGeneratorFieldStyles("gold"),
-    label: {
-        ...generatorFieldStyles.goldLabel,
-        fontWeight: 800,
-        letterSpacing: "0.16em",
-        color: rgba(RAW_GOLD, 0.9),
-        marginBottom: 6
-    },
-    input: {
-        ...generatorFieldStyles.input,
-        background: "rgba(33, 33, 33, 0.18)",
-        backdropFilter: "blur(2px)",
-        WebkitBackdropFilter: "blur(2px)",
-        border: "1px solid rgba(255, 255, 255, 0.16)",
-        borderRadius: 10,
-        color: "rgba(244, 236, 232, 0.92)",
-        fontSize: "1rem",
-        transition: "border-color 180ms ease",
-        ":focus": {
-            borderColor: rgba(RAW_GRAPE, 1)
-        }
-    }
-}
+const inputStyles = getGeneratorFieldStyles("gold")
 
 const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
-    const height = globals.viewportHeightPx
 
     const [name, setName] = useState(character.name)
     const [sire, setSire] = useState(character.sire)
@@ -65,115 +46,112 @@ const BasicsPicker = ({ character, setCharacter, nextStep }: BasicsPickerProps) 
         setCharacter((current) => ({ ...current, ...updates }))
     }
 
+    const fieldProps = { size: "md" as const, styles: inputStyles }
+
     return (
-        <div style={{ width: "100%", marginTop: height < 1250 ? "50px" : "55px" }}>
-            <style>{`
-                .basics-picker-input::placeholder {
-                    color: ${rgba(RAW_GREY, 0.5)};
-                    opacity: 1;
-                }
-            `}</style>
+        <div style={generatorScrollableShellStyle}>
             <ScrollArea
-                h={height - 230}
+                style={generatorScrollableAreaStyle}
+                w="100%"
+                px={phoneScreen ? 12 : 20}
+                pt={4}
+                pb={8}
                 type="always"
                 scrollbarSize={nightfallScrollbarSize}
                 styles={nightfallScrollAreaStyles}
             >
-                <GeneratorStepHero
-                    leadText="Come up with the"
-                    accentText="Basics"
-                    marginBottom={phoneScreen ? 18 : 26}
-                />
-
-                <Stack gap="lg" maw={420} mx="auto" px={phoneScreen ? 12 : 0} pb="xl">
-                    <TextInput
-                        data-testid="basic-full-name-input"
-                        value={name}
-                        onChange={(e) => {
-                            const value = e.currentTarget.value
-                            setName(value)
-                            persistBasics({ name: value })
-                        }}
-                        placeholder="Erika Mustermann"
-                        label="Full name"
-                        styles={inputStyles}
-                        classNames={{ input: "basics-picker-input" }}
+                <div style={{ ...generatorScrollableContentStyle, maxWidth: 640 }}>
+                    <GeneratorStepHero
+                        leadText="Come up with the"
+                        accentText="Basics"
+                        marginBottom={phoneScreen ? 16 : 24}
                     />
 
-                    <TextInput
-                        data-testid="basic-sire-input"
-                        value={sire}
-                        onChange={(e) => {
-                            const value = e.currentTarget.value
-                            setSire(value)
-                            persistBasics({ sire: value })
-                        }}
-                        placeholder="Your sire"
-                        label="Sire"
-                        description="The vampire that turned you"
-                        styles={inputStyles}
-                        classNames={{ input: "basics-picker-input" }}
-                    />
+                    <Panel tone="glass" p={phoneScreen ? "md" : "xl"} radius="lg">
+                        <Stack gap="lg">
+                            <TextInput
+                                data-testid="basic-full-name-input"
+                                value={name}
+                                onChange={(e) => {
+                                    const value = e.currentTarget.value
+                                    setName(value)
+                                    persistBasics({ name: value })
+                                }}
+                                placeholder="Erika Mustermann"
+                                label="Full name"
+                                autoFocus={!phoneScreen && !name}
+                                {...fieldProps}
+                            />
 
-                    <TextInput
-                        data-testid="basic-ambition-input"
-                        value={ambition}
-                        onChange={(e) => {
-                            const value = e.currentTarget.value
-                            setAmbition(value)
-                            persistBasics({ ambition: value })
-                        }}
-                        placeholder="Break free from my sire's clutches"
-                        label="Long term ambition"
-                        styles={inputStyles}
-                        classNames={{ input: "basics-picker-input" }}
-                    />
+                            <TextInput
+                                data-testid="basic-sire-input"
+                                value={sire}
+                                onChange={(e) => {
+                                    const value = e.currentTarget.value
+                                    setSire(value)
+                                    persistBasics({ sire: value })
+                                }}
+                                placeholder="Your sire"
+                                label="Sire"
+                                description="The vampire that turned you"
+                                {...fieldProps}
+                            />
 
-                    <TextInput
-                        data-testid="basic-desire-input"
-                        value={desire}
-                        onChange={(e) => {
-                            const value = e.currentTarget.value
-                            setDesire(value)
-                            persistBasics({ desire: value })
-                        }}
-                        placeholder="Embarrass my rival in court"
-                        label="Short term desire"
-                        styles={inputStyles}
-                        classNames={{ input: "basics-picker-input" }}
-                    />
+                            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+                                <TextInput
+                                    data-testid="basic-ambition-input"
+                                    value={ambition}
+                                    onChange={(e) => {
+                                        const value = e.currentTarget.value
+                                        setAmbition(value)
+                                        persistBasics({ ambition: value })
+                                    }}
+                                    placeholder="Break free from my sire's clutches"
+                                    label="Long term ambition"
+                                    {...fieldProps}
+                                />
 
-                    <Textarea
-                        data-testid="basic-description-input"
-                        value={description}
-                        onChange={(e) => {
-                            const value = e.currentTarget.value
-                            setDescription(value)
-                            persistBasics({ description: value })
-                        }}
-                        placeholder="Young alt-rock musician with a black vegan-leather jacket and long black hair"
-                        label="Description & appearance"
-                        autosize
-                        minRows={4}
-                        styles={inputStyles}
-                        classNames={{ input: "basics-picker-input" }}
-                    />
+                                <TextInput
+                                    data-testid="basic-desire-input"
+                                    value={desire}
+                                    onChange={(e) => {
+                                        const value = e.currentTarget.value
+                                        setDesire(value)
+                                        persistBasics({ desire: value })
+                                    }}
+                                    placeholder="Embarrass my rival in court"
+                                    label="Short term desire"
+                                    {...fieldProps}
+                                />
+                            </SimpleGrid>
 
-                    <Button
-                        data-testid="basics-confirm-button"
-                        color="grape"
-                        mt="sm"
-                        mx="auto"
-                        display="block"
-                        styles={generatorConfirmButtonStyles}
-                        onClick={() => {
-                            persistBasics({ name, sire, ambition, desire, description })
-                            nextStep()
-                        }}
-                    >
-                        Confirm
-                    </Button>
-                </Stack>
+                            <Textarea
+                                data-testid="basic-description-input"
+                                value={description}
+                                onChange={(e) => {
+                                    const value = e.currentTarget.value
+                                    setDescription(value)
+                                    persistBasics({ description: value })
+                                }}
+                                placeholder="Young alt-rock musician with a black vegan-leather jacket and long black hair"
+                                label="Description & appearance"
+                                autosize
+                                minRows={4}
+                                {...fieldProps}
+                            />
+                        </Stack>
+                    </Panel>
+
+                    <GeneratorStepFooter>
+                        <GeneratorConfirmButton
+                            data-testid="basics-confirm-button"
+                            onClick={() => {
+                                persistBasics({ name, sire, ambition, desire, description })
+                                nextStep()
+                            }}
+                        />
+                    </GeneratorStepFooter>
+                </div>
             </ScrollArea>
         </div>
     )

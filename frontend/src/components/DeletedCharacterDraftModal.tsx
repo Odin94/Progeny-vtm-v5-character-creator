@@ -1,5 +1,7 @@
 import { CharacterOperationError } from "~/utils/characterOperationError"
-import { Alert, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
+import { Alert, Button, Modal, TextInput } from "@mantine/core"
+import { IconAlertTriangle, IconRestore, IconTrash } from "@tabler/icons-react"
+import classes from "./AppModals.module.css"
 import { notifications } from "@mantine/notifications"
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
@@ -158,16 +160,17 @@ export default function DeletedCharacterDraftModal() {
             closeOnEscape={false}
             centered
         >
-            <Stack>
-                <Text>
+            <div className={classes.body}>
+                <p className={classes.lede}>
                     The saved character for “{character.name}” no longer exists. This browser still
                     has its draft.
-                </Text>
-                <Text>
+                </p>
+                <p className={classes.note}>
                     Restore it as a new saved copy, or delete the local draft to start fresh.
-                </Text>
+                </p>
                 {!character.name.trim() && (
                     <TextInput
+                        data-autofocus
                         label="Character name"
                         value={restoreName}
                         onChange={(event) => setRestoreName(event.currentTarget.value)}
@@ -176,24 +179,30 @@ export default function DeletedCharacterDraftModal() {
                     />
                 )}
                 {failure && (
-                    <Alert color="red" role="alert">
+                    <Alert color="red" role="alert" icon={<IconAlertTriangle size={16} />}>
                         {failure}
                     </Alert>
                 )}
-                <Group justify="flex-end">
+                <hr className={classes.rule} />
+                <div className={classes.actions}>
                     <Button
                         color="red"
-                        variant="outline"
+                        variant="light"
+                        leftSection={<IconTrash size={16} />}
                         disabled={pending}
                         onClick={() => recover("delete")}
                     >
                         Delete local draft
                     </Button>
-                    <Button loading={pending} onClick={() => recover("restore")}>
+                    <Button
+                        leftSection={<IconRestore size={16} />}
+                        loading={pending}
+                        onClick={() => recover("restore")}
+                    >
                         Restore character
                     </Button>
-                </Group>
-            </Stack>
+                </div>
+            </div>
         </Modal>
     )
 }

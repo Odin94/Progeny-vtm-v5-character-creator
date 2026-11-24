@@ -1,0 +1,99 @@
+/* Character creator frame and mobile step drawer. */
+
+.root {
+    background: var(--pg-abyss);
+}
+
+.header {
+    z-index: var(--pg-z-modal);
+}
+
+.rail {
+    background: var(--pg-surface-1);
+    border-color: var(--pg-border);
+}
+
+.navbar {
+    border-right: 1px solid var(--pg-border);
+}
+
+.aside {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--pg-border);
+}
+
+/* Small screens: the step list is a drawer sliding in from the right. */
+.aside[data-drawer] {
+    z-index: calc(var(--pg-z-header) + 2);
+    background: var(--pg-surface-overlay);
+    box-shadow: var(--pg-shadow-4);
+    transform: translateX(104%);
+    visibility: hidden;
+    transition:
+        transform var(--pg-dur-exit) var(--ease-in),
+        visibility 0s linear var(--pg-dur-exit);
+    padding-bottom: calc(var(--pg-space-4) + var(--pg-safe-bottom));
+}
+
+.aside[data-drawer][data-open] {
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+        transform var(--pg-dur-slow) var(--ease-drawer),
+        visibility 0s linear 0s;
+}
+
+.scrim {
+    position: fixed;
+    inset: var(--pg-topbar-h) 0 0 0;
+    z-index: calc(var(--pg-z-header) + 1);
+    background: var(--pg-scrim);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--pg-dur-exit) var(--ease-in);
+}
+
+.scrim[data-open] {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity var(--pg-dur-base) var(--ease-out);
+}
+
+/* ---- Canvas ------------------------------------------------------------------ */
+
+.canvas {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--pg-bg);
+}
+
+.stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aside[data-drawer] {
+        transform: none;
+        opacity: 0;
+        transition:
+            opacity var(--pg-dur-exit) var(--ease-in),
+            visibility 0s linear var(--pg-dur-exit);
+    }
+
+    .aside[data-drawer][data-open] {
+        opacity: 1;
+        transition:
+            opacity var(--pg-dur-base) var(--ease-out),
+            visibility 0s linear 0s;
+    }
+}

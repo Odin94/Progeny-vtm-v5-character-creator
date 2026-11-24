@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restore Progeny’s gothic redesign with quieter shared controls, a scannable clan catalog, a character sheet that uses the chosen clan color for key details, and a compact account roster.
+- Add a quick navigator (Ctrl+K / ⌘K) for jumping to pages, coteries and homebrew collections, right-click menus on characters, coteries and homebrew lists, and drag-and-drop or paste for JSON and image uploads.
 - Add a Reset to default button to the 3D dice throw settings.
 - Angle sorted dice faces slightly toward the camera so every die in the grid reads evenly, without the bright environment flare that rolled dice keep.
 - Open the dice roller without rerendering the whole sheet, and prepare WebGL in idle time after the controls paint. Keep sorting manual after rerolls, and allow Sort dice to finish and arrange an active roll immediately.

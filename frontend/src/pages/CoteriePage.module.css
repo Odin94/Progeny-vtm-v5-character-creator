@@ -1,0 +1,453 @@
+/* Coterie war room. Tokens: src/index.css. Docs: frontend/DESIGN.md */
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center 30%;
+    opacity: 0.32;
+    filter: grayscale(0.35) contrast(1.05);
+    pointer-events: none;
+}
+
+.backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(120% 70% at 20% 0%, transparent 0%, rgba(5, 4, 4, 0.55) 60%),
+        linear-gradient(180deg, rgba(5, 4, 4, 0.35) 0%, var(--pg-bg) 78%);
+}
+
+.page {
+    --chat-dock-space: 460px;
+
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: calc(1440px + var(--pg-gutter) * 2);
+    margin-inline: auto;
+    padding: clamp(var(--pg-space-5), 4vw, var(--pg-space-10)) var(--pg-gutter)
+        calc(var(--pg-space-16) + var(--pg-safe-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-8);
+}
+
+.page[data-chat-docked] {
+    max-width: none;
+    padding-right: calc(var(--chat-dock-space) + var(--pg-space-2));
+}
+
+.top {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+}
+
+.top > header {
+    margin-bottom: 0;
+}
+
+.back {
+    align-self: flex-start;
+    margin-left: calc(var(--pg-space-3) * -1);
+}
+
+.headerActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--pg-space-2);
+}
+
+/* ---- Overview: roster + players --------------------------------------------- */
+
+.overview {
+    container: overview / inline-size;
+}
+
+.overviewGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--pg-space-6);
+}
+
+@container overview (min-width: 820px) {
+    .overviewGrid[data-with-players] {
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    }
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+    min-width: 0;
+}
+
+.roster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: var(--pg-space-2);
+}
+
+.rosterChip {
+    --clan: var(--pg-blood);
+    --clan-bright: var(--pg-blood-bright);
+
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--pg-space-3);
+    width: 100%;
+    min-height: 56px;
+    padding: var(--pg-space-2) var(--pg-space-3);
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border);
+    background:
+        linear-gradient(100deg, color-mix(in srgb, var(--clan) 14%, transparent), transparent 55%),
+        var(--pg-surface-1);
+    box-shadow: var(--pg-shadow-inset-top);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        transform var(--pg-dur-press) var(--ease-out),
+        border-color var(--pg-dur-fast) var(--ease-out),
+        background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.rosterChip:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .rosterChip:hover {
+        border-color: color-mix(in srgb, var(--clan-bright) 45%, transparent);
+    }
+}
+
+.chipSigil {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--pg-radius-sm);
+    background: var(--pg-sunken);
+    border: 1px solid color-mix(in srgb, var(--clan-bright) 35%, transparent);
+}
+
+.chipSigilMark {
+    width: 22px;
+    height: 22px;
+    background-color: var(--clan-bright);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+}
+
+.chipInitial {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    color: var(--clan-bright);
+}
+
+.chipText {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.chipName {
+    font-family: var(--pg-font-display);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: var(--pg-tracking-display);
+    color: var(--pg-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chipMeta {
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chipHunger {
+    display: flex;
+    gap: 3px;
+}
+
+.chipHungerPip {
+    width: 4px;
+    height: 14px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background-color var(--pg-dur-base) var(--ease-out);
+}
+
+.chipHungerPip[data-filled] {
+    background: var(--pg-blood-bright);
+    box-shadow: 0 0 6px rgba(220, 52, 70, 0.45);
+}
+
+/* ---- Live vitals status -------------------------------------------------------- */
+
+.liveStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--pg-tracking-caps);
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    white-space: nowrap;
+}
+
+.liveDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--pg-success);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pg-success) 60%, transparent);
+    animation: live-pulse 2.4s var(--ease-out) infinite;
+}
+
+.liveStatus[data-state="error"] {
+    color: var(--pg-warning);
+}
+
+.liveStatus[data-state="error"] .liveDot {
+    background: var(--pg-warning);
+    animation: none;
+}
+
+@keyframes live-pulse {
+    0%,
+    60%,
+    100% {
+        opacity: 1;
+    }
+    30% {
+        opacity: 0.35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .liveDot {
+        animation: none;
+    }
+}
+
+/* ---- Players ------------------------------------------------------------------- */
+
+.players {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--pg-space-1);
+}
+
+.playerRow {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    min-height: 40px;
+    padding: 4px 4px 4px var(--pg-space-3);
+    border-radius: var(--pg-radius-sm);
+    transition: background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .playerRow:hover {
+        background: rgba(255, 255, 255, 0.035);
+    }
+}
+
+.playerName {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+    color: var(--pg-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playerName[data-placeholder] {
+    color: var(--pg-ink-3);
+    font-style: italic;
+}
+
+/* ---- Chat (inline below 1100px) ----------------------------------------------- */
+
+.chatInline {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+/* ---- Invite popover ------------------------------------------------------------ */
+
+.invite {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-3);
+}
+
+.inviteRow {
+    display: flex;
+    gap: var(--pg-space-2);
+    align-items: center;
+}
+
+/* ---- Notes modal --------------------------------------------------------------- */
+
+.notesModalDocked {
+    margin-right: 460px;
+}
+
+.notesTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-3);
+    width: 100%;
+    min-width: 0;
+}
+
+.notesTitleText {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    min-width: 0;
+    flex: 1;
+    color: var(--pg-gold);
+}
+
+.notesTitleLabel {
+    color: var(--pg-ink);
+}
+
+.saveState {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--pg-font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--pg-ink-3);
+    transition: opacity var(--pg-dur-base) var(--ease-out);
+}
+
+.saveState[data-state="saved"] {
+    color: var(--pg-success);
+}
+
+.saveState[data-state="error"],
+.saveState[data-state="too-large"] {
+    color: var(--pg-danger);
+}
+
+.notesInput {
+    font-family: var(--pg-font-body);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.notesFooter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-2);
+    min-height: 30px;
+}
+
+.notesMeter {
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--pg-ink-3);
+}
+
+.notesMeter[data-over] {
+    color: var(--pg-danger);
+}
+
+.historyBanner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-2);
+    padding: var(--pg-space-2) var(--pg-space-3);
+    border-radius: var(--pg-radius-md);
+    border: 1px solid var(--pg-border-gold);
+    background: color-mix(in srgb, var(--pg-gold) 7%, transparent);
+    font-size: 0.8125rem;
+    color: var(--pg-gold);
+}
+
+.versionList {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.versionButton {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-3);
+    width: 100%;
+    padding: var(--pg-space-2) var(--pg-space-3);
+    border: 0;
+    border-radius: var(--pg-radius-sm);
+    background: transparent;
+    color: var(--pg-ink-2);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color var(--pg-dur-fast) var(--ease-out),
+        transform var(--pg-dur-press) var(--ease-out);
+}
+
+.versionButton:active {
+    transform: scale(var(--pg-press-scale));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .versionButton:hover {
+        background: var(--pg-accent-soft);
+        color: var(--pg-ink);
+    }
+}
+
+.versionMeta {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+    white-space: nowrap;
+}
+
+/* ---- Skeleton ------------------------------------------------------------------ */
+
+.skeletonDossier {
+    height: 520px;
+}

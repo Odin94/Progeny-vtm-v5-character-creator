@@ -1,29 +1,27 @@
 import { memo } from "react"
-import { List, Stack, Text, Title } from "@mantine/core"
 import { Touchstone } from "../../data/Character"
+import classes from "./Dossier.module.css"
 
 export type TouchstoneProps = {
     touchstones: Touchstone[]
 }
 
-const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => {
-    return (
-        <Stack>
-            <Title order={2}>Touchstones</Title>
-            <List>
-                {touchstones.map((stone, i) => {
-                    return (
-                        <List.Item key={i}>
-                            <Text>
-                                <b>{stone.name}</b>
-                            </Text>
-                            <Text c="dimmed">{stone.conviction}</Text>
-                        </List.Item>
-                    )
-                })}
-            </List>
-        </Stack>
-    )
-}
+const TouchstoneDisplay = ({ touchstones }: TouchstoneProps) => (
+    <section className={classes.section}>
+        <h3 className={classes.sectionTitle}>Touchstones</h3>
+        <div className={classes.fields}>
+            {touchstones.map((stone, i) => (
+                <div key={i} className={classes.field}>
+                    <span className={classes.fieldValue} style={{ color: "var(--pg-ink)" }}>
+                        {stone.name}
+                    </span>
+                    {stone.conviction ? (
+                        <span className={classes.muted}>{stone.conviction}</span>
+                    ) : null}
+                </div>
+            ))}
+        </div>
+    </section>
+)
 
 export default memo(TouchstoneDisplay)

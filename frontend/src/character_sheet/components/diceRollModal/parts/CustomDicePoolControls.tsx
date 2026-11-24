@@ -1,15 +1,14 @@
-import { Button, Group, Text, useMantineTheme } from "@mantine/core"
+import { ActionIcon, Tooltip } from "@mantine/core"
 import { IconMinus, IconPlus } from "@tabler/icons-react"
 import { useDiceRollModalStore } from "../../../stores/diceRollModalStore"
 import { useShallow } from "zustand/react/shallow"
+import classes from "../diceRoller.module.css"
 
 type CustomDicePoolControlsProps = {
     primaryColor: string
 }
 
 const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) => {
-    const theme = useMantineTheme()
-    const colorValue = theme.colors[primaryColor]?.[6] || theme.colors.grape[6]
     const { diceCount, setDiceCount } = useDiceRollModalStore(
         useShallow((state) => ({
             diceCount: state.diceCount,
@@ -24,34 +23,39 @@ const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) =
     }
 
     return (
-        <Group
-            justify="center"
-            gap="md"
-            style={{
-                flexShrink: 0,
-                borderBottom: `1px solid ${colorValue}`,
-                paddingBottom: "1rem"
-            }}
-        >
-            <Button
-                variant="subtle"
-                onClick={removeDie}
-                color={primaryColor}
-                disabled={diceCount <= 1}
+        <div className={classes.stepper} role="group" aria-label="Custom dice pool">
+            <Tooltip
+                label={diceCount <= 1 ? "A pool needs at least one die" : "Remove a die"}
+                zIndex={2100}
             >
-                <IconMinus size={18} />
-            </Button>
-            <Text fw={600} fz="lg">
-                {diceCount} {diceCount === 1 ? "Die" : "Dice"}
-            </Text>
-            <Button
-                variant="subtle"
-                onClick={() => setDiceCount(diceCount + 1)}
-                color={primaryColor}
-            >
-                <IconPlus size={18} />
-            </Button>
-        </Group>
+                <span style={{ display: "inline-flex" }}>
+                    <ActionIcon
+                        size="lg"
+                        variant="default"
+                        aria-label="Remove a die"
+                        onClick={removeDie}
+                        disabled={diceCount <= 1}
+                    >
+                        <IconMinus size={18} />
+                    </ActionIcon>
+                </span>
+            </Tooltip>
+            <div className={classes.stepperValue} aria-live="polite">
+                <span className={classes.stepperNumber}>{diceCount}</span>
+                <span className={classes.stepperUnit}>{diceCount === 1 ? "Die" : "Dice"}</span>
+            </div>
+            <Tooltip label="Add a die" zIndex={2100}>
+                <ActionIcon
+                    size="lg"
+                    variant="light"
+                    color={primaryColor}
+                    aria-label="Add a die"
+                    onClick={() => setDiceCount(diceCount + 1)}
+                >
+                    <IconPlus size={18} />
+                </ActionIcon>
+            </Tooltip>
+        </div>
     )
 }
 

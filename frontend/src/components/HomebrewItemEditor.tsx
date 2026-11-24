@@ -1,23 +1,12 @@
-import HomebrewValidationSummary from "./HomebrewValidationSummary"
-import {
-    Button,
-    Group,
-    Modal,
-    MultiSelect,
-    NumberInput,
-    Select,
-    SimpleGrid,
-    Stack,
-    TagsInput,
-    Text,
-    TextInput,
-    Textarea
-} from "@mantine/core"
+import { MultiSelect, NumberInput, Select, TagsInput, TextInput, Textarea } from "@mantine/core"
 import { useEffect, useState } from "react"
-import HomebrewPredatorTypeEditor from "~/components/HomebrewPredatorTypeEditor"
-import { homebrewPredatorTypeSchema } from "~/data/HomebrewPredatorTypeValidation"
+import { DotPips } from "~/components/HomebrewCodex"
+import HomebrewEditorFrame, { EditorSection, belowInput } from "~/components/HomebrewEditorFrame"
+import HomebrewItemPreview from "~/components/HomebrewItemPreview"
+import HomebrewLoresheetPreview from "~/components/HomebrewLoresheetPreview"
 import HomebrewPowerCardEditor from "~/components/HomebrewPowerCardEditor"
-import OrnamentalDivider from "~/components/OrnamentalDivider"
+import HomebrewPredatorTypeEditor from "~/components/HomebrewPredatorTypeEditor"
+import HomebrewPredatorTypePreview from "~/components/HomebrewPredatorTypePreview"
 import { homebrewDropdownClassNames } from "~/components/homebrewFormControlProps"
 import type {
     HomebrewClan,
@@ -28,9 +17,8 @@ import type {
     HomebrewMeritFlaw,
     HomebrewPower
 } from "~/data/Homebrew"
-import { homebrewKindLabel } from "~/data/Homebrew"
 import { disciplines } from "~/data/Disciplines"
-import "./HomebrewItemEditor.css"
+import { homebrewPredatorTypeSchema } from "~/data/HomebrewPredatorTypeValidation"
 
 type Props = {
     opened: boolean
@@ -310,6 +298,8 @@ const HomebrewItemEditor = ({
         }
     }
 
+    const editorIsNew = isNew ?? !item.id
+
     const commonFields = (
         <>
             <TextInput
@@ -319,37 +309,44 @@ const HomebrewItemEditor = ({
                 onChange={(event) => update({ name: event.currentTarget.value })}
                 error={fieldErrors.name}
                 required
+                data-autofocus
+                data-hb-field="name"
             />
             {draft.kind === "merit" || draft.kind === "flaw" ? (
                 <Textarea
                     label="Description"
                     description="Shown on the character sheet and in pickers."
+                    inputWrapperOrder={belowInput}
                     minRows={3}
                     autosize
                     maxRows={10}
                     value={draft.summary}
                     onChange={(event) => update({ summary: event.currentTarget.value })}
                     error={fieldErrors.summary}
+                    data-hb-field="summary"
                 />
             ) : "summary" in draft ? (
                 <TextInput
                     label="Short summary"
                     description="Shown in pickers and library previews."
+                    inputWrapperOrder={belowInput}
                     value={draft.summary}
                     maxLength={500}
                     onChange={(event) => update({ summary: event.currentTarget.value })}
                     error={fieldErrors.summary}
+                    data-hb-field="summary"
                 />
             ) : null}
             {"description" in draft && draft.kind !== "merit" && draft.kind !== "flaw" ? (
                 <Textarea
                     label="Full description"
-                    minRows={3}
+                    minRows={4}
                     autosize
-                    maxRows={10}
+                    maxRows={12}
                     value={draft.description}
                     onChange={(event) => update({ description: event.currentTarget.value })}
                     error={fieldErrors.description}
+                    data-hb-field="description"
                 />
             ) : null}
         </>
@@ -360,7 +357,7 @@ const HomebrewItemEditor = ({
               const power = draft as HomebrewPower
               return (
                   <>
-                      <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                      <div className="hb-form-grid" data-cols="power">
                           <Select
                               label="Discipline"
                               description={
@@ -370,6 +367,7 @@ const HomebrewItemEditor = ({
                                         ? "Ceremonies belong to Oblivion."
                                         : "Official or Homebrew Discipline name."
                               }
+                              inputWrapperOrder={belowInput}
                               data={disciplineOptions}
                               searchable
                               value={encodeDisciplineReference(
@@ -387,6 +385,7 @@ const HomebrewItemEditor = ({
                               classNames={homebrewDropdownClassNames}
                               error={fieldErrors.discipline}
                               required
+                              data-hb-field="discipline"
                           />
                           <NumberInput
                               label="Level"
@@ -395,13 +394,7 @@ const HomebrewItemEditor = ({
                               value={power.level}
                               onChange={(value) => update({ level: Number(value) || 1 })}
                               error={fieldErrors.level}
-                          />
-                          <TextInput
-                              label="Dice pool"
-                              placeholder="Resolve + Auspex"
-                              value={power.dicePool}
-                              onChange={(event) => update({ dicePool: event.currentTarget.value })}
-                              error={fieldErrors.dicePool}
+                              data-hb-field="level"
                           />
                           <NumberInput
                               label="Rouse checks"
@@ -410,11 +403,21 @@ const HomebrewItemEditor = ({
                               value={power.rouseChecks}
                               onChange={(value) => update({ rouseChecks: Number(value) || 0 })}
                               error={fieldErrors.rouseChecks}
+                              data-hb-field="rouseChecks"
                           />
-                      </SimpleGrid>
+                      </div>
+                      <TextInput
+                          label="Dice pool"
+                          placeholder="Resolve + Auspex"
+                          value={power.dicePool}
+                          onChange={(event) => update({ dicePool: event.currentTarget.value })}
+                          error={fieldErrors.dicePool}
+                          data-hb-field="dicePool"
+                      />
                       <TextInput
                           label="Amalgam prerequisites"
                           description="Comma-separated, for example: Celerity 2, Potence 1."
+                          inputWrapperOrder={belowInput}
                           value={power.amalgamPrerequisites
                               .map(
                                   (prerequisite) =>
@@ -434,9 +437,10 @@ const HomebrewItemEditor = ({
                               })
                           }
                           error={fieldErrors.amalgamPrerequisites}
+                          data-hb-field="amalgamPrerequisites"
                       />
                       {power.kind !== "power" ? (
-                          <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                          <>
                               <TextInput
                                   label="Required time"
                                   value={power.requiredTime ?? ""}
@@ -444,25 +448,31 @@ const HomebrewItemEditor = ({
                                       update({ requiredTime: event.currentTarget.value })
                                   }
                                   error={fieldErrors.requiredTime}
+                                  data-hb-field="requiredTime"
                               />
                               <Textarea
                                   label="Ingredients"
+                                  autosize
+                                  minRows={2}
                                   value={power.ingredients ?? ""}
                                   onChange={(event) =>
                                       update({ ingredients: event.currentTarget.value })
                                   }
                                   error={fieldErrors.ingredients}
+                                  data-hb-field="ingredients"
                               />
-                          </SimpleGrid>
+                          </>
                       ) : null}
                       {power.kind === "ceremony" ? (
                           <TagsInput
                               label="Prerequisite Powers"
                               description="The character must know at least one of these Oblivion Powers. Leave empty for none."
+                              inputWrapperOrder={belowInput}
                               value={power.prerequisitePowers ?? []}
                               onChange={(prerequisitePowers) => update({ prerequisitePowers })}
                               classNames={homebrewDropdownClassNames}
                               error={fieldErrors.prerequisitePowers}
+                              data-hb-field="prerequisitePowers"
                           />
                       ) : null}
                   </>
@@ -472,130 +482,126 @@ const HomebrewItemEditor = ({
 
     if (draft.kind === "predatorType") {
         return (
-            <Modal
+            <HomebrewEditorFrame
                 opened={opened}
                 onClose={onClose}
+                kind={draft.kind}
+                isNew={editorIsNew}
                 aria-label="Homebrew Predator Type editor"
-                centered
-                size="xl"
-                withCloseButton={false}
-                classNames={{
-                    content: "homebrew-loresheet__modal",
-                    body: "homebrew-loresheet__modal-body"
-                }}
+                preview={<HomebrewPredatorTypePreview item={draft} />}
+                errors={fieldErrors}
+                saveLabel="Save predator type"
+                onSave={save}
             >
                 <HomebrewPredatorTypeEditor
-                    isNew={isNew ?? !item.id}
                     draft={draft}
                     update={update}
                     errors={fieldErrors}
                     disciplineOptions={disciplineOptions}
                     encodeDisciplineReference={encodeDisciplineReference}
                     decodeDisciplineReference={decodeDisciplineReference}
-                    onClose={onClose}
-                    onSave={save}
                 />
-            </Modal>
+            </HomebrewEditorFrame>
         )
     }
 
     if (draft.kind === "loresheet") {
         return (
-            <Modal
+            <HomebrewEditorFrame
                 opened={opened}
                 onClose={onClose}
-                centered
-                size="xl"
-                withCloseButton={false}
-                classNames={{
-                    content: "homebrew-loresheet__modal",
-                    body: "homebrew-loresheet__modal-body"
-                }}
+                kind={draft.kind}
+                isNew={editorIsNew}
+                preview={<HomebrewLoresheetPreview item={draft} />}
+                errors={fieldErrors}
+                saveLabel="Save loresheet"
+                onSave={save}
             >
-                <LoresheetEditor
-                    draft={draft}
-                    update={update}
-                    errors={fieldErrors}
-                    onClose={onClose}
-                    onSave={save}
-                />
-            </Modal>
+                <LoresheetEditor draft={draft} update={update} errors={fieldErrors} />
+            </HomebrewEditorFrame>
         )
     }
 
     if (draft.kind === "power") {
         const power = draft as HomebrewPower
         return (
-            <HomebrewPowerCardEditor
+            <HomebrewEditorFrame
                 opened={opened}
-                power={power}
-                disciplineOptions={disciplineOptions}
-                disciplineValue={encodeDisciplineReference(
-                    power.disciplineRef ?? {
-                        type: "official",
-                        name: power.discipline
-                    }
-                )}
-                onDisciplineChange={(value) => {
-                    const disciplineRef = decodeDisciplineReference(value)
-                    update({ discipline: disciplineRef.name, disciplineRef })
-                }}
-                update={update}
-                errors={fieldErrors}
                 onClose={onClose}
+                kind={draft.kind}
+                isNew={editorIsNew}
+                preview={<HomebrewItemPreview item={power} />}
+                errors={fieldErrors}
+                saveLabel="Save power"
                 onSave={save}
-            />
+            >
+                <HomebrewPowerCardEditor
+                    power={power}
+                    disciplineOptions={disciplineOptions}
+                    disciplineValue={encodeDisciplineReference(
+                        power.disciplineRef ?? {
+                            type: "official",
+                            name: power.discipline
+                        }
+                    )}
+                    onDisciplineChange={(value) => {
+                        const disciplineRef = decodeDisciplineReference(value)
+                        update({ discipline: disciplineRef.name, disciplineRef })
+                    }}
+                    update={update}
+                    errors={fieldErrors}
+                />
+            </HomebrewEditorFrame>
         )
     }
 
+    const hasMechanics =
+        !!powerFields || draft.kind === "merit" || draft.kind === "flaw" || draft.kind === "clan"
+
     return (
-        <Modal
+        <HomebrewEditorFrame
             opened={opened}
             onClose={onClose}
-            title={`${item.id ? "Edit" : "Add"} ${homebrewKindLabel(item.kind)}`}
-            size="lg"
-            classNames={{
-                content: "homebrew-rule-modal",
-                header: "homebrew-rule-modal__header",
-                body: "homebrew-rule-modal__body"
-            }}
+            kind={draft.kind}
+            isNew={editorIsNew}
+            preview={<HomebrewItemPreview item={draft} />}
+            errors={fieldErrors}
+            saveLabel="Save item"
+            onSave={save}
         >
-            <Stack gap="md" className="homebrew-form-controls">
+            <EditorSection title="Text">
                 {commonFields}
                 {"logo" in draft ? (
                     <TextInput
                         label="Logo URL"
                         description="Optional HTTPS image URL. A standard icon is used when empty."
+                        inputWrapperOrder={belowInput}
                         value={draft.logo}
                         onChange={(event) => update({ logo: event.currentTarget.value })}
                         error={fieldErrors.logo}
+                        data-hb-field="logo"
                     />
                 ) : null}
-                {powerFields}
-                {draft.kind === "merit" || draft.kind === "flaw" ? (
-                    <MeritFlawFields draft={draft} update={update} errors={fieldErrors} />
-                ) : null}
-                {draft.kind === "clan" ? (
-                    <ClanFields
-                        draft={draft}
-                        update={update}
-                        disciplineOptions={disciplineOptions}
-                        encodeDisciplineReference={encodeDisciplineReference}
-                        decodeDisciplineReference={decodeDisciplineReference}
-                        errors={fieldErrors}
-                    />
-                ) : null}
-                <HomebrewValidationSummary errors={fieldErrors} />
-                <Group justify="flex-end">
-                    <Button variant="subtle" color="gray" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button color="grape" onClick={save}>
-                        Save item
-                    </Button>
-                </Group>
-            </Stack>
-        </Modal>
+            </EditorSection>
+            {hasMechanics ? (
+                <EditorSection title={draft.kind === "clan" ? "Curse & Blood" : "Rules"}>
+                    {powerFields}
+                    {draft.kind === "merit" || draft.kind === "flaw" ? (
+                        <MeritFlawFields draft={draft} update={update} errors={fieldErrors} />
+                    ) : null}
+                    {draft.kind === "clan" ? (
+                        <ClanFields
+                            draft={draft}
+                            update={update}
+                            disciplineOptions={disciplineOptions}
+                            encodeDisciplineReference={encodeDisciplineReference}
+                            decodeDisciplineReference={decodeDisciplineReference}
+                            errors={fieldErrors}
+                        />
+                    ) : null}
+                </EditorSection>
+            ) : null}
+        </HomebrewEditorFrame>
     )
 }
 
@@ -608,10 +614,11 @@ const MeritFlawFields = ({
     update: (values: Partial<HomebrewItem>) => void
     errors: FieldErrors
 }) => (
-    <SimpleGrid cols={{ base: 1, sm: 2 }}>
+    <div className="hb-form-grid" data-cols="2">
         <TagsInput
             label="Dot costs"
             description="One or more values from 1 to 5."
+            inputWrapperOrder={belowInput}
             value={draft.costs.map(String)}
             onChange={(values) =>
                 update({
@@ -622,16 +629,19 @@ const MeritFlawFields = ({
             }
             classNames={homebrewDropdownClassNames}
             error={errors.costs}
+            data-hb-field="costs"
         />
         <TagsInput
             label="Excludes"
             description="Merits or Flaws that cannot be combined with this item."
+            inputWrapperOrder={belowInput}
             value={draft.excludes}
             onChange={(excludes) => update({ excludes })}
             classNames={homebrewDropdownClassNames}
             error={errors.excludes}
+            data-hb-field="excludes"
         />
-    </SimpleGrid>
+    </div>
 )
 
 const ClanFields = ({
@@ -653,22 +663,27 @@ const ClanFields = ({
         <Textarea
             label="Bane"
             minRows={2}
+            autosize
             value={draft.bane}
             onChange={(event) => update({ bane: event.currentTarget.value })}
             error={errors.bane}
             required
+            data-hb-field="bane"
         />
         <Textarea
             label="Compulsion"
             minRows={2}
+            autosize
             value={draft.compulsion}
             onChange={(event) => update({ compulsion: event.currentTarget.value })}
             error={errors.compulsion}
             required
+            data-hb-field="compulsion"
         />
         <MultiSelect
             label="Native Disciplines"
             description="Official and Homebrew Disciplines are both supported."
+            inputWrapperOrder={belowInput}
             data={disciplineOptions}
             searchable
             value={(
@@ -684,14 +699,16 @@ const ClanFields = ({
             }}
             classNames={homebrewDropdownClassNames}
             error={errors.nativeDisciplines}
+            data-hb-field="nativeDisciplines"
         />
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+        <div className="hb-form-grid" data-cols="2">
             <TagsInput
                 label="Excluded predator types"
                 value={draft.excludedPredatorTypes}
                 onChange={(excludedPredatorTypes) => update({ excludedPredatorTypes })}
                 classNames={homebrewDropdownClassNames}
                 error={errors.excludedPredatorTypes}
+                data-hb-field="excludedPredatorTypes"
             />
             <TagsInput
                 label="Excluded Merits & Flaws"
@@ -699,23 +716,20 @@ const ClanFields = ({
                 onChange={(excludedMeritsAndFlaws) => update({ excludedMeritsAndFlaws })}
                 classNames={homebrewDropdownClassNames}
                 error={errors.excludedMeritsAndFlaws}
+                data-hb-field="excludedMeritsAndFlaws"
             />
-        </SimpleGrid>
+        </div>
     </>
 )
 
 const LoresheetEditor = ({
     draft,
     update,
-    errors,
-    onClose,
-    onSave
+    errors
 }: {
     draft: HomebrewLoresheet
     update: (values: Partial<HomebrewItem>) => void
     errors: FieldErrors
-    onClose: () => void
-    onSave: () => void
 }) => {
     const updateTier = (index: number, values: Partial<HomebrewLoresheet["tiers"][number]>) => {
         const tiers = [...draft.tiers]
@@ -724,77 +738,74 @@ const LoresheetEditor = ({
     }
 
     return (
-        <div className="homebrew-loresheet__shell">
-            <article className="homebrew-loresheet__sheet">
-                <header className="homebrew-loresheet__header">
-                    <TextInput
-                        aria-label="Loresheet name"
-                        placeholder="Untitled loresheet"
-                        value={draft.name}
-                        maxLength={100}
-                        onChange={(event) => update({ name: event.currentTarget.value })}
-                        classNames={{ input: "homebrew-loresheet__title-input" }}
-                        error={errors.name}
-                    />
-                    <Text size="xs" className="homebrew-loresheet__eyebrow">
-                        {draft.id ? "Edit Homebrew Loresheet" : "New Homebrew Loresheet"}
-                    </Text>
-                </header>
+        <>
+            <EditorSection title="Text">
+                <TextInput
+                    label="Name"
+                    aria-label="Loresheet name"
+                    placeholder="Untitled loresheet"
+                    value={draft.name}
+                    maxLength={100}
+                    onChange={(event) => update({ name: event.currentTarget.value })}
+                    error={errors.name}
+                    required
+                    data-autofocus
+                    data-hb-field="name"
+                />
+                <Textarea
+                    label="Short summary"
+                    description="Shown in pickers and library previews."
+                    inputWrapperOrder={belowInput}
+                    minRows={2}
+                    autosize
+                    maxRows={5}
+                    value={draft.summary}
+                    onChange={(event) => update({ summary: event.currentTarget.value })}
+                    error={errors.summary}
+                    data-hb-field="summary"
+                />
+                <Textarea
+                    label="Full description"
+                    minRows={4}
+                    autosize
+                    maxRows={12}
+                    value={draft.description}
+                    onChange={(event) => update({ description: event.currentTarget.value })}
+                    error={errors.description}
+                    data-hb-field="description"
+                />
+                <TextInput
+                    label="Source label"
+                    value={draft.source}
+                    onChange={(event) => update({ source: event.currentTarget.value })}
+                    error={errors.source}
+                    data-hb-field="source"
+                />
+                <Textarea
+                    label="Requirements"
+                    description="Displayed as guidance; not automatically enforced."
+                    inputWrapperOrder={belowInput}
+                    minRows={2}
+                    autosize
+                    value={draft.requirements}
+                    onChange={(event) => update({ requirements: event.currentTarget.value })}
+                    error={errors.requirements}
+                    data-hb-field="requirements"
+                />
+            </EditorSection>
 
-                <section className="homebrew-loresheet__intro">
-                    <Stack gap="sm">
-                        <Textarea
-                            label="Short summary"
-                            description="Shown in pickers and library previews."
-                            minRows={2}
-                            autosize
-                            maxRows={5}
-                            value={draft.summary}
-                            onChange={(event) => update({ summary: event.currentTarget.value })}
-                            error={errors.summary}
-                        />
-                        <Textarea
-                            label="Full description"
-                            minRows={5}
-                            autosize
-                            maxRows={12}
-                            value={draft.description}
-                            onChange={(event) => update({ description: event.currentTarget.value })}
-                            error={errors.description}
-                        />
-                    </Stack>
-                    <Stack gap="sm" className="homebrew-loresheet__details">
-                        <TextInput
-                            label="Source label"
-                            value={draft.source}
-                            onChange={(event) => update({ source: event.currentTarget.value })}
-                            error={errors.source}
-                        />
-                        <Textarea
-                            label="Requirements"
-                            description="Displayed as guidance; not automatically enforced."
-                            minRows={4}
-                            value={draft.requirements}
-                            onChange={(event) =>
-                                update({ requirements: event.currentTarget.value })
-                            }
-                            error={errors.requirements}
-                        />
-                    </Stack>
-                </section>
-
-                <OrnamentalDivider label="Lore" />
-
-                <section className="homebrew-loresheet__tiers" aria-label="Loresheet levels">
+            <EditorSection title="Levels">
+                <ol className="hb-tier-fields" aria-label="Loresheet levels" data-hb-field="tiers">
                     {draft.tiers.map((tier, index) => (
-                        <div className="homebrew-loresheet__tier" key={tier.level}>
-                            <div className="homebrew-loresheet__tier-heading">
-                                <Text
-                                    className="homebrew-loresheet__dots"
-                                    aria-label={`Level ${tier.level}`}
-                                >
-                                    {"●".repeat(tier.level)}
-                                </Text>
+                        <li className="hb-tier-field" key={tier.level}>
+                            <span className="hb-tier-field__level">
+                                <DotPips
+                                    value={tier.level}
+                                    tone="blood"
+                                    label={`Level ${tier.level}`}
+                                />
+                            </span>
+                            <div className="hb-tier-field__inputs">
                                 <TextInput
                                     aria-label={`Level ${tier.level} name`}
                                     placeholder={`Level ${tier.level} name`}
@@ -802,42 +813,28 @@ const LoresheetEditor = ({
                                     onChange={(event) =>
                                         updateTier(index, { name: event.currentTarget.value })
                                     }
-                                    classNames={{ input: "homebrew-loresheet__tier-name" }}
                                     error={errors[`tiers.${index}.name`]}
+                                    data-hb-field={`tiers.${index}.name`}
+                                />
+                                <Textarea
+                                    aria-label={`Level ${tier.level} summary`}
+                                    placeholder="Describe this benefit"
+                                    minRows={2}
+                                    autosize
+                                    value={tier.summary}
+                                    onChange={(event) =>
+                                        updateTier(index, { summary: event.currentTarget.value })
+                                    }
+                                    error={errors[`tiers.${index}.summary`]}
+                                    data-hb-field={`tiers.${index}.summary`}
                                 />
                             </div>
-                            <Textarea
-                                aria-label={`Level ${tier.level} summary`}
-                                placeholder="Describe this benefit"
-                                minRows={5}
-                                autosize
-                                value={tier.summary}
-                                onChange={(event) =>
-                                    updateTier(index, { summary: event.currentTarget.value })
-                                }
-                                classNames={{ input: "homebrew-loresheet__tier-summary" }}
-                                error={errors[`tiers.${index}.summary`]}
-                            />
-                        </div>
+                        </li>
                     ))}
-                </section>
-
-                {errors.tiers ? (
-                    <Text c="red" size="sm">
-                        {errors.tiers}
-                    </Text>
-                ) : null}
-                <HomebrewValidationSummary errors={errors} />
-                <footer className="homebrew-loresheet__footer">
-                    <Button variant="subtle" color="gray" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button color="red" variant="outline" onClick={onSave}>
-                        Save loresheet
-                    </Button>
-                </footer>
-            </article>
-        </div>
+                </ol>
+                {errors.tiers ? <p className="hb-field-error">{errors.tiers}</p> : null}
+            </EditorSection>
+        </>
     )
 }
 

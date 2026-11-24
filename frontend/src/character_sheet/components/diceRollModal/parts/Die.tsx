@@ -78,10 +78,11 @@ const Die = ({
         cursor: isSelectable ? "pointer" : "default"
     }
 
-    const selectionColor = isSelected ? "#ffd700" : colorValue
+    // Willpower selection is candle-gold, matching the reroll strip and the 3D dice.
+    const selectionColor = isSelected ? "#b0853a" : colorValue
     const selectionGlow = isSelected
-        ? "drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
-        : "drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
+        ? "drop-shadow(0 0 8px rgba(212, 175, 100, 0.75)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))"
+        : "drop-shadow(0 0 1px rgba(0, 0, 0, 0.6))"
 
     const baseFaceStyle = {
         position: "absolute" as const,
@@ -115,8 +116,10 @@ const Die = ({
         position: "absolute" as const,
         top: `${upperHeight * 0.25}px`,
         left: `-${internalWidth}px`,
-        color: "#fff",
-        textShadow: "1px 1px 3px #000",
+        color: "#f2eae6",
+        fontFamily: "var(--pg-font-display)",
+        fontWeight: 600,
+        textShadow: "0 1px 3px rgba(0, 0, 0, 0.85)",
         fontSize: `${upperHeight * 0.6}px`,
         textAlign: "center" as const,
         lineHeight: `${upperHeight}px`,

@@ -1,7 +1,7 @@
-import { Badge, Box, Button, Grid, Group, Modal, Stack, Text, Title, Tooltip } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { Button } from "@mantine/core"
+import { IconPlus } from "@tabler/icons-react"
 import posthog from "posthog-js"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Character } from "~/data/Character"
 import {
     Ceremony,
@@ -17,7 +17,26 @@ import { useCharacterHomebrew } from "~/hooks/useHomebrew"
 import type { HomebrewPower } from "~/data/Homebrew"
 import { getRitualIdentity, homebrewPowerToCeremony } from "~/utils/homebrewOptions"
 import HomebrewBadge from "~/components/HomebrewBadge"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import {
+    DisabledLine,
+    LevelTag,
+    MetaRows,
+    OptionCard,
+    OptionGroup,
+    OptionHead,
+    RouseDrops,
+    SearchField,
+    SelectEmpty,
+    SelectFooter,
+    SelectScroll,
+    SelectToolbar,
+    SheetModal,
+    Summary,
+    Tag,
+    matchesQuery,
+    selectModalClasses,
+    useListNav
+} from "./selectModalParts"
 
 type CeremonySelectModalProps = {
     opened: boolean
@@ -27,7 +46,6 @@ type CeremonySelectModalProps = {
 
 const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalProps) => {
     const { character, mode, primaryColor, setCharacter } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const { data: homebrewCollections = [] } = useCharacterHomebrew(character.id)
     const availableXP = getAvailableXP(character)
     const knownCeremonyIds = useMemo(
@@ -89,161 +107,155 @@ const CeremonySelectModal = ({ opened, onClose, options }: CeremonySelectModalPr
         onClose()
     }
 
+    const [query, setQuery] = useState("")
+    const [customOpened, setCustomOpened] = useState(false)
+    useEffect(() => {
+        if (!opened) setQuery("")
+    }, [opened])
+
+    const visibleLevels = sortedLevels
+        .map((level) => ({
+            level,
+            items: ceremoniesByLevel
+                .get(level)!
+                .filter((item) => matchesQuery(query, item.name, item.summary))
+        }))
+        .filter((group) => group.items.length > 0)
+    const visibleItems = visibleLevels.flatMap((group) => group.items)
+
+    const getBlockedReason = (item: Ceremony) => {
+        if (mode !== "xp") return undefined
+        const cost = getRitualCost(item.level)
+        return canAffordUpgrade(availableXP, cost)
+            ? undefined
+            : `Insufficient XP. Need ${cost}, have ${availableXP}`
+    }
+
+    const nav = useListNav({
+        items: visibleItems,
+        onPick: (item) => {
+            if (!getBlockedReason(item)) handleSelectCeremony(item)
+        },
+        resetKey: query
+    })
+
+    let navIndex = 0
     return (
-        <Modal
-            opened={opened}
-            onClose={onClose}
-            title="Select a Ceremony"
-            size="lg"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
-        >
-            <Stack gap="lg">
+        <SheetModal opened={opened} onClose={onClose} title="Select a Ceremony" size="xl">
+            <SelectToolbar>
+                <SearchField
+                    label="Search ceremonies"
+                    placeholder="Search ceremonies"
+                    value={query}
+                    onChange={setQuery}
+                    nav={nav}
+                />
+            </SelectToolbar>
+            <SelectScroll listId={nav.listId} label="Ceremonys">
                 {availableCeremonies.length === 0 ? (
-                    <Text c="dimmed" ta="center" py="xl">
-                        No available ceremonies to add.
-                    </Text>
+                    <SelectEmpty>No available ceremonies to add.</SelectEmpty>
+                ) : visibleItems.length === 0 ? (
+                    <SelectEmpty>No ceremony matches “{query.trim()}”.</SelectEmpty>
                 ) : (
-                    sortedLevels.map((level) => (
-                        <Stack key={level} gap="md">
-                            <Title order={4} c={primaryColor}>
-                                Level {level}
-                            </Title>
-                            <Grid gap="md">
-                                {ceremoniesByLevel.get(level)!.map((ceremony) => {
-                                    const cost = getRitualCost(ceremony.level)
-                                    const canAfford =
-                                        mode !== "xp" || canAffordUpgrade(availableXP, cost)
-                                    const tooltipLabel =
-                                        mode === "xp"
-                                            ? canAfford
-                                                ? `${cost} XP`
-                                                : `Insufficient XP. Need ${cost}, have ${availableXP}`
-                                            : undefined
-
-                                    const card = (
-                                        <Box
-                                            p="xs"
-                                            style={{
-                                                border: "1px solid var(--mantine-color-gray-8)",
-                                                borderRadius: "var(--mantine-radius-sm)",
-                                                height: "220px",
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                opacity: canAfford ? 1 : 0.6
-                                            }}
-                                        >
-                                            <Group
-                                                justify="space-between"
-                                                align="flex-start"
-                                                wrap="nowrap"
-                                            >
-                                                <Text
-                                                    fw={600}
-                                                    size="sm"
-                                                    pr="xs"
-                                                    lineClamp={2}
-                                                    style={{ flex: 1 }}
-                                                >
-                                                    {ceremony.name}
-                                                </Text>
-                                                <Badge
-                                                    size="sm"
-                                                    variant="dot"
-                                                    color={primaryColor}
-                                                    style={{ flexShrink: 0 }}
-                                                >
-                                                    Lv.{ceremony.level}
-                                                </Badge>
-                                                {ceremony.homebrewSource ? (
-                                                    <HomebrewBadge
-                                                        source={ceremony.homebrewSource}
-                                                    />
-                                                ) : null}
-                                            </Group>
-                                            <Text
-                                                size="xs"
-                                                c="dimmed"
-                                                mt="xs"
-                                                lineClamp={4}
-                                                style={{ height: 68 }}
-                                            >
-                                                {ceremony.summary}
-                                            </Text>
-                                            <Stack gap={2} mt="sm">
-                                                <Text size="xs">
-                                                    {ceremony.dicePool.toUpperCase()}
-                                                </Text>
-                                                <Text size="xs">
-                                                    Requires:{" "}
-                                                    {getCeremonyPrerequisiteLabel(ceremony)}
-                                                </Text>
-                                                <Text size="xs">Time: {ceremony.requiredTime}</Text>
-                                            </Stack>
-                                            <Button
-                                                size="xs"
-                                                variant="light"
-                                                color={primaryColor}
-                                                mt="auto"
-                                                disabled={!canAfford}
-                                                onClick={() => handleSelectCeremony(ceremony)}
-                                            >
-                                                Add Ceremony
-                                            </Button>
-                                        </Box>
-                                    )
-
+                    visibleLevels.map(({ level, items }) => (
+                        <OptionGroup key={level} label={`Level ${level}`}>
+                            <div className={selectModalClasses.grid}>
+                                {items.map((item) => {
+                                    const index = navIndex++
+                                    const blockedReason = getBlockedReason(item)
                                     return (
-                                        <Grid.Col
-                                            key={getRitualIdentity(ceremony)}
-                                            span={{ base: 12, sm: 6 }}
+                                        <OptionCard
+                                            key={getRitualIdentity(item)}
+                                            disabled={!!blockedReason}
+                                            {...nav.optionProps(index)}
                                         >
-                                            {tooltipLabel ? (
-                                                <Tooltip label={tooltipLabel}>
-                                                    <div>{card}</div>
-                                                </Tooltip>
-                                            ) : (
-                                                card
-                                            )}
-                                        </Grid.Col>
+                                            <OptionHead
+                                                name={item.name}
+                                                tags={
+                                                    <>
+                                                        {item.homebrewSource ? (
+                                                            <HomebrewBadge
+                                                                source={item.homebrewSource}
+                                                            />
+                                                        ) : null}
+                                                        {mode === "xp" ? (
+                                                            <Tag tone="accent">
+                                                                {getRitualCost(item.level)} XP
+                                                            </Tag>
+                                                        ) : null}
+                                                        <LevelTag level={item.level} />
+                                                    </>
+                                                }
+                                            />
+                                            <Summary>{item.summary}</Summary>
+                                            <MetaRows
+                                                rows={[
+                                                    item.dicePool
+                                                        ? [
+                                                              "Pool",
+                                                              <span
+                                                                  key="pool"
+                                                                  className={
+                                                                      selectModalClasses.pool
+                                                                  }
+                                                              >
+                                                                  {item.dicePool}
+                                                              </span>
+                                                          ]
+                                                        : null,
+                                                    [
+                                                        "Requires",
+                                                        getCeremonyPrerequisiteLabel(item)
+                                                    ],
+                                                    item.requiredTime
+                                                        ? ["Time", item.requiredTime]
+                                                        : null,
+                                                    item.rouseChecks > 0
+                                                        ? [
+                                                              "Rouse",
+                                                              <RouseDrops
+                                                                  key="r"
+                                                                  n={item.rouseChecks}
+                                                              />
+                                                          ]
+                                                        : null,
+                                                    item.ingredients
+                                                        ? ["Needs", item.ingredients]
+                                                        : null
+                                                ]}
+                                            />
+                                            {blockedReason ? (
+                                                <DisabledLine>{blockedReason}</DisabledLine>
+                                            ) : null}
+                                        </OptionCard>
                                     )
                                 })}
-                            </Grid>
-                        </Stack>
+                            </div>
+                        </OptionGroup>
                     ))
                 )}
-                <CustomCeremonyModalTrigger options={options} onSave={onClose} />
-            </Stack>
-        </Modal>
-    )
-}
-
-const CustomCeremonyModalTrigger = ({
-    options,
-    onSave
-}: {
-    options: SheetOptions
-    onSave: () => void
-}) => {
-    const [opened, setOpened] = useState(false)
-
-    return (
-        <>
-            <Button variant="filled" color="black" fullWidth onClick={() => setOpened(true)}>
-                Create Custom Ceremony
-            </Button>
+            </SelectScroll>
+            <SelectFooter
+                end={
+                    <Button
+                        variant="default"
+                        leftSection={<IconPlus size={16} />}
+                        onClick={() => setCustomOpened(true)}
+                    >
+                        Create Custom Ceremony
+                    </Button>
+                }
+            />
             <CustomCeremonyModal
-                opened={opened}
-                onClose={() => setOpened(false)}
+                opened={customOpened}
+                onClose={() => setCustomOpened(false)}
                 options={options}
                 onSave={() => {
-                    setOpened(false)
-                    onSave()
+                    setCustomOpened(false)
+                    onClose()
                 }}
             />
-        </>
+        </SheetModal>
     )
 }
 

@@ -1,9 +1,9 @@
-import { Button, Group, Modal, Stack, TextInput, Textarea } from "@mantine/core"
-import { useMediaQuery } from "@mantine/hooks"
+import { Button, TextInput, Textarea } from "@mantine/core"
 import { useState, useEffect } from "react"
 import { Touchstone } from "~/data/Character"
 import { SheetOptions } from "../CharacterSheet"
-import { confirmationModalWithHeaderStyles } from "~/components/ConfirmActionModal"
+import { DisabledReason } from "~/components/ui"
+import { SheetModal, selectModalClasses as formClasses } from "./selectModalParts"
 
 type TouchstoneModalProps = {
     opened: boolean
@@ -21,7 +21,6 @@ const TouchstoneModal = ({
     initialIndex
 }: TouchstoneModalProps) => {
     const { character, setCharacter, primaryColor } = options
-    const phoneScreen = useMediaQuery("(max-width: 48em)")
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [conviction, setConviction] = useState("")
@@ -75,47 +74,58 @@ const TouchstoneModal = ({
     }
 
     return (
-        <Modal
+        <SheetModal
             opened={opened}
             onClose={onClose}
             title={initialTouchstone ? "Edit Touchstone" : "Add Touchstone"}
             size="md"
-            centered
-            withCloseButton={false}
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            styles={confirmationModalWithHeaderStyles(phoneScreen)}
+            fullScreenOnPhone={false}
         >
-            <Stack gap="md">
+            <form
+                className={formClasses.form}
+                onSubmit={(event) => {
+                    event.preventDefault()
+                    handleSave()
+                }}
+            >
                 <TextInput
                     label="Name"
+                    placeholder="e.g., Sister Marguerite, my old confessor"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    data-autofocus
                     color={primaryColor}
                 />
                 <Textarea
                     label="Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    minRows={3}
+                    rows={3}
+                    resize="vertical"
                     color={primaryColor}
                 />
                 <TextInput
                     label="Conviction"
+                    placeholder="e.g., Never harm a child"
                     value={conviction}
                     onChange={(e) => setConviction(e.target.value)}
                     color={primaryColor}
                 />
-                <Group justify="flex-end" mt="md">
-                    <Button variant="subtle" onClick={onClose} color={primaryColor}>
+                <div className={formClasses.formFooter}>
+                    <Button variant="subtle" color="gray" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={!name.trim()} color={primaryColor}>
-                        Save
-                    </Button>
-                </Group>
-            </Stack>
-        </Modal>
+                    <DisabledReason
+                        reason={!name.trim() ? "Give the touchstone a name" : undefined}
+                    >
+                        <Button type="submit" disabled={!name.trim()} color={primaryColor}>
+                            Save
+                        </Button>
+                    </DisabledReason>
+                </div>
+            </form>
+        </SheetModal>
     )
 }
 

@@ -1,7 +1,9 @@
-import { Anchor, Loader, Stack, Text } from "@mantine/core"
+import { Anchor, Button, Loader } from "@mantine/core"
+import { IconCheck, IconCopy } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 import { CONTACT_LINKS } from "~/constants/contactLinks"
 import { getSourceMappedStack, type SourceMappedStack } from "~/utils/sourceMappedStack"
+import classes from "./AppModals.module.css"
 
 type ErrorDetailsProps = {
     error: Error
@@ -19,6 +21,7 @@ const renderFrameLabel = (frame: SourceMappedStack["frames"][number]) => {
 const ErrorDetails = ({ error, linkColor }: ErrorDetailsProps) => {
     const [mappedStack, setMappedStack] = useState<SourceMappedStack | null>(null)
     const [loading, setLoading] = useState(true)
+    const [copied, setCopied] = useState(false)
 
     useEffect(() => {
         let cancelled = false
@@ -43,14 +46,39 @@ const ErrorDetails = ({ error, linkColor }: ErrorDetailsProps) => {
         }
     }, [error])
 
+    useEffect(() => {
+        if (!copied) return
+        const timeout = window.setTimeout(() => setCopied(false), 1800)
+        return () => window.clearTimeout(timeout)
+    }, [copied])
+
     const sourceFrame = mappedStack?.frames.find((frame) => frame.sourceExcerpt)
+    const stackText = mappedStack?.frames.length
+        ? mappedStack.frames.map(renderFrameLabel).join("\n")
+        : (error.stack ?? "")
+
+    const copyDetails = async () => {
+        const details = [
+            `There was an error: ${error.message}`,
+            stackText,
+            sourceFrame?.sourceExcerpt ?? ""
+        ]
+            .filter(Boolean)
+            .join("\n\n")
+        try {
+            await navigator.clipboard.writeText(details)
+            setCopied(true)
+        } catch {
+            setCopied(false)
+        }
+    }
 
     return (
-        <Stack gap="sm">
-            <Text fz="xl" ta="center">
+        <div className={classes.body}>
+            <p className={`${classes.fileName} ${classes.centered}`}>
                 There was an error: {error.message}
-            </Text>
-            <Text fz="lg" ta="center">
+            </p>
+            <p className={`${classes.lede} ${classes.centered}`}>
                 Send a screenshot of this to me on{" "}
                 <Anchor
                     href={CONTACT_LINKS.reddit.href}
@@ -70,50 +98,28 @@ const ErrorDetails = ({ error, linkColor }: ErrorDetailsProps) => {
                     {CONTACT_LINKS.bluesky.label}
                 </Anchor>{" "}
                 to help me fix it
-            </Text>
+            </p>
             {loading ? (
-                <Stack gap={4} align="center">
-                    <Loader size="sm" />
-                    <Text size="sm" c="dimmed">
-                        Resolving original TypeScript source...
-                    </Text>
-                </Stack>
+                <div className={`${classes.status} ${classes.centerRow}`}>
+                    <Loader size="xs" />
+                    <span className={classes.note}>Resolving original TypeScript source...</span>
+                </div>
             ) : null}
-            {mappedStack?.frames.length ? (
-                <Text
-                    size="xs"
-                    c="dimmed"
-                    style={{
-                        fontFamily: "monospace",
-                        wordBreak: "break-word",
-                        whiteSpace: "pre-wrap"
-                    }}
-                >
-                    {mappedStack.frames.map(renderFrameLabel).join("\n")}
-                </Text>
-            ) : (
-                <Text
-                    size="xs"
-                    c="dimmed"
-                    style={{
-                        fontFamily: "monospace",
-                        wordBreak: "break-word",
-                        whiteSpace: "pre-wrap"
-                    }}
-                >
-                    {error.stack}
-                </Text>
-            )}
+            <pre className={classes.code}>{stackText}</pre>
             {sourceFrame?.sourceExcerpt ? (
-                <Text
-                    size="xs"
-                    c="dimmed"
-                    style={{ fontFamily: "monospace", whiteSpace: "pre-wrap", overflowX: "auto" }}
-                >
-                    {sourceFrame.sourceExcerpt}
-                </Text>
+                <pre className={classes.code}>{sourceFrame.sourceExcerpt}</pre>
             ) : null}
-        </Stack>
+            <div className={classes.centerRow}>
+                <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                    onClick={() => void copyDetails()}
+                >
+                    {copied ? "Copied" : "Copy error details"}
+                </Button>
+            </div>
+        </div>
     )
 }
 

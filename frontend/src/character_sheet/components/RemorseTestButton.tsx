@@ -1,14 +1,13 @@
 import { ActionIcon, Tooltip } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { IconHeartHandshake } from "@tabler/icons-react"
-import { motion } from "framer-motion"
 import { memo, useState } from "react"
 import posthog from "posthog-js"
 import { Character } from "~/data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import { useSessionChat } from "~/hooks/useSessionChat"
 import { getAutoShareDiceRolls } from "~/utils/chatSettings"
-import { vtmRed } from "../utils/style"
+import classes from "../sheet.module.css"
 
 type RemorseTestButtonProps = {
     character?: Character
@@ -32,7 +31,7 @@ const RemorseTestButton = ({
     disabledReason
 }: RemorseTestButtonProps) => {
     const [animationKey, setAnimationKey] = useState(0)
-    const [isSuccess, setIsSuccess] = useState(true)
+    const [isSuccess, setIsSuccess] = useState<boolean | null>(null)
     const { sendRemorseCheck, sessionId, connectionStatus } = useSessionChat((state) => ({
         sendRemorseCheck: state.sendRemorseCheck,
         sessionId: state.sessionId,
@@ -135,35 +134,24 @@ const RemorseTestButton = ({
             }
             zIndex={tooltipZIndex}
         >
-            <ActionIcon
-                size={size}
-                variant="subtle"
-                onClick={handleRemorseTest}
-                color={vtmRed}
-                disabled={isDisabled}
-            >
-                <motion.div
-                    key={animationKey}
-                    animate={
-                        isSuccess
-                            ? {
-                                  rotate: [0, -6, 6, -3, 3, 0],
-                                  y: [0, 2, -2, 0]
-                              }
-                            : {
-                                  x: [0, -2, 2, -2, 2, 0],
-                                  rotate: [0, -8, 8, 0]
-                              }
-                    }
-                    transition={{
-                        duration: 0.6,
-                        ease: "easeInOut"
-                    }}
-                    style={{ display: "inline-block" }}
+            <span className={classes.disabledWrap}>
+                <ActionIcon
+                    size={size}
+                    variant="light"
+                    onClick={handleRemorseTest}
+                    color="red"
+                    disabled={isDisabled}
+                    aria-label="Remorse test"
                 >
-                    <IconHeartHandshake size={iconSize} />
-                </motion.div>
-            </ActionIcon>
+                    <span
+                        key={animationKey}
+                        className={classes.rollIcon}
+                        data-result={isSuccess === null ? undefined : isSuccess ? "pass" : "fail"}
+                    >
+                        <IconHeartHandshake size={iconSize} stroke={1.8} />
+                    </span>
+                </ActionIcon>
+            </span>
         </Tooltip>
     )
 }

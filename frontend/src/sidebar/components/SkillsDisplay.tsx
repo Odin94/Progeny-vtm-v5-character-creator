@@ -1,94 +1,81 @@
 import { memo } from "react"
-import { Grid, Stack, Text, Title } from "@mantine/core"
 import { upcase } from "../../generator/utils"
-import Tally from "../../components/Tally"
 import { Skills, skillsKeySchema } from "../../data/Skills"
+import Dots from "./Dots"
+import classes from "./Dossier.module.css"
 
 export type SkillsProps = {
     skills: Skills
 }
 
-const SkillDisplay = ({ skills }: SkillsProps) => {
-    const textStyle: React.CSSProperties = {
-        fontFamily: "Courier New"
+const groups = [
+    {
+        label: "Physical",
+        keys: [
+            "athletics",
+            "brawl",
+            "craft",
+            "drive",
+            "firearms",
+            "melee",
+            "larceny",
+            "stealth",
+            "survival"
+        ]
+    },
+    {
+        label: "Social",
+        keys: [
+            "animal ken",
+            "etiquette",
+            "insight",
+            "intimidation",
+            "leadership",
+            "performance",
+            "persuasion",
+            "streetwise",
+            "subterfuge"
+        ]
+    },
+    {
+        label: "Mental",
+        keys: [
+            "academics",
+            "awareness",
+            "finance",
+            "investigation",
+            "medicine",
+            "occult",
+            "politics",
+            "science",
+            "technology"
+        ]
     }
+]
 
-    return (
-        <Stack>
-            <Title order={2}>Skills</Title>
+/** Trained skills only; untrained ones would just be 27 rows of empty dots. */
+const SkillDisplay = ({ skills }: SkillsProps) => (
+    <section className={classes.section}>
+        <h3 className={classes.sectionTitle}>Skills</h3>
+        {groups.map((group) => {
+            const trained = group.keys
+                .map((s) => skillsKeySchema.parse(s))
+                .filter((skill) => skills[skill] > 0)
+            if (trained.length === 0) return null
 
-            <Grid>
-                <Grid.Col span={4}>
-                    <Title order={4}>Physical</Title>
-                    {[
-                        "athletics",
-                        "brawl",
-                        "craft",
-                        "drive",
-                        "firearms",
-                        "melee",
-                        "larceny",
-                        "stealth",
-                        "survival"
-                    ]
-                        .map((s) => skillsKeySchema.parse(s))
-                        .map((skill) => {
-                            return (
-                                <Text style={textStyle} key={skill}>
-                                    {upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} />
-                                </Text>
-                            )
-                        })}
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                    <Title order={4}>Social</Title>
-                    {[
-                        "animal ken",
-                        "etiquette",
-                        "insight",
-                        "intimidation",
-                        "leadership",
-                        "performance",
-                        "persuasion",
-                        "streetwise",
-                        "subterfuge"
-                    ]
-                        .map((s) => skillsKeySchema.parse(s))
-                        .map((skill) => {
-                            return (
-                                <Text style={textStyle} key={skill}>
-                                    {upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} />
-                                </Text>
-                            )
-                        })}
-                </Grid.Col>
-
-                <Grid.Col span={4}>
-                    <Title order={4}>Mental</Title>
-                    {[
-                        "academics",
-                        "awareness",
-                        "finance",
-                        "investigation",
-                        "medicine",
-                        "occult",
-                        "politics",
-                        "science",
-                        "technology"
-                    ]
-                        .map((s) => skillsKeySchema.parse(s))
-                        .map((skill) => {
-                            return (
-                                <Text style={textStyle} key={skill}>
-                                    {upcase(skill).slice(0, 4)}: <Tally n={skills[skill]} />
-                                </Text>
-                            )
-                        })}
-                </Grid.Col>
-            </Grid>
-        </Stack>
-    )
-}
+            return (
+                <div key={group.label} className={classes.group}>
+                    <span className={classes.groupLabel}>{group.label}</span>
+                    {trained.map((skill) => (
+                        <div key={skill} className={classes.row}>
+                            <span className={classes.rowName}>{upcase(skill)}</span>
+                            <Dots n={skills[skill]} />
+                        </div>
+                    ))}
+                </div>
+            )
+        })}
+    </section>
+)
 
 export default memo(SkillDisplay)

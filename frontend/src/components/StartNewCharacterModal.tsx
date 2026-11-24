@@ -1,6 +1,6 @@
-import { Badge, Button, Divider, Group, Modal, Stack, Text, TextInput } from "@mantine/core"
+import { Badge, Button, Modal, TextInput } from "@mantine/core"
 import { IconDeviceFloppy, IconPencil } from "@tabler/icons-react"
-import { COLOR_MODAL_DIVIDER } from "~/theme/colors"
+import classes from "./AppModals.module.css"
 
 type StartNewCharacterModalProps = {
     opened: boolean
@@ -24,39 +24,23 @@ const StartNewCharacterModal = ({
     onSaveAndStartNew
 }: StartNewCharacterModalProps) => {
     return (
-        <Modal
-            opened={opened}
-            onClose={onClose}
-            centered
-            title="Start a new character?"
-            radius="xl"
-            padding="xl"
-            size="lg"
-            overlayProps={{ backgroundOpacity: 0.72, blur: 8 }}
-            classNames={{
-                content: "landing-page__modal",
-                header: "landing-page__modal-header",
-                title: "landing-page__modal-title",
-                body: "landing-page__modal-body"
-            }}
-        >
-            <Stack gap="lg">
-                <Group justify="space-between" align="center" gap="sm">
-                    <Text className="landing-page__body">
-                        You already have a character in progress.
-                    </Text>
-                    <Badge color="green" variant="light">
+        <Modal opened={opened} onClose={onClose} centered title="Start a new character?" size="lg">
+            <div className={classes.body}>
+                <div className={classes.status}>
+                    <p className={classes.lede}>You already have a character in progress.</p>
+                    <Badge color="green" variant="light" ml="auto">
                         Signed in
                     </Badge>
-                </Group>
+                </div>
 
-                <Text className="landing-page__body">
+                <p className={classes.lede}>
                     Keep editing the current character, or save it to your account before starting
                     over.
-                </Text>
+                </p>
 
                 {isCharacterNameEditable ? (
                     <TextInput
+                        data-autofocus
                         value={characterName}
                         onChange={(event) => setCharacterName(event.currentTarget.value)}
                         label="Current character name"
@@ -64,39 +48,35 @@ const StartNewCharacterModal = ({
                         color="red"
                     />
                 ) : (
-                    <Stack gap={4}>
-                        <Text fw={700} size="sm">
-                            Current character name
-                        </Text>
-                        <Text className="landing-page__body">{characterName}</Text>
-                    </Stack>
+                    <div className={classes.field}>
+                        <span className={classes.fieldLabel}>Current character name</span>
+                        <span className={classes.fieldValue}>{characterName}</span>
+                    </div>
                 )}
 
-                <Divider color={COLOR_MODAL_DIVIDER} />
+                <hr className={classes.rule} />
 
-                <Group justify="space-between" align="center">
+                <div className={classes.actions}>
                     <Button
                         variant="subtle"
                         color="gray"
-                        leftSection={<IconPencil size={18} />}
+                        leftSection={<IconPencil size={16} />}
                         onClick={onContinueCurrent}
                         disabled={isSaving}
                     >
                         Keep editing
                     </Button>
 
-                    <Group gap="sm">
-                        <Button
-                            color="red"
-                            leftSection={<IconDeviceFloppy size={18} />}
-                            onClick={onSaveAndStartNew}
-                            loading={isSaving}
-                        >
-                            Save and start new
-                        </Button>
-                    </Group>
-                </Group>
-            </Stack>
+                    <Button
+                        color="red"
+                        leftSection={<IconDeviceFloppy size={16} />}
+                        onClick={onSaveAndStartNew}
+                        loading={isSaving}
+                    >
+                        Save and start new
+                    </Button>
+                </div>
+            </div>
         </Modal>
     )
 }

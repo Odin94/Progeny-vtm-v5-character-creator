@@ -1,7 +1,6 @@
 import { notifyCharacterTransitionRefused } from "~/modules/characterTransition"
 import { reportCharacterOperationFailure } from "~/utils/characterOperationAnalytics"
-import { AppShell, BackgroundImage, useComputedColorScheme } from "@mantine/core"
-import { RAW_GOLD, rgba } from "~/theme/colors"
+import { AppShell } from "@mantine/core"
 import { useLocalStorage, useMediaQuery, useViewportSize } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
 import { useQueryClient } from "@tanstack/react-query"
@@ -18,25 +17,19 @@ import {
     normalizeGeneratorStepId,
     type GeneratorStepId
 } from "~/generator/steps"
-import { rndInt } from "~/generator/utils"
 import { globals } from "~/globals"
 import { useAuth } from "~/hooks/useAuth"
 import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
 import { useCharacters } from "~/hooks/useCharacters"
-import club from "~/resources/backgrounds/aleksandr-popov-3InMDrsuYrk-unsplash.jpg"
-import brokenDoor from "~/resources/backgrounds/amber-kipp-VcPo_DvKjQE-unsplash.jpg"
-import city from "~/resources/backgrounds/dominik-hofbauer-IculuMoubkQ-unsplash.jpg"
-import bloodGuy from "~/resources/backgrounds/marcus-bellamy-xvW725b6LQk-unsplash.jpg"
-import batWoman from "~/resources/backgrounds/peter-scherbatykh-VzQWVqHOCaE-unsplash.jpg"
-import alley from "~/resources/backgrounds/thomas-le-KNQEvvCGoew-unsplash.jpg"
 import AsideBar from "~/sidebar/AsideBar"
 import Sidebar from "~/sidebar/Sidebar"
+import StepProgressStrip, { STEP_PROGRESS_STRIP_HEIGHT } from "~/sidebar/StepProgressStrip"
+import classes from "./CreatorPage.module.css"
 import Topbar from "~/topbar/Topbar"
 import { characterHttp } from "~/utils/http/characters"
 import { parseCharacterData } from "~/utils/characterData"
 import { characterPersistence, isOwnedSavedCharacter } from "~/modules/characterPersistence"
 
-const backgrounds = [club, brokenDoor, city, bloodGuy, batWoman, alley]
 type PendingSwitchAction = { type: "load"; characterId: string } | { type: "create" } | null
 
 export default function CreatorPage() {
@@ -50,13 +43,13 @@ export default function CreatorPage() {
     globals.viewportWidthPx = viewportWidth
     globals.isPhoneScreen = useMediaQuery(`(max-width: ${globals.phoneScreenW}px)`)
     globals.isSmallScreen = useMediaQuery(`(max-width: ${globals.smallScreenW}px)`)
-    const computedColorScheme = useComputedColorScheme("dark", { getInitialValueInEffect: true })
     // Firefox mobile's browser chrome can cover the bottom of a 100vh layout. Dynamic viewport
     // units follow the currently visible viewport, keeping the generator's action buttons usable.
     const creatorViewportHeight = globals.isPhoneScreen ? "100dvh" : "100vh"
     const creatorContentHeight = globals.isPhoneScreen
         ? "calc(100dvh - 52px)"
         : "calc(100vh - 52px)"
+    const asideWidth = globals.isSmallScreen ? Math.min(300, viewportWidth - 56) : 220
 
     useEffect(() => {
         globals.largeFontSize = globals.isPhoneScreen ? "21px" : "30px"
@@ -71,7 +64,6 @@ export default function CreatorPage() {
     })
     const [loadModalOpened, setLoadModalOpened] = useState(false)
     const [loadedFile, setLoadedFile] = useState<File | null>(null)
-    const [backgroundIndex] = useState(rndInt(0, backgrounds.length))
     const [pendingSwitchAction, setPendingSwitchAction] = useState<PendingSwitchAction>(null)
     const [switchNameValue, setSwitchNameValue] = useState("")
     const [isSavingBeforeSwitch, setIsSavingBeforeSwitch] = useState(false)
@@ -399,44 +391,25 @@ export default function CreatorPage() {
             <AppShell
                 padding="0"
                 header={{ height: 52 }}
-                styles={(theme) => ({
+                className={classes.root}
+                classNames={{
+                    header: classes.header,
+                    navbar: `${classes.rail} ${classes.navbar}`,
+                    aside: `${classes.rail} ${classes.aside}`
+                }}
+                styles={{
                     root: {
                         height: creatorViewportHeight
                     },
-                    header: {
-                        background: "rgba(8, 7, 8, 0.7)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        borderBottom: `1px solid ${rgba(RAW_GOLD, 0.12)}`,
-                        zIndex: 200
-                    },
                     navbar: {
                         top: 52,
-                        height: creatorContentHeight,
-                        background: "rgba(8, 7, 8, 0.72)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        borderRight: `1px solid ${rgba(RAW_GOLD, 0.12)}`
+                        height: creatorContentHeight
                     },
                     aside: {
                         top: 52,
-                        height: creatorContentHeight,
-                        background: "rgba(8, 7, 8, 0.72)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        borderLeft: `1px solid ${rgba(RAW_GOLD, 0.12)}`
-                    },
-                    main: {
-                        backgroundColor:
-                            computedColorScheme === "dark"
-                                ? theme.colors.dark[8]
-                                : theme.colors.gray[0],
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        overflow: "hidden"
+                        height: creatorContentHeight
                     }
-                })}
+                }}
             >
                 <AppShell.Header>
                     <RenderProfiler id="CreatorTopbar">
@@ -449,7 +422,7 @@ export default function CreatorPage() {
                     </RenderProfiler>
                 </AppShell.Header>
                 {!globals.isSmallScreen && (
-                    <AppShell.Navbar p="xs" w={{ base: 250, xl: 300 }}>
+                    <AppShell.Navbar p="sm" w={{ base: 250, xl: 300 }}>
                         <RenderProfiler id="CreatorSidebar">
                             <Sidebar
                                 character={character}
@@ -460,71 +433,82 @@ export default function CreatorPage() {
                         </RenderProfiler>
                     </AppShell.Navbar>
                 )}
-                {showAsideBar && (
+                {globals.isSmallScreen ? (
+                    <div
+                        className={classes.scrim}
+                        data-open={showAsideBar || undefined}
+                        aria-hidden="true"
+                        onClick={() => setShowAsideBar(false)}
+                    />
+                ) : null}
+                {(showAsideBar || globals.isSmallScreen) && (
                     <AppShell.Aside
                         p="md"
-                        w={{ xs: 200 }}
-                        style={{ display: "flex", flexDirection: "column" }}
+                        w={asideWidth}
+                        data-drawer={globals.isSmallScreen || undefined}
+                        data-open={showAsideBar || undefined}
+                        inert={globals.isSmallScreen && !showAsideBar}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <RenderProfiler id="CreatorAsideBar">
                             <AsideBar
                                 selectedStep={selectedStep}
-                                setSelectedStep={setSelectedStep}
+                                setSelectedStep={(step) => {
+                                    setSelectedStep(step)
+                                    if (globals.isSmallScreen) setShowAsideBar(false)
+                                }}
                                 character={character}
                             />
                         </RenderProfiler>
                     </AppShell.Aside>
                 )}
-                <BackgroundImage
-                    h="100%"
-                    src={backgrounds[backgroundIndex]}
-                    style={{ flex: 1, minHeight: 0 }}
+                <div
+                    className={classes.canvas}
                     onClick={() => {
                         if (globals.isSmallScreen && showAsideBar) {
                             setShowAsideBar(false)
                         }
                     }}
                 >
+                    {globals.isSmallScreen ? (
+                        <StepProgressStrip
+                            character={character}
+                            selectedStep={selectedStep}
+                            stepsOpen={showAsideBar}
+                            onToggleSteps={() => setShowAsideBar(!showAsideBar)}
+                        />
+                    ) : null}
                     <div
-                        style={{
-                            backgroundColor: "rgba(0, 0, 0, 0.7)",
-                            height: "100%",
-                            display: "flex",
-                            flexDirection: "column"
-                        }}
+                        inert={isTransitioningCharacter}
+                        className={classes.stage}
+                        style={
+                            {
+                                "--generator-top-offset": globals.isSmallScreen
+                                    ? `${52 + STEP_PROGRESS_STRIP_HEIGHT}px`
+                                    : "52px",
+                                "--aside-offset":
+                                    showAsideBar && !globals.isSmallScreen
+                                        ? `${asideWidth}px`
+                                        : "0px",
+                                "--navbar-offset": globals.isSmallScreen
+                                    ? "0px"
+                                    : viewportWidth >= 1408
+                                      ? "300px"
+                                      : "250px"
+                            } as React.CSSProperties
+                        }
                     >
-                        <div
-                            inert={isTransitioningCharacter}
-                            style={
-                                {
-                                    width: "100%",
-                                    height: "100%",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    flex: 1,
-                                    minHeight: 0,
-                                    "--aside-offset": showAsideBar ? "200px" : "0px",
-                                    "--navbar-offset": globals.isSmallScreen
-                                        ? "0px"
-                                        : viewportWidth >= 1408
-                                          ? "300px"
-                                          : "250px"
-                                } as React.CSSProperties
-                            }
-                        >
-                            <RenderProfiler id="Generator">
-                                <Generator
-                                    key={characterSessionKey}
-                                    character={character}
-                                    setCharacter={updateGeneratorCharacter}
-                                    selectedStep={selectedStep}
-                                    setSelectedStep={setSelectedStep}
-                                />
-                            </RenderProfiler>
-                        </div>
+                        <RenderProfiler id="Generator">
+                            <Generator
+                                key={characterSessionKey}
+                                character={character}
+                                setCharacter={updateGeneratorCharacter}
+                                selectedStep={selectedStep}
+                                setSelectedStep={setSelectedStep}
+                            />
+                        </RenderProfiler>
                     </div>
-                </BackgroundImage>
+                </div>
             </AppShell>
         </>
     )

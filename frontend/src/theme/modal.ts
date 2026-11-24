@@ -1,35 +1,34 @@
 import { Modal } from "@mantine/core"
+import shared from "./components.module.css"
 import classes from "./modal.module.css"
+import { modalTransitionProps } from "./transitions"
 
 /**
- * The shared visual shell for ordinary application modals. Purpose-built modals
- * can still supply their own class names or styles when their content needs a
- * distinct presentation (for example, the character-sheet menu).
+ * The shared visual shell for ordinary application modals: candlelit gradient surface,
+ * gold hairline border, Cinzel title, blurred scrim, and a scale-in (.96 → 1, ease-out)
+ * / scale-out (ease-in) transition. Purpose-built modals can still supply their own
+ * class names or styles when their content needs a distinct presentation (for example,
+ * the character-sheet menu).
  */
 export const modalTheme = {
     Modal: Modal.extend({
         defaultProps: {
             centered: true,
-            overlayProps: { backgroundOpacity: 0.72, blur: 8 }
+            overlayProps: { blur: 6 },
+            transitionProps: modalTransitionProps,
+            radius: "lg"
         },
-        classNames: { body: classes.body, header: classes.header, title: classes.title },
+        classNames: {
+            content: shared.modalContent,
+            header: `${shared.modalHeader} ${classes.header}`,
+            title: `${shared.modalTitle} ${classes.title}`,
+            body: classes.body,
+            close: `${shared.closeButton} ${classes.close}`,
+            overlay: shared.overlay
+        },
         styles: {
-            content: {
-                border: "1px solid rgba(125, 91, 72, 0.38)",
-                background:
-                    "linear-gradient(180deg, rgba(24, 17, 20, 0.98) 0%, rgba(14, 10, 12, 0.98) 100%)",
-                boxShadow:
-                    "0 24px 54px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
-            },
             header: {
                 justifyContent: "center"
-            },
-            title: {
-                fontFamily: "Cinzel, Georgia, serif",
-
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "rgba(244, 236, 232, 0.95)"
             }
         }
     })

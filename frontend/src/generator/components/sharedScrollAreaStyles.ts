@@ -1,21 +1,13 @@
-import { RAW_RED, rgba } from "~/theme/colors"
+export const nightfallScrollbarSize = 10
 
-export const nightfallScrollbarSize = 11
-
+/**
+ * Generator scroll areas. The thumb look (bone → accent on hover) comes from the Mantine theme
+ * (`theme/components.module.css`); inline thumb colors would disable its hover state, so this
+ * only keeps the track transparent over the background photography.
+ */
 export const nightfallScrollAreaStyles = {
     scrollbar: {
         background: "transparent"
-    },
-    thumb: {
-        background: rgba(RAW_RED, 0.3),
-        borderRadius: "999px",
-        transition: "background 140ms ease",
-        "&:hover": {
-            background: rgba(RAW_RED, 0.52)
-        },
-        "&:active": {
-            background: rgba(RAW_RED, 0.7)
-        }
     },
     corner: {
         background: "transparent"

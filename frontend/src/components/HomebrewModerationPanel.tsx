@@ -4,15 +4,24 @@ import {
     Button,
     Group,
     Modal,
-    Paper,
     ScrollArea,
     SimpleGrid,
+    Skeleton,
     Stack,
     Table,
     Text,
     Textarea,
     Title
 } from "@mantine/core"
+import {
+    IconAlertTriangle,
+    IconCheck,
+    IconEye,
+    IconGavel,
+    IconInbox,
+    IconRefresh,
+    IconX
+} from "@tabler/icons-react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import type { HomebrewCollection, HomebrewItem, HomebrewPublishRequest } from "~/data/Homebrew"
@@ -21,6 +30,15 @@ import { api } from "~/utils/api"
 import HomebrewRuleDetails from "~/components/HomebrewRuleDetails"
 import ContentWarning from "~/components/ContentWarning"
 import HomebrewItemPreview from "~/components/HomebrewItemPreview"
+import {
+    DisabledReason,
+    EmptyState,
+    Panel,
+    SectionHeader,
+    useContextMenu,
+    type ContextMenuEntry
+} from "~/components/ui"
+import classes from "./AdminPanels.module.css"
 
 const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) => {
     const itemsByKind = homebrewItemKinds
@@ -32,7 +50,7 @@ const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) =
 
     return (
         <Stack gap="xl">
-            <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
+            <Panel tone="inset" p="xl">
                 <Stack gap="md">
                     <div>
                         <Text size="sm" c="dimmed">
@@ -61,7 +79,7 @@ const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) =
                         <ContentWarning>{collection.contentWarning}</ContentWarning>
                     ) : null}
                 </Stack>
-            </Paper>
+            </Panel>
 
             {itemsByKind.map(({ kind, items }) => (
                 <Stack key={kind} gap="sm">
@@ -90,9 +108,9 @@ const CollectionPreview = ({ collection }: { collection: HomebrewCollection }) =
             ))}
 
             {itemsByKind.length === 0 ? (
-                <Paper withBorder p="xl" bg="rgba(0,0,0,.18)">
-                    <Text c="dimmed">This collection has no rules yet.</Text>
-                </Paper>
+                <Panel tone="inset" p={0}>
+                    <EmptyState compact title="This collection has no rules yet." />
+                </Panel>
             ) : null}
         </Stack>
     )
@@ -125,69 +143,156 @@ const HomebrewModerationPanel = () => {
 
     const requests = requestsQuery.data ?? []
     const pendingCount = requests.filter((request) => request.status === "pending").length
+    const contextMenu = useContextMenu()
+    const requesterLabel = (request: HomebrewPublishRequest) =>
+        request.requester?.nickname ?? request.requester?.email ?? "User"
+
+    const requestMenuEntries = (request: HomebrewPublishRequest): ContextMenuEntry[] => [
+        { type: "label", key: "label", label: request.snapshot.name },
+        {
+            key: "preview",
+            label: "Preview",
+            icon: <IconEye size={14} />,
+            onClick: () => setPreview(request)
+        },
+        {
+            key: "review",
+            label: "Review…",
+            icon: <IconGavel size={14} />,
+            disabled: request.status !== "pending",
+            onClick: () => setReview(request)
+        }
+    ]
 
     return (
-        <Paper p="md" withBorder>
-            <Group justify="space-between" mb="md">
-                <div>
-                    <Title order={2}>Homebrew publication review</Title>
-                    <Text c="dimmed" size="sm">
-                        Review immutable snapshots before they enter the Community Library.
-                    </Text>
-                </div>
-                <Badge color={pendingCount ? "yellow" : "gray"}>{pendingCount} pending</Badge>
-            </Group>
-            <ScrollArea>
-                <Table miw={760} verticalSpacing="sm">
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Collection</Table.Th>
-                            <Table.Th>Requester</Table.Th>
-                            <Table.Th>Items</Table.Th>
-                            <Table.Th>Status</Table.Th>
-                            <Table.Th />
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                        {requests.map((request) => (
-                            <Table.Tr key={request.id}>
-                                <Table.Td>{request.snapshot.name}</Table.Td>
-                                <Table.Td>
-                                    {request.requester?.nickname ??
-                                        request.requester?.email ??
-                                        "User"}
-                                </Table.Td>
-                                <Table.Td>{request.snapshot.items.length}</Table.Td>
-                                <Table.Td>
-                                    <Badge color={request.status === "pending" ? "yellow" : "gray"}>
-                                        {request.status}
-                                    </Badge>
-                                </Table.Td>
-                                <Table.Td>
-                                    <Group gap="xs" wrap="nowrap">
-                                        <Button
-                                            size="xs"
-                                            variant="subtle"
-                                            onClick={() => setPreview(request)}
-                                        >
-                                            Preview
-                                        </Button>
-                                        <Button
-                                            size="xs"
-                                            variant="light"
-                                            disabled={request.status !== "pending"}
-                                            onClick={() => setReview(request)}
-                                        >
-                                            Review
-                                        </Button>
-                                    </Group>
-                                </Table.Td>
-                            </Table.Tr>
+        <div className={classes.stack}>
+            <SectionHeader
+                title="Homebrew publication review"
+                description="Review immutable snapshots before they enter the Community Library."
+                actions={
+                    <Badge color={pendingCount ? "gold" : "gray"} variant="light">
+                        {pendingCount} pending
+                    </Badge>
+                }
+            />
+            <Panel p={0}>
+                {requestsQuery.isLoading ? (
+                    <Stack gap={0} p="md" aria-busy="true">
+                        {Array.from({ length: 4 }, (_, index) => (
+                            <Group key={index} h={52} gap="xl" wrap="nowrap">
+                                <Skeleton height={12} width="30%" radius="sm" />
+                                <Skeleton height={12} width="20%" radius="sm" />
+                                <Skeleton height={12} width={24} radius="sm" />
+                                <Skeleton height={18} width={64} radius="sm" ml="auto" />
+                            </Group>
                         ))}
-                    </Table.Tbody>
-                </Table>
-            </ScrollArea>
-            {requests.length === 0 ? <Text c="dimmed">No requests yet.</Text> : null}
+                    </Stack>
+                ) : requestsQuery.isError ? (
+                    <EmptyState
+                        compact
+                        icon={<IconAlertTriangle size={22} stroke={1.5} />}
+                        title="Could not load publish requests"
+                        description={requestsQuery.error.message}
+                        actions={
+                            <Button
+                                size="xs"
+                                variant="default"
+                                leftSection={<IconRefresh size={14} />}
+                                loading={requestsQuery.isFetching}
+                                onClick={() => void requestsQuery.refetch()}
+                            >
+                                Retry
+                            </Button>
+                        }
+                    />
+                ) : requests.length === 0 ? (
+                    <EmptyState
+                        compact
+                        icon={<IconInbox size={22} stroke={1.5} />}
+                        title="No requests yet."
+                    />
+                ) : (
+                    <ScrollArea>
+                        <Table miw={720} verticalSpacing="sm" highlightOnHover>
+                            <Table.Thead>
+                                <Table.Tr>
+                                    <Table.Th>Collection</Table.Th>
+                                    <Table.Th>Requester</Table.Th>
+                                    <Table.Th>Items</Table.Th>
+                                    <Table.Th>Status</Table.Th>
+                                    <Table.Th />
+                                </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                                {requests.map((request) => (
+                                    <Table.Tr
+                                        key={request.id}
+                                        onContextMenu={(event) =>
+                                            contextMenu.open(event, requestMenuEntries(request))
+                                        }
+                                    >
+                                        <Table.Td>
+                                            <div className={classes.collectionCell}>
+                                                <span className={classes.collectionName}>
+                                                    {request.snapshot.name}
+                                                </span>
+                                                {request.snapshot.shortDescription ? (
+                                                    <span className={classes.collectionMeta}>
+                                                        {request.snapshot.shortDescription}
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                        </Table.Td>
+                                        <Table.Td>{requesterLabel(request)}</Table.Td>
+                                        <Table.Td className={classes.numeric}>
+                                            {request.snapshot.items.length}
+                                        </Table.Td>
+                                        <Table.Td>
+                                            <span
+                                                className={classes.status}
+                                                data-status={request.status}
+                                            >
+                                                {request.status}
+                                            </span>
+                                        </Table.Td>
+                                        <Table.Td>
+                                            <Group gap="xs" wrap="nowrap" justify="flex-end">
+                                                <Button
+                                                    size="xs"
+                                                    variant="subtle"
+                                                    color="gray"
+                                                    leftSection={<IconEye size={14} />}
+                                                    onClick={() => setPreview(request)}
+                                                >
+                                                    Preview
+                                                </Button>
+                                                <DisabledReason
+                                                    reason={
+                                                        request.status !== "pending"
+                                                            ? "Already reviewed"
+                                                            : undefined
+                                                    }
+                                                >
+                                                    <Button
+                                                        size="xs"
+                                                        variant="light"
+                                                        color="gold"
+                                                        leftSection={<IconGavel size={14} />}
+                                                        disabled={request.status !== "pending"}
+                                                        onClick={() => setReview(request)}
+                                                    >
+                                                        Review
+                                                    </Button>
+                                                </DisabledReason>
+                                            </Group>
+                                        </Table.Td>
+                                    </Table.Tr>
+                                ))}
+                            </Table.Tbody>
+                        </Table>
+                    </ScrollArea>
+                )}
+            </Panel>
 
             <Modal
                 opened={!!review}
@@ -196,19 +301,27 @@ const HomebrewModerationPanel = () => {
                 size="lg"
             >
                 <Stack>
-                    <Text>{review?.snapshot.description || review?.snapshot.shortDescription}</Text>
+                    {review?.snapshot.description || review?.snapshot.shortDescription ? (
+                        <Text c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
+                            {review?.snapshot.description || review?.snapshot.shortDescription}
+                        </Text>
+                    ) : null}
                     {review?.snapshot.contentWarning ? (
                         <ContentWarning>{review.snapshot.contentWarning}</ContentWarning>
                     ) : null}
                     <Stack gap="xs">
                         {review?.snapshot.items.map((item) => (
-                            <Paper key={item.id} p="xs" withBorder>
-                                <Group justify="space-between">
-                                    <Text fw={600}>{item.name}</Text>
-                                    <Badge color="grape">{item.kind}</Badge>
-                                </Group>
-                                <HomebrewRuleDetails item={item} />
-                            </Paper>
+                            <Panel key={item.id} tone="inset" p="sm">
+                                <div className={classes.reviewItem}>
+                                    <div className={classes.reviewItemHead}>
+                                        <Text fw={600}>{item.name}</Text>
+                                        <Badge color="grape" variant="light">
+                                            {homebrewKindLabel(item.kind)}
+                                        </Badge>
+                                    </div>
+                                    <HomebrewRuleDetails item={item} />
+                                </div>
+                            </Panel>
                         ))}
                     </Stack>
                     <Textarea
@@ -216,42 +329,59 @@ const HomebrewModerationPanel = () => {
                         description="Required only when denying; shown privately to the requester."
                         value={denialMessage}
                         onChange={(event) => setDenialMessage(event.currentTarget.value)}
+                        autosize
+                        minRows={3}
                     />
                     {moderateMutation.error ? (
-                        <Alert color="red">{moderateMutation.error.message}</Alert>
+                        <Alert color="red" icon={<IconAlertTriangle size={16} />}>
+                            {moderateMutation.error.message}
+                        </Alert>
                     ) : null}
-                    <Group justify="flex-end">
-                        <Button variant="subtle" onClick={() => setReview(null)}>
+                    <div className={classes.reviewActions}>
+                        <Button variant="subtle" color="gray" onClick={() => setReview(null)}>
                             Cancel
                         </Button>
-                        <Button
-                            color="red"
-                            disabled={!denialMessage.trim()}
-                            loading={moderateMutation.isPending}
-                            onClick={() =>
-                                review &&
-                                moderateMutation.mutate({
-                                    id: review.id,
-                                    decision: { decision: "deny", message: denialMessage }
-                                })
-                            }
-                        >
-                            Deny
-                        </Button>
-                        <Button
-                            color="green"
-                            loading={moderateMutation.isPending}
-                            onClick={() =>
-                                review &&
-                                moderateMutation.mutate({
-                                    id: review.id,
-                                    decision: { decision: "approve" }
-                                })
-                            }
-                        >
-                            Approve snapshot
-                        </Button>
-                    </Group>
+                        <div className={classes.reviewDecision}>
+                            <DisabledReason
+                                reason={
+                                    !denialMessage.trim()
+                                        ? "Write a denial message first"
+                                        : undefined
+                                }
+                            >
+                                <Button
+                                    color="red"
+                                    variant="light"
+                                    leftSection={<IconX size={16} />}
+                                    disabled={!denialMessage.trim()}
+                                    loading={moderateMutation.isPending}
+                                    onClick={() =>
+                                        review &&
+                                        moderateMutation.mutate({
+                                            id: review.id,
+                                            decision: { decision: "deny", message: denialMessage }
+                                        })
+                                    }
+                                >
+                                    Deny
+                                </Button>
+                            </DisabledReason>
+                            <Button
+                                color="green"
+                                leftSection={<IconCheck size={16} />}
+                                loading={moderateMutation.isPending}
+                                onClick={() =>
+                                    review &&
+                                    moderateMutation.mutate({
+                                        id: review.id,
+                                        decision: { decision: "approve" }
+                                    })
+                                }
+                            >
+                                Approve snapshot
+                            </Button>
+                        </div>
+                    </div>
                 </Stack>
             </Modal>
 
@@ -266,7 +396,8 @@ const HomebrewModerationPanel = () => {
                     {preview ? <CollectionPreview collection={preview.snapshot} /> : null}
                 </ScrollArea>
             </Modal>
-        </Paper>
+            {contextMenu.menu}
+        </div>
     )
 }
 

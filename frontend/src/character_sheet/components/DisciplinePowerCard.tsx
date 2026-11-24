@@ -1,9 +1,9 @@
-import { Box, Group, Stack, Text, Textarea, Tooltip } from "@mantine/core"
+import { Text, Textarea, Tooltip } from "@mantine/core"
+import type { MouseEvent } from "react"
 import { Power } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
-import Tally from "~/components/Tally"
 import { getValueForKey } from "~/generator/utils"
-import { sheetSurfaceStyle } from "../utils/style"
+import classes from "../sheet.module.css"
 import HomebrewBadge from "~/components/HomebrewBadge"
 
 type DisciplinePowerCardProps = {
@@ -20,6 +20,7 @@ type DisciplinePowerCardProps = {
     onCustomTextChange?: (value: string) => void
     isEditingCustomText?: boolean
     onFinishCustomTextEditing?: () => void
+    onContextMenu?: (event: MouseEvent<HTMLDivElement>) => void
 }
 
 export const calculateDicePoolValues = (
@@ -55,9 +56,44 @@ export const calculateDicePoolValues = (
     return values.join(" + ")
 }
 
+const ROUSE_DROP_PATH = "M9 1.2C9 1.2 1.6 9.6 1.6 14.6a7.4 7.4 0 0 0 14.8 0C16.4 9.6 9 1.2 9 1.2Z"
+
+/** Rouse cost as blood drops ("Free" when it costs nothing). */
+export const RouseCost = ({ count }: { count: number }) => (
+    <span
+        className={classes.rouse}
+        aria-label={count > 0 ? `${count} rouse check${count === 1 ? "" : "s"}` : "No rouse check"}
+    >
+        {count > 0 ? (
+            <>
+                {Array.from({ length: count }, (_, index) => (
+                    <svg key={index} className={classes.rouseDrop} viewBox="0 0 18 23">
+                        <path d={ROUSE_DROP_PATH} fill="currentColor" />
+                    </svg>
+                ))}
+                <span>Rouse</span>
+            </>
+        ) : (
+            <span>Free</span>
+        )}
+    </span>
+)
+
+const DicePool = ({ dicePool, character }: { dicePool: string; character?: Character }) => {
+    const values = character ? calculateDicePoolValues(dicePool, character) : null
+    return values ? (
+        <Tooltip label={values} withArrow>
+            <span className={classes.dicePool} data-help>
+                {dicePool}
+            </span>
+        </Tooltip>
+    ) : (
+        <span className={classes.dicePool}>{dicePool}</span>
+    )
+}
+
 const DisciplinePowerCard = ({
     power,
-    primaryColor,
     onClick,
     inModal,
     renderActions,
@@ -68,21 +104,33 @@ const DisciplinePowerCard = ({
     customText = "",
     onCustomTextChange,
     isEditingCustomText = false,
-    onFinishCustomTextEditing
+    onFinishCustomTextEditing,
+    onContextMenu
 }: DisciplinePowerCardProps) => {
-    const content = (
-        <Stack gap="xs" style={{ height: "100%", minHeight: "135px" }}>
-            <Text
-                fw={600}
-                size="sm"
-                style={{ paddingRight: renderActions || !inModal ? "60px" : "0" }}
-            >
-                {power.name}
-            </Text>
+    const hasDicePool = !!power.dicePool && power.dicePool !== "-"
+    const card = (
+        <div
+            className={`${classes.card} ${classes.powerCard}`}
+            data-sheet-power={power.name}
+            data-in-modal={inModal || undefined}
+            data-disabled={(inModal && disabled) || undefined}
+            data-actionable={onContextMenu ? true : undefined}
+            onClick={inModal ? (disabled ? onDisabledClick : onClick) : undefined}
+            onContextMenu={onContextMenu}
+        >
+            <div className={classes.cardHead}>
+                <span className={classes.powerLevel} aria-label={`Level ${power.level}`}>
+                    {power.level}
+                </span>
+                <p className={classes.cardTitle}>{power.name}</p>
+                {renderActions ? (
+                    <div className={classes.cardActions}>{renderActions()}</div>
+                ) : null}
+            </div>
             {power.homebrewSource ? <HomebrewBadge source={power.homebrewSource} /> : null}
             {power.summary ? (
-                <Text size="xs" c="dimmed" lineClamp={4}>
-                    {power.summary}
+                <Text component="p" className={classes.cardBody} lineClamp={4}>
+                    {power.summary.charAt(0).toUpperCase() + power.summary.slice(1)}
                 </Text>
             ) : null}
             {onCustomTextChange && isEditingCustomText ? (
@@ -103,124 +151,42 @@ const DisciplinePowerCard = ({
                     }}
                 />
             ) : customText ? (
-                <Text size="xs" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
-                    {customText}
-                </Text>
+                <p className={classes.cardNote}>{customText}</p>
             ) : null}
-            {power.requiredTime ? (
-                <Text size="xs" c="dimmed">
-                    Time: {power.requiredTime}
-                </Text>
+            {power.requiredTime || power.ingredients ? (
+                <div className={classes.cardMeta}>
+                    {power.requiredTime ? (
+                        <span>
+                            <strong>Time</strong> {power.requiredTime}
+                        </span>
+                    ) : null}
+                    {power.ingredients ? (
+                        <span>
+                            <strong>Ingredients</strong> {power.ingredients}
+                        </span>
+                    ) : null}
+                </div>
             ) : null}
-            {power.ingredients ? (
-                <Text size="xs" c="dimmed" lineClamp={2}>
-                    Ingredients: {power.ingredients}
-                </Text>
-            ) : null}
-            <Box style={{ flex: 1 }} />
-            <Stack gap={2} mt="auto">
-                {power.dicePool && power.dicePool !== "-" ? (
-                    character ? (
-                        (() => {
-                            const tooltipValue = calculateDicePoolValues(power.dicePool, character)
-                            return tooltipValue ? (
-                                <Tooltip label={tooltipValue}>
-                                    <Text size="xs" style={{ cursor: "help" }}>
-                                        {power.dicePool.toUpperCase()}
-                                    </Text>
-                                </Tooltip>
-                            ) : (
-                                <Text size="xs">{power.dicePool.toUpperCase()}</Text>
-                            )
-                        })()
-                    ) : (
-                        <Text size="xs">{power.dicePool.toUpperCase()}</Text>
-                    )
-                ) : null}
-                <Group gap="xs" align="center">
-                    <Text size="xs">Rouses:</Text>
-                    {power.rouseChecks > 0 ? (
-                        <Tally
-                            n={power.rouseChecks}
-                            size={16}
-                            style={{ color: "var(--mantine-color-red-6)" }}
-                        />
-                    ) : (
-                        <Text size="xs">FREE</Text>
-                    )}
-                </Group>
-            </Stack>
-        </Stack>
+            <div className={classes.cardFoot}>
+                {hasDicePool ? (
+                    <DicePool dicePool={power.dicePool} character={character} />
+                ) : (
+                    <span />
+                )}
+                <RouseCost count={power.rouseChecks} />
+            </div>
+        </div>
     )
 
-    const topRightActions = (
-        <Group gap="xs" align="center" style={{ position: "absolute", top: "8px", right: "8px" }}>
-            {!inModal ? (
-                <Tally
-                    n={power.level}
-                    size={24}
-                    style={{ color: `var(--mantine-color-${primaryColor}-6)` }}
-                />
-            ) : null}
-            {renderActions ? renderActions() : null}
-        </Group>
-    )
-
-    if (inModal) {
-        const cardContent = (
-            <Box
-                p="xs"
-                onClick={disabled ? onDisabledClick : onClick}
-                style={{
-                    border: "1px solid var(--mantine-color-gray-8)",
-                    borderRadius: "var(--mantine-radius-sm)",
-                    cursor: disabled ? "default" : "pointer",
-                    transition: "background-color 0.2s",
-                    minHeight: "140px",
-                    display: "flex",
-                    position: "relative",
-                    opacity: disabled ? 0.6 : 1
-                }}
-                onMouseEnter={(e) => {
-                    if (!disabled) {
-                        e.currentTarget.style.backgroundColor = `var(--mantine-color-${primaryColor}-light-hover)`
-                    }
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent"
-                }}
-            >
-                {content}
-                {topRightActions}
-            </Box>
+    if (inModal && disabled && disabledTooltip) {
+        return (
+            <Tooltip label={disabledTooltip} withArrow>
+                <div style={{ width: "100%" }}>{card}</div>
+            </Tooltip>
         )
-
-        if (disabled && disabledTooltip) {
-            return (
-                <Tooltip label={disabledTooltip} withArrow>
-                    <div style={{ width: "100%" }}>{cardContent}</div>
-                </Tooltip>
-            )
-        }
-
-        return cardContent
     }
 
-    return (
-        <Box
-            p="xs"
-            style={{
-                borderRadius: "var(--mantine-radius-sm)",
-                minHeight: "140px",
-                display: "flex",
-                ...sheetSurfaceStyle,
-                position: "relative"
-            }}
-        >
-            {content}
-            {topRightActions}
-        </Box>
-    )
+    return card
 }
 
 export default DisciplinePowerCard

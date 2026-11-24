@@ -1,5 +1,5 @@
-import { Box, Button, Group, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core"
-import { RAW_GRAPE, RAW_GREY, RAW_RED, rgba } from "~/theme/colors"
+import { Box, Button, Group, ScrollArea, Stack, UnstyledButton } from "@mantine/core"
+import { IconCheck, IconLock } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import { trackEvent } from "../../utils/analytics"
 import { Character, getCharacterExcludedPredatorTypes } from "../../data/Character"
@@ -7,7 +7,6 @@ import { PredatorType } from "../../data/PredatorType"
 import { globals } from "../../globals"
 import PredatorTypeModal from "../../components/PredatorTypeModal"
 import { PredatorTypeName } from "~/data/NameSchemas"
-import { generatorConfirmButtonStyles } from "./sharedGeneratorConfirmButtonStyles"
 import {
     generatorScrollableAreaStyle,
     generatorScrollableContentStyle,
@@ -22,7 +21,8 @@ import {
 } from "~/data/predatorTypeOptions"
 import { predatorDisciplineKey } from "~/data/PredatorTypeRules"
 import HomebrewBadge from "~/components/HomebrewBadge"
-import { GeneratorStepHero } from "./sharedGeneratorUi"
+import { GeneratorConfirmButton, GeneratorStepHero } from "./sharedGeneratorUi"
+import classes from "./PredatorTypePicker.module.css"
 
 type PredatorTypePickerProps = {
     character: Character
@@ -59,60 +59,30 @@ const specialtyKeyForStored = (
 }
 
 type CategoryMeta = {
+    key: "violent" | "sociable" | "stealth" | "exclusive" | "homebrew"
     label: string
-    accentColor: string
-    bgColor: string
-    bgActiveColor: string
-    pillColor: string
-    borderColor: string
-    borderActiveColor: string
-    lineColor: string
     predatorTypes: PredatorTypeName[]
 }
 
 const CATEGORIES: CategoryMeta[] = [
     {
+        key: "violent",
         label: "Violent",
-        accentColor: rgba(RAW_RED, 0.95),
-        bgColor: rgba(RAW_RED, 0.22),
-        bgActiveColor: rgba(RAW_RED, 0.39),
-        pillColor: rgba(RAW_RED, 0.39),
-        borderColor: rgba(RAW_RED, 0.18),
-        borderActiveColor: rgba(RAW_RED, 0.55),
-        lineColor: rgba(RAW_RED, 0.38),
         predatorTypes: ["Alleycat", "Extortionist", "Roadside Killer", "Montero"]
     },
     {
+        key: "sociable",
         label: "Sociable",
-        accentColor: rgba(RAW_GRAPE, 0.95),
-        bgColor: rgba(RAW_GRAPE, 0.3),
-        bgActiveColor: rgba(RAW_GRAPE, 0.48),
-        pillColor: rgba(RAW_GRAPE, 0.38),
-        borderColor: rgba(RAW_GRAPE, 0.18),
-        borderActiveColor: rgba(RAW_GRAPE, 0.55),
-        lineColor: rgba(RAW_GRAPE, 0.38),
         predatorTypes: ["Cleaver", "Consensualist", "Osiris", "Scene Queen", "Siren"]
     },
     {
+        key: "stealth",
         label: "Stealth",
-        accentColor: "rgba(222, 226, 230, 0.92)",
-        bgColor: "rgba(173, 181, 189, 0.32)",
-        bgActiveColor: "rgba(173, 181, 189, 0.48)",
-        pillColor: "rgba(173, 181, 189, 0.38)",
-        borderColor: "rgba(173, 181, 189, 0.18)",
-        borderActiveColor: "rgba(222, 226, 230, 0.55)",
-        lineColor: "rgba(173, 181, 189, 0.34)",
         predatorTypes: ["Sandman", "Graverobber", "Grim Reaper", "Pursuer", "Trapdoor"]
     },
     {
+        key: "exclusive",
         label: "Excluding Mortals",
-        accentColor: rgba(RAW_GRAPE, 0.95),
-        bgColor: rgba(RAW_GRAPE, 0.35),
-        bgActiveColor: rgba(RAW_GRAPE, 0.48),
-        pillColor: rgba(RAW_GRAPE, 0.4),
-        borderColor: rgba(RAW_GRAPE, 0.18),
-        borderActiveColor: rgba(RAW_GRAPE, 0.55),
-        lineColor: rgba(RAW_GRAPE, 0.38),
         predatorTypes: ["Bagger", "Blood Leech", "Farmer"]
     }
 ]
@@ -186,7 +156,7 @@ const PredatorTypePicker = ({
         openModal()
     }
 
-    const createCard = (predatorTypeName: PredatorTypeName, meta: CategoryMeta) => {
+    const createCard = (predatorTypeName: PredatorTypeName) => {
         const predatorType = predatorTypes[predatorTypeName]
         const clanDisabled = getCharacterExcludedPredatorTypes(character).includes(
             predatorType.name
@@ -194,132 +164,57 @@ const PredatorTypePicker = ({
         const isSelected = getCharacterPredatorTypeKey(character) === predatorTypeName
 
         return (
-            <div
+            <UnstyledButton
                 data-testid={`predator-type-${predatorTypeName.toLowerCase().replace(/\s+/g, "-")}-card`}
                 key={predatorTypeName}
+                className={classes.card}
+                data-selected={isSelected || undefined}
+                data-locked={clanDisabled || undefined}
                 aria-disabled={isThinBlood}
+                aria-pressed={isSelected}
                 onClick={() => {
                     // Locked cards stay openable so the coupling is legible rather than a dead
                     // end: the modal explains the clan restriction instead of blocking the click.
                     openPredatorType(predatorTypeName)
                 }}
-                onMouseEnter={(e) => {
-                    if (!isThinBlood && !isSelected) {
-                        e.currentTarget.style.background = meta.bgActiveColor
-                        e.currentTarget.style.borderColor = meta.borderColor
-                        e.currentTarget.style.transform = "translateY(-2px)"
-                    }
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isSelected
-                        ? meta.bgActiveColor
-                        : meta.bgColor
-                    e.currentTarget.style.borderColor = isSelected
-                        ? meta.borderActiveColor
-                        : meta.borderColor
-                    e.currentTarget.style.transform = "translateY(0)"
-                }}
-                style={{
-                    padding: "10px 12px",
-                    borderRadius: "12px",
-                    border: `1px solid ${isSelected ? meta.borderActiveColor : meta.borderColor}`,
-                    background: isSelected ? meta.bgActiveColor : meta.bgColor,
-                    cursor: isThinBlood ? "not-allowed" : "pointer",
-                    opacity: isThinBlood ? 0.38 : clanDisabled ? 0.7 : 1,
-                    transition:
-                        "background 200ms ease, border-color 200ms ease, transform 160ms ease",
-                    display: "flex",
-                    flexDirection: "column" as const,
-                    gap: "6px",
-                    boxShadow: isSelected ? `0 0 18px ${meta.bgActiveColor}` : "none"
-                }}
             >
-                <Text
-                    style={{
-                        fontFamily: "Cinzel, Georgia, serif",
-                        fontSize: "0.95rem",
-                        fontWeight: 800,
-                        letterSpacing: "0.04em",
-                        color: "rgb(244, 236, 232)"
-                    }}
-                >
-                    {predatorType.name}
-                    {predatorType.homebrewSource && (
-                        <HomebrewBadge source={predatorType.homebrewSource} />
-                    )}
-                    {clanDisabled && (
-                        <span
-                            style={{
-                                marginLeft: 8,
-                                fontSize: "0.72rem",
-                                color: rgba(RAW_RED, 0.95),
-                                fontFamily: "Inter, sans-serif",
-                                fontWeight: 600,
-                                letterSpacing: "0.04em",
-                                textTransform: "uppercase",
-                                padding: "1px 8px",
-                                borderRadius: "999px",
-                                border: `1px solid ${rgba(RAW_RED, 0.4)}`,
-                                background: rgba(RAW_RED, 0.14),
-                                whiteSpace: "nowrap"
-                            }}
-                        >
+                <span className={classes.head}>
+                    <span className={classes.name}>
+                        {predatorType.name}
+                        {predatorType.homebrewSource && (
+                            <HomebrewBadge source={predatorType.homebrewSource} />
+                        )}
+                    </span>
+                    {clanDisabled ? (
+                        <span className={classes.state} data-kind="locked">
+                            <IconLock size={11} stroke={2.4} />
                             Locked for {character.clan}
                         </span>
-                    )}
-                </Text>
+                    ) : isSelected ? (
+                        <span className={classes.state} data-kind="chosen">
+                            <IconCheck size={11} stroke={3} />
+                            Chosen
+                        </span>
+                    ) : null}
+                </span>
 
-                <Text
-                    style={{
-                        fontFamily: "Crimson Text, Georgia, serif",
-                        fontSize: "0.9rem",
-                        color: rgba(RAW_GREY, 0.93),
-                        lineHeight: 1.4
-                    }}
-                >
-                    {predatorType.summary}
-                </Text>
+                <span className={classes.summary}>{predatorType.summary}</span>
 
                 {clanDisabled && (
-                    <Text
-                        style={{
-                            fontFamily: "Inter, sans-serif",
-                            fontSize: "0.76rem",
-                            color: rgba(RAW_RED, 0.8),
-                            lineHeight: 1.35
-                        }}
-                    >
+                    <span className={classes.lockNote}>
                         Not available to the {character.homebrewClan?.name ?? character.clan} clan —
                         switch clans to unlock it.
-                    </Text>
+                    </span>
                 )}
 
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "4px",
-                        flexWrap: "wrap" as const,
-                        marginTop: "3px"
-                    }}
-                >
+                <span className={classes.chips}>
                     {predatorType.disciplineOptions.map((disc) => (
-                        <span
-                            key={disc.name}
-                            style={{
-                                fontSize: "0.72rem",
-                                fontFamily: "Inter, Segoe UI, sans-serif",
-                                padding: "2px 8px",
-                                borderRadius: "999px",
-                                background: meta.pillColor,
-                                border: `1px solid ${meta.borderColor}`,
-                                letterSpacing: "0.03em"
-                            }}
-                        >
-                            <Text fz={"xs"}>{titleCase(disc.name)}</Text>
+                        <span key={disc.name} className={classes.chip}>
+                            {titleCase(disc.name)}
                         </span>
                     ))}
-                </div>
-            </div>
+                </span>
+            </UnstyledButton>
         )
     }
 
@@ -337,7 +232,7 @@ const PredatorTypePicker = ({
                 ...(Object.values(predatorTypes).some((option) => option.homebrewSource)
                     ? [
                           {
-                              ...CATEGORIES[1],
+                              key: "homebrew" as const,
                               label: "Homebrew",
                               predatorTypes: Object.keys(predatorTypes).filter(
                                   (key) => predatorTypes[key].homebrewSource
@@ -346,36 +241,31 @@ const PredatorTypePicker = ({
                       ]
                     : [])
             ].map((meta) => (
-                <Box key={meta.label} px={phoneScreen ? 4 : 12}>
-                    <CategoryHeading
-                        label={meta.label}
-                        color={meta.accentColor}
-                        lineColor={meta.lineColor}
-                    />
-                    <SimpleGrid cols={phoneScreen ? 1 : 2} spacing="sm">
-                        {meta.predatorTypes.map((name) => createCard(name, meta))}
-                    </SimpleGrid>
+                <Box
+                    key={meta.label}
+                    component="section"
+                    aria-label={meta.label}
+                    className={classes.category}
+                    data-category={meta.key}
+                >
+                    <div className={classes.categoryHead}>
+                        <span className={classes.categoryRule} />
+                        <span className={classes.categoryLabel}>{meta.label}</span>
+                        <span className={classes.categoryRule} data-side="end" />
+                    </div>
+                    <div className={classes.grid}>
+                        {meta.predatorTypes.map((name) => createCard(name))}
+                    </div>
                 </Box>
             ))}
 
             <Group justify="center" mt="sm">
                 <Button
                     data-testid="predator-type-skip-button"
-                    variant="transparent"
+                    variant="subtle"
                     color="gray"
-                    size="xs"
+                    size="sm"
                     onClick={skipPredatorType}
-                    styles={{
-                        root: {
-                            color: rgba(RAW_GREY, 0.5),
-                            fontWeight: 500,
-                            letterSpacing: "0.03em",
-                            "&:hover": {
-                                background: rgba(RAW_GREY, 0.06),
-                                color: rgba(RAW_GREY, 0.8)
-                            }
-                        }
-                    }}
                 >
                     Skip predator type
                 </Button>
@@ -390,30 +280,28 @@ const PredatorTypePicker = ({
                     style={{
                         ...generatorScrollableAreaStyle,
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        textAlign: "center"
+                        padding: "0 var(--pg-gutter)"
                     }}
                 >
-                    <Text fz={globals.largeFontSize} ta={"center"} component="span">
-                        <b>Thin-bloods</b> do not have a predator type
-                    </Text>
-                    <Button
-                        data-testid="thin-blood-predator-type-continue-button"
-                        ml={"20px"}
-                        color={"red"}
-                        styles={generatorConfirmButtonStyles}
-                        onClick={() => {
-                            trackEvent({
-                                action: "predatortype confirm clicked",
-                                category: "predator type",
-                                label: "thin-blood - no predator type"
-                            })
-                            nextStep()
-                        }}
-                    >
-                        Continue
-                    </Button>
+                    <div className={classes.thinBlood}>
+                        <GeneratorStepHero leadText="Your" accentText="Hunt" marginBottom={0} />
+                        <span className={classes.thinBloodText}>
+                            <b>Thin-bloods</b> do not have a predator type
+                        </span>
+                        <GeneratorConfirmButton
+                            data-testid="thin-blood-predator-type-continue-button"
+                            onClick={() => {
+                                trackEvent({
+                                    action: "predatortype confirm clicked",
+                                    category: "predator type",
+                                    label: "thin-blood - no predator type"
+                                })
+                                nextStep()
+                            }}
+                        >
+                            Continue
+                        </GeneratorConfirmButton>
+                    </div>
                 </div>
             ) : (
                 <ScrollArea
@@ -449,47 +337,5 @@ const PredatorTypePicker = ({
         </div>
     )
 }
-
-const CategoryHeading = ({
-    label,
-    color,
-    lineColor
-}: {
-    label: string
-    color: string
-    lineColor: string
-}) => (
-    <Box mt="xs" mb="md">
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div
-                style={{
-                    flex: 1,
-                    height: "1px",
-                    background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)`
-                }}
-            />
-            <Text
-                ta="center"
-                style={{
-                    fontFamily: "Cinzel, Georgia, serif",
-                    fontSize: "0.96rem",
-                    fontWeight: 600,
-                    letterSpacing: "0.22em",
-                    textTransform: "uppercase",
-                    color
-                }}
-            >
-                {label}
-            </Text>
-            <div
-                style={{
-                    flex: 1,
-                    height: "1px",
-                    background: `linear-gradient(90deg, transparent 0%, ${lineColor} 50%, transparent 100%)`
-                }}
-            />
-        </div>
-    </Box>
-)
 
 export default PredatorTypePicker

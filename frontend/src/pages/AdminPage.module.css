@@ -1,0 +1,157 @@
+/* Admin console. Tokens: src/index.css. Docs: frontend/DESIGN.md */
+
+.tabs {
+    margin-bottom: var(--pg-space-6);
+}
+
+.tabCount {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: var(--pg-radius-sm);
+    background: color-mix(in srgb, var(--pg-gold) 18%, transparent);
+    color: var(--pg-gold);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.panelStack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pg-space-4);
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--pg-space-3);
+}
+
+.search {
+    flex: 1 1 260px;
+    max-width: 360px;
+}
+
+@media (max-width: 36em) {
+    .search {
+        max-width: none;
+    }
+}
+
+.tablePanel {
+    overflow: hidden;
+}
+
+.userCell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.userName {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--pg-ink);
+}
+
+.userEmail {
+    font-size: 0.8125rem;
+    color: var(--pg-ink-3);
+}
+
+.presence {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--pg-ink-3);
+    white-space: nowrap;
+}
+
+.presenceDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--pg-ink-4);
+}
+
+.presence[data-active] {
+    color: var(--pg-success);
+}
+
+.presence[data-active] .presenceDot {
+    background: var(--pg-success);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--pg-success) 60%, transparent);
+}
+
+.row {
+    transition: background-color var(--pg-dur-fast) var(--ease-out);
+}
+
+.footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pg-space-3);
+    padding: var(--pg-space-3) var(--pg-space-4);
+    border-top: 1px solid var(--pg-border-faint);
+}
+
+.footerText {
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--pg-ink-3);
+}
+
+.skeletonRows {
+    display: flex;
+    flex-direction: column;
+    padding: var(--pg-space-2) var(--pg-space-4);
+}
+
+.gate {
+    max-width: 520px;
+    margin: var(--pg-space-8) auto 0;
+}
+
+.skeletonRow {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-6);
+    height: 61px;
+}
+
+.skeletonRow + .skeletonRow {
+    border-top: 1px solid var(--pg-border-faint);
+}
+
+.skeletonLead {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--pg-space-2);
+}
+
+.tabList {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tabList::-webkit-scrollbar {
+    display: none;
+}
+
+.tabList > * {
+    flex: none;
+}
