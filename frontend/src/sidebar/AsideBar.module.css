@@ -266,13 +266,13 @@
 .strip {
     position: absolute;
     top: var(--pg-topbar-h);
-    left: 0;
+    left: var(--navbar-offset, 0px);
     right: 0;
     z-index: var(--pg-z-sticky);
     display: flex;
     flex-direction: column;
     gap: 7px;
-    width: 100%;
+    width: calc(100% - var(--navbar-offset, 0px));
     padding: 8px var(--pg-gutter) 9px;
     background: var(--pg-surface-glass);
     -webkit-backdrop-filter: blur(14px) saturate(1.1);

@@ -213,6 +213,25 @@
     padding-top: var(--pg-space-3);
 }
 
+.attributeStep {
+    width: 100%;
+    max-width: 820px;
+    max-height: 100%;
+    padding: var(--pg-space-2) 2px calc(var(--pg-space-4) + var(--pg-safe-bottom));
+    overflow-y: auto;
+}
+
+@media (max-width: 64em) {
+    .attributeStep {
+        align-self: flex-start;
+        padding-top: var(--pg-space-6);
+    }
+}
+
+.stepFooter.attributeActions {
+    margin-top: var(--pg-space-3);
+}
+
 .confirmButton {
     min-width: 188px;
 }

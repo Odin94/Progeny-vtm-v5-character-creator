@@ -12,15 +12,15 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
     gap: var(--pg-space-3);
 }
 
 .card {
     --clan: var(--pg-blood-bright);
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    align-content: start;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
     gap: var(--pg-space-3);
     min-width: 0;
     padding: var(--pg-space-4) var(--pg-space-3);
@@ -48,7 +48,7 @@
 }
 
 .chosen {
-    margin-top: 4px;
+    flex: none;
     color: color-mix(in srgb, var(--clan) 65%, var(--pg-ink));
 }
 
@@ -88,11 +88,19 @@
     min-width: 0;
 }
 
+.title {
+    display: flex;
+    align-items: center;
+    gap: var(--pg-space-2);
+    min-width: 0;
+}
+
 .name {
     font-family: var(--pg-font-display);
     font-size: 1.125rem;
     font-weight: 700;
     line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .description {
@@ -111,6 +119,10 @@
     color: var(--pg-ink-3);
     font-size: 0.75rem;
     line-height: 1.5;
+}
+
+.discipline {
+    white-space: nowrap;
 }
 
 .discipline:not(:last-child)::after {

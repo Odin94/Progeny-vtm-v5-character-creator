@@ -49,6 +49,8 @@ export default function CreatorPage() {
     const creatorContentHeight = globals.isPhoneScreen
         ? "calc(100dvh - 52px)"
         : "calc(100vh - 52px)"
+    const showDossier = viewportWidth >= 1200
+    const dossierWidth = showDossier ? (viewportWidth >= 1408 ? 300 : 250) : 0
     const asideWidth = globals.isSmallScreen ? Math.min(300, viewportWidth - 56) : 220
 
     useEffect(() => {
@@ -421,8 +423,8 @@ export default function CreatorPage() {
                         />
                     </RenderProfiler>
                 </AppShell.Header>
-                {!globals.isSmallScreen && (
-                    <AppShell.Navbar p="sm" w={{ base: 250, xl: 300 }}>
+                {showDossier && (
+                    <AppShell.Navbar p="sm" w={dossierWidth}>
                         <RenderProfiler id="CreatorSidebar">
                             <Sidebar
                                 character={character}
@@ -464,6 +466,7 @@ export default function CreatorPage() {
                 )}
                 <div
                     className={classes.canvas}
+                    style={{ "--navbar-offset": `${dossierWidth}px` } as React.CSSProperties}
                     onClick={() => {
                         if (globals.isSmallScreen && showAsideBar) {
                             setShowAsideBar(false)
@@ -489,12 +492,7 @@ export default function CreatorPage() {
                                 "--aside-offset":
                                     showAsideBar && !globals.isSmallScreen
                                         ? `${asideWidth}px`
-                                        : "0px",
-                                "--navbar-offset": globals.isSmallScreen
-                                    ? "0px"
-                                    : viewportWidth >= 1408
-                                      ? "300px"
-                                      : "250px"
+                                        : "0px"
                             } as React.CSSProperties
                         }
                     >

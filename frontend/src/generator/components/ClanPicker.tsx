@@ -298,7 +298,12 @@ const ClanCard = ({
     >
         <span className={classes.medallion}>{sigil}</span>
         <span className={classes.body}>
-            <span className={classes.name}>{name}</span>
+            <span className={classes.title}>
+                <span className={classes.name}>{name}</span>
+                {selected ? (
+                    <IconCheck className={classes.chosen} size={14} aria-hidden="true" />
+                ) : null}
+            </span>
             {badge}
             <span className={classes.description}>{description}</span>
             {disciplines.length > 0 ? (
@@ -311,7 +316,6 @@ const ClanCard = ({
                 </span>
             ) : null}
         </span>
-        {selected ? <IconCheck className={classes.chosen} size={14} aria-hidden="true" /> : null}
     </UnstyledButton>
 )
 

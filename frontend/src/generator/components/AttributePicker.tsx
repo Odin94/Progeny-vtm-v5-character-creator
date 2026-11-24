@@ -7,6 +7,7 @@ import { Character, getEmptyCharacter } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import {
+    generatorUiClasses,
     GeneratorConfirmButton,
     GeneratorPhasePrompt,
     GeneratorSectionDivider,
@@ -205,6 +206,7 @@ const AttributePicker = ({
         return "medium"
     })()
 
+    const mediumRemaining = 3 - pickedAttributes.medium.length
     const phases = [
         {
             key: "strongest",
@@ -227,12 +229,12 @@ const AttributePicker = ({
             prompt:
                 excessMediumAttributes > 0
                     ? `Remove ${excessMediumAttributes}`
-                    : `Pick ${Math.max(0, 3 - pickedAttributes.medium.length)}`,
+                    : `Pick ${mediumRemaining || 3}`,
             bold: "medium",
             suffix:
                 excessMediumAttributes > 0
                     ? `attribute${excessMediumAttributes === 1 ? "" : "s"}`
-                    : `attribute${pickedAttributes.medium.length < 2 ? "s" : ""}`,
+                    : `attribute${mediumRemaining !== 1 ? "s" : ""}`,
             level: 3,
             done: pickedAttributes.medium.length === 3
         }
@@ -246,10 +248,10 @@ const AttributePicker = ({
               : undefined
 
     return (
-        <div style={{ width: "100%", maxWidth: 820 }}>
+        <div className={generatorUiClasses.attributeStep}>
             <GeneratorPhasePrompt
                 lines={phases}
-                activeKey={toPick}
+                activeKey={isComplete ? "" : toPick}
                 phoneScreen={phoneScreen}
                 footerText="Remaining attributes will be lvl 2"
             />
@@ -299,7 +301,7 @@ const AttributePicker = ({
             </PickGrid>
 
             {hasConfirmedAttributes ? (
-                <GeneratorStepFooter>
+                <GeneratorStepFooter className={generatorUiClasses.attributeActions}>
                     <Button
                         variant="subtle"
                         color="gray"

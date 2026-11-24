@@ -342,12 +342,14 @@ const SkillsPicker = ({
         </PickGrid>
     )
 
+    const promptCount = (total: number, picked: number) =>
+        picked === total ? total : total - picked
     const phases = [
         pickedDistribution === "Specialist"
             ? {
                   key: "special",
                   prompt: "Pick your",
-                  bold: `${distr.special - pickedSkills.special.length}`,
+                  bold: `${promptCount(distr.special, pickedSkills.special.length)}`,
                   suffix: "specialty skill",
                   level: 4,
                   done: pickedSkills.special.length === distr.special
@@ -356,7 +358,7 @@ const SkillsPicker = ({
         {
             key: "strongest",
             prompt: "Pick your",
-            bold: `${distr.strongest - pickedSkills.strongest.length} strongest`,
+            bold: `${promptCount(distr.strongest, pickedSkills.strongest.length)} strongest`,
             suffix: "skills",
             level: 3,
             done: pickedSkills.strongest.length === distr.strongest
@@ -364,7 +366,7 @@ const SkillsPicker = ({
         {
             key: "decent",
             prompt: "Pick",
-            bold: `${distr.decent - pickedSkills.decent.length}`,
+            bold: `${promptCount(distr.decent, pickedSkills.decent.length)}`,
             suffix: "skills you're decent in",
             level: 2,
             done: pickedSkills.decent.length === distr.decent
@@ -372,7 +374,7 @@ const SkillsPicker = ({
         {
             key: "acceptable",
             prompt: "Pick",
-            bold: `${distr.acceptable - pickedSkills.acceptable.length}`,
+            bold: `${promptCount(distr.acceptable, pickedSkills.acceptable.length)}`,
             suffix: "skills you're ok in",
             level: 1,
             done: pickedSkills.acceptable.length === distr.acceptable
@@ -498,7 +500,7 @@ const SkillsPicker = ({
                     ) : (
                         <GeneratorPhasePrompt
                             lines={phases}
-                            activeKey={toPick}
+                            activeKey={isComplete ? "" : toPick}
                             phoneScreen={phoneScreen}
                             caption={pickedDistribution}
                         />

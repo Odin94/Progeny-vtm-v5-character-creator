@@ -6,7 +6,7 @@ import AppTopbar from "~/components/AppTopbar"
 import { Anchor, Button, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure, useLocalStorage } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconArrowDown, IconArrowRight, IconNotebook, IconUserCircle } from "@tabler/icons-react"
+import { IconArrowDown, IconArrowRight, IconUserCircle } from "@tabler/icons-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { motion, useReducedMotion, type Variants } from "framer-motion"
@@ -58,7 +58,7 @@ type ChapterProps = {
     title: string
     bullets: string[]
     body?: ReactNode
-    action: ReactNode
+    action?: ReactNode
 }
 
 /** One "rulebook spread": a full-bleed photographic plate facing a page of text. */
@@ -87,7 +87,7 @@ function Chapter({ index, id, plate, plateFocus, title, bullets, body, action }:
                         ))}
                     </ul>
                     {body ? <div className="landing__chapter-body">{body}</div> : null}
-                    <div className="landing__chapter-action">{action}</div>
+                    {action ? <div className="landing__chapter-action">{action}</div> : null}
                 </div>
             </article>
         </li>
@@ -304,7 +304,7 @@ export default function LandingPage() {
 
                         <motion.div className="landing__ctas" variants={heroItem}>
                             <Button
-                                size="lg"
+                                size="xl"
                                 color="red"
                                 className="landing__cta-primary"
                                 leftSection={
@@ -321,17 +321,7 @@ export default function LandingPage() {
                                 Embrace a new character
                             </Button>
                             <Button
-                                size="lg"
-                                variant="default"
-                                component={Link}
-                                to="/sheet"
-                                leftSection={<IconNotebook size={18} stroke={1.6} />}
-                                className="landing__cta-secondary"
-                            >
-                                Open the sheet
-                            </Button>
-                            <Button
-                                size="lg"
+                                size="sm"
                                 variant="subtle"
                                 color="gray"
                                 leftSection={<IconUserCircle size={18} stroke={1.6} />}
@@ -436,16 +426,6 @@ export default function LandingPage() {
                                         track play-state changes, and keep the character in front of
                                         you during sessions.
                                     </p>
-                                }
-                                action={
-                                    <Button
-                                        variant="default"
-                                        component={Link}
-                                        to="/sheet"
-                                        rightSection={<IconArrowRight size={16} />}
-                                    >
-                                        Open sheet
-                                    </Button>
                                 }
                             />
                             <Chapter

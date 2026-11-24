@@ -300,21 +300,23 @@ const Sidebar = ({
                                         />
                                     </span>
                                 ) : null}
-                                <span
-                                    className={classes.name}
-                                    data-placeholder={!hasName || undefined}
-                                >
-                                    {hasName ? character.name : "Unnamed"}
-                                </span>
-                                <span className={classes.lineage}>
-                                    <b>{clanName}</b>
-                                    {notDefault(character, "generation")
-                                        ? ` · ${character.generation}th gen.`
-                                        : null}
-                                    {notDefault(character, "predatorType")
-                                        ? ` · ${character.predatorType.name}`
-                                        : null}
-                                </span>
+                                <div className={classes.identityText}>
+                                    <span
+                                        className={classes.name}
+                                        data-placeholder={!hasName || undefined}
+                                    >
+                                        {hasName ? character.name : "Unnamed"}
+                                    </span>
+                                    <span className={classes.lineage}>
+                                        <b>{clanName}</b>
+                                        {notDefault(character, "generation")
+                                            ? ` · ${character.generation}th gen.`
+                                            : null}
+                                        {notDefault(character, "predatorType")
+                                            ? ` · ${character.predatorType.name}`
+                                            : null}
+                                    </span>
+                                </div>
                             </div>
                         ) : (
                             <Text className={classes.muted} ta="center" py="lg">

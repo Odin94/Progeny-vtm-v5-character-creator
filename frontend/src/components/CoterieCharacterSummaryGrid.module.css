@@ -29,7 +29,7 @@
     background:
         linear-gradient(
             160deg,
-            color-mix(in srgb, var(--clan) 9%, transparent) 0%,
+            color-mix(in srgb, var(--clan) 5%, transparent) 0%,
             transparent 42%
         ),
         var(--pg-surface-1);
@@ -44,7 +44,7 @@
     content: "";
     position: absolute;
     inset: 0 0 auto;
-    height: 2px;
+    height: 1px;
     background: linear-gradient(
         90deg,
         transparent,
@@ -52,17 +52,16 @@
         var(--clan) 70%,
         transparent
     );
-    opacity: 0.85;
+    opacity: 0.42;
     z-index: 1;
 }
 
 .dossier[data-highlighted] {
-    border-color: color-mix(in srgb, var(--clan-bright) 55%, transparent);
+    border-color: color-mix(in srgb, var(--clan-bright) 36%, var(--pg-border));
     box-shadow:
         var(--pg-shadow-inset-top),
         var(--pg-shadow-2),
-        0 0 0 1px color-mix(in srgb, var(--clan-bright) 30%, transparent),
-        0 0 32px -6px color-mix(in srgb, var(--clan) 55%, transparent);
+        0 0 24px -8px color-mix(in srgb, var(--clan) 20%, transparent);
 }
 
 .watermark {
@@ -72,7 +71,7 @@
     width: 168px;
     height: 168px;
     background-color: var(--clan);
-    opacity: 0.08;
+    opacity: 0.05;
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
@@ -144,7 +143,7 @@
     background:
         radial-gradient(
             circle at 50% 35%,
-            color-mix(in srgb, var(--clan) 34%, transparent),
+            color-mix(in srgb, var(--clan) 15%, transparent),
             transparent 72%
         ),
         var(--pg-sunken);
