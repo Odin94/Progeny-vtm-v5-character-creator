@@ -4,8 +4,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import AttributePicker from "~/generator/components/AttributePicker"
 import SkillsPicker from "~/generator/components/SkillsPicker"
-import type { AttributeSetting, SkillsSetting } from "~/generator/creatorDrafts"
-import { getAttributeSetting } from "~/generator/creatorDrafts"
+import { useCharacterLocalStorage } from "~/hooks/useCharacterLocalStorage"
+import { getEmptyCharacter } from "~/data/Character"
+import type { SkillsSetting } from "~/generator/creatorDrafts"
 import { getBasicTestCharacter } from "./testUtils"
 
 const { renderSpecialtyModal } = vi.hoisted(() => ({ renderSpecialtyModal: vi.fn() }))
@@ -37,9 +38,63 @@ globalThis.ResizeObserver = class {
     disconnect() {}
 }
 
-afterEach(cleanup)
+afterEach(() => {
+    cleanup()
+    localStorage.clear()
+})
 
 describe("creator picker limits", () => {
+    it("restores pending attributes from the active local draft and clears them on confirmation", () => {
+        const character = { ...getEmptyCharacter(), clan: "Ventrue", version: 13 }
+        localStorage.setItem("character", JSON.stringify(character))
+        const nextStep = vi.fn()
+        function Harness() {
+            const [active, setCharacter] = useCharacterLocalStorage()
+            return (
+                <MantineProvider>
+                    <AttributePicker
+                        character={active}
+                        setCharacter={setCharacter}
+                        nextStep={nextStep}
+                    />
+                    <button onClick={() => setCharacter(getEmptyCharacter())}>
+                        New test character
+                    </button>
+                </MantineProvider>
+            )
+        }
+
+        const firstMount = render(<Harness />)
+        fireEvent.click(screen.getByTestId("attribute-strength-button"))
+        fireEvent.click(screen.getByTestId("attribute-charisma-button"))
+        expect(JSON.parse(localStorage.getItem("character")!)).toMatchObject({
+            attributes: character.attributes,
+            attributeDraft: { strongest: "strength", weakest: "charisma", medium: [] },
+            version: 14
+        })
+        firstMount.unmount()
+
+        render(<Harness />)
+        fireEvent.click(screen.getByTestId("attribute-dexterity-button"))
+        fireEvent.click(screen.getByTestId("attribute-stamina-button"))
+        fireEvent.click(screen.getByTestId("attribute-composure-button"))
+        expect(nextStep).toHaveBeenCalledOnce()
+        const confirmed = JSON.parse(localStorage.getItem("character")!)
+        expect(confirmed.attributes).toMatchObject({
+            strength: 4,
+            charisma: 1,
+            dexterity: 3,
+            stamina: 3,
+            composure: 3
+        })
+        expect(confirmed.attributeDraft).toBeUndefined()
+
+        fireEvent.click(screen.getByTestId("attribute-strength-button"))
+        expect(JSON.parse(localStorage.getItem("character")!).attributeDraft).toBeDefined()
+        fireEvent.click(screen.getByRole("button", { name: "New test character" }))
+        expect(JSON.parse(localStorage.getItem("character")!).attributeDraft).toBeUndefined()
+    })
+
     it("lets users repair an overallocated saved character and confirm", () => {
         const savedCharacter = getBasicTestCharacter()
         savedCharacter.attributes = {
@@ -57,18 +112,17 @@ describe("creator picker limits", () => {
         const persistCharacter = vi.fn()
         const Harness = () => {
             const [character, setCharacter] = useState(savedCharacter)
-            const [draft, setDraft] = useState(() => getAttributeSetting(character.attributes))
             return (
                 <MantineProvider>
                     <AttributePicker
                         character={character}
                         setCharacter={(updated) => {
-                            persistCharacter(updated)
-                            setCharacter(updated)
+                            const next =
+                                typeof updated === "function" ? updated(character) : updated
+                            persistCharacter(next)
+                            setCharacter(next)
                         }}
                         nextStep={nextStep}
-                        pickedAttributes={draft}
-                        setPickedAttributes={setDraft}
                     />
                 </MantineProvider>
             )
@@ -135,11 +189,6 @@ describe("creator picker limits", () => {
     })
 
     it("prevents extra attribute picks while leaving assigned attributes removable", () => {
-        const pickedAttributes: AttributeSetting = {
-            strongest: "strength",
-            weakest: "charisma",
-            medium: ["dexterity", "stamina", "composure"]
-        }
         const character = getBasicTestCharacter()
         character.attributes = {
             ...character.attributes,
@@ -152,13 +201,7 @@ describe("creator picker limits", () => {
 
         render(
             <MantineProvider>
-                <AttributePicker
-                    character={character}
-                    setCharacter={vi.fn()}
-                    nextStep={vi.fn()}
-                    pickedAttributes={pickedAttributes}
-                    setPickedAttributes={vi.fn()}
-                />
+                <AttributePicker character={character} setCharacter={vi.fn()} nextStep={vi.fn()} />
             </MantineProvider>
         )
 
@@ -214,61 +257,39 @@ describe("creator picker limits", () => {
             stamina: 3,
             composure: 3
         }
+        character.attributeDraft = {
+            strongest: "strength",
+            weakest: "charisma",
+            medium: ["dexterity", "stamina"]
+        }
         const setCharacter = vi.fn()
-        const setPickedAttributes = vi.fn()
-
-        const { rerender } = render(
+        const renderPicker = (value: typeof character) => (
             <MantineProvider>
-                <AttributePicker
-                    character={character}
-                    setCharacter={setCharacter}
-                    nextStep={vi.fn()}
-                    pickedAttributes={{
-                        strongest: "strength",
-                        weakest: "charisma",
-                        medium: ["dexterity", "stamina", "composure"]
-                    }}
-                    setPickedAttributes={setPickedAttributes}
-                />
+                <AttributePicker character={value} setCharacter={setCharacter} nextStep={vi.fn()} />
             </MantineProvider>
         )
+        const { rerender } = render(renderPicker(character))
 
         fireEvent.click(screen.getByRole("button", { name: "Reset attributes" }))
 
-        expect(setPickedAttributes).toHaveBeenCalledWith({
-            strongest: null,
-            weakest: null,
-            medium: []
+        const reset = setCharacter.mock.calls[0][0](character)
+        expect(reset).toMatchObject({
+            attributes: {
+                strength: 1,
+                dexterity: 1,
+                stamina: 1,
+                charisma: 1,
+                manipulation: 1,
+                composure: 1,
+                intelligence: 1,
+                wits: 1,
+                resolve: 1
+            },
+            maxHealth: 4,
+            willpower: 2
         })
-        expect(setCharacter).toHaveBeenCalledWith(
-            expect.objectContaining({
-                attributes: {
-                    strength: 1,
-                    dexterity: 1,
-                    stamina: 1,
-                    charisma: 1,
-                    manipulation: 1,
-                    composure: 1,
-                    intelligence: 1,
-                    wits: 1,
-                    resolve: 1
-                },
-                maxHealth: 4,
-                willpower: 2
-            })
-        )
-
-        rerender(
-            <MantineProvider>
-                <AttributePicker
-                    character={setCharacter.mock.calls[0][0]}
-                    setCharacter={setCharacter}
-                    nextStep={vi.fn()}
-                    pickedAttributes={{ strongest: null, weakest: null, medium: [] }}
-                    setPickedAttributes={setPickedAttributes}
-                />
-            </MantineProvider>
-        )
+        expect(reset.attributeDraft).toBeUndefined()
+        rerender(renderPicker(reset))
 
         expect(screen.queryByRole("button", { name: "Reset attributes" })).not.toBeInTheDocument()
         expect(screen.queryByTestId("attributes-confirm-button")).not.toBeInTheDocument()

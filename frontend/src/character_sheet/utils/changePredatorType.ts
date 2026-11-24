@@ -1,10 +1,10 @@
-import type { Character } from "~/data/Character"
+import { clearMissingCreatorChoices, type Character } from "~/data/Character"
 import {
     getCharacterPredatorType,
     getPredatorDisciplineIdentity,
     replacePredatorSkillBonuses
 } from "~/data/predatorTypeOptions"
-import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import { getPowerDisciplineIdentity, getPowerIdentity } from "~/utils/homebrewOptions"
 import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAndFlawsResolution"
 import { characterHasCeremonyPrerequisite, getOblivionCeremonyLevel } from "~/data/Ceremonies"
 
@@ -40,20 +40,20 @@ export const changeSheetPredatorType = (
     )
     const oldIdentity = getPredatorDisciplineIdentity(current)
     const newIdentity = getPredatorDisciplineIdentity(next)
-    if (oldIdentity === newIdentity) return next
+    if (oldIdentity === newIdentity) {
+        next.predatorType.pickedPowerId = current.predatorType.pickedPowerId
+        return next
+    }
+    next.predatorType.pickedPowerId = undefined
     const levels = { ...current.disciplineLevels }
     if (current.predatorType.pickedDiscipline)
         levels[oldIdentity] = Math.max(0, (levels[oldIdentity] ?? 0) - 1)
-    // Remove the old bonus power (the generator appends it after clan powers).
-    const bonusIndex =
-        current.predatorType.pickedDiscipline &&
-        current.disciplines.filter((power) => getPowerDisciplineIdentity(power) === oldIdentity)
-            .length > (levels[oldIdentity] ?? 0)
-            ? current.disciplines.findLastIndex(
-                  (power) => getPowerDisciplineIdentity(power) === oldIdentity
-              )
-            : -1
-    let powers = current.disciplines.filter((_, index) => index !== bonusIndex)
+    const oldBonusPowerId = current.predatorType.pickedPowerId
+    let powers = current.disciplines.filter(
+        (power) =>
+            getPowerIdentity(power) !== oldBonusPowerId ||
+            getPowerDisciplineIdentity(power) !== oldIdentity
+    )
     if (predatorType.pickedDiscipline)
         levels[newIdentity] = Math.min(5, (levels[newIdentity] ?? 0) + 1)
     // Remove invalid powers to a fixed point: losing one amalgam may invalidate another.
@@ -97,5 +97,5 @@ export const changeSheetPredatorType = (
             ceremony.level <= getOblivionCeremonyLevel(next) &&
             characterHasCeremonyPrerequisite(next, ceremony)
     )
-    return next
+    return clearMissingCreatorChoices(next)
 }

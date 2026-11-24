@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { getEmptyCharacter } from "~/data/Character"
+import { getPowerIdentity, getRitualIdentity } from "~/utils/homebrewOptions"
+import { Rituals } from "~/data/Rituals"
 import { disciplines } from "~/data/Disciplines"
 import {
     getAttributeSetting,
     getDisciplineDraft,
     getSkillDistribution,
-    getSkillsSetting
+    getSkillsSetting,
+    updateFreeGrimoireChoice
 } from "~/generator/creatorDrafts"
 
 describe("creator drafts", () => {
@@ -50,12 +53,48 @@ describe("creator drafts", () => {
         expect(getSkillDistribution(getSkillsSetting(character.skills))).toBe("Balanced")
     })
 
-    it("separates the predator power from confirmed clan powers", () => {
-        const [first, second, predator] = disciplines.animalism.powers
+    it("restores the exact predator award after learning another power in the same Discipline", () => {
+        const [first, predator, learned] = disciplines.animalism.powers
+        const character = getEmptyCharacter()
+        character.predatorType = {
+            ...character.predatorType,
+            name: "Farmer",
+            pickedDiscipline: "animalism",
+            pickedPowerId: getPowerIdentity(predator)
+        }
+        character.disciplines = [first, predator, learned]
+        const draft = getDisciplineDraft(character)
 
-        const draft = getDisciplineDraft([first, second, predator], "animalism")
-
-        expect(draft.clanPowers).toEqual([first, second])
+        expect(draft.clanPowers).toEqual([first, learned])
         expect(draft.predatorPower).toEqual(predator)
+    })
+
+    it("replaces only the free entry and preserves learned entries", () => {
+        const [learned, first, replacement] = Rituals
+        const chosen = updateFreeGrimoireChoice([learned], undefined, first)
+        const same = updateFreeGrimoireChoice(chosen.entries, chosen.choice, first)
+        expect(same).toEqual(chosen)
+
+        const swapped = updateFreeGrimoireChoice(same.entries, same.choice, replacement)
+        expect(swapped.entries).toEqual([learned, replacement])
+        expect(swapped.choice).toEqual({
+            identity: getRitualIdentity(replacement),
+            addedByCreator: true
+        })
+        expect(updateFreeGrimoireChoice(swapped.entries, swapped.choice).entries).toEqual([learned])
+    })
+
+    it("preserves entries already learned, including when they become the selected free choice", () => {
+        const [learned, other] = Rituals
+        const chosen = updateFreeGrimoireChoice([learned], undefined, learned)
+        expect(chosen.entries).toEqual([learned])
+        expect(chosen.choice).toEqual({
+            identity: getRitualIdentity(learned),
+            addedByCreator: false
+        })
+        expect(updateFreeGrimoireChoice(chosen.entries, chosen.choice, other).entries).toEqual([
+            learned,
+            other
+        ])
     })
 })

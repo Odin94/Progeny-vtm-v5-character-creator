@@ -1,13 +1,13 @@
-import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import { getPredatorDisciplineIdentity } from "~/data/predatorTypeOptions"
+import type { AttributeSetting, Character, FreeGrimoireChoice } from "~/data/Character"
+import {
+    getPowerDisciplineIdentity,
+    getPowerIdentity,
+    getRitualIdentity
+} from "~/utils/homebrewOptions"
 import type { Attributes, AttributesKey } from "~/data/Attributes"
-import type { Power } from "~/data/Disciplines"
+import type { Power, Ritual } from "~/data/Disciplines"
 import type { Skills, SkillsKey } from "~/data/Skills"
-
-export type AttributeSetting = {
-    strongest: AttributesKey | null
-    weakest: AttributesKey | null
-    medium: AttributesKey[]
-}
 
 export type SkillsSetting = {
     special: SkillsKey[]
@@ -81,22 +81,46 @@ export const getSkillDistribution = (setting: SkillsSetting): DistributionKey | 
 }
 
 export const getDisciplineDraft = (
-    pickedPowers: Power[],
-    predatorDiscipline: string,
-    predatorDisciplineIdentity?: string
+    character: Pick<Character, "disciplines" | "predatorType">
 ): { clanPowers: Power[]; predatorPower: Power | undefined } => {
-    const predatorPower = [...pickedPowers]
-        .reverse()
-        .find((power) =>
-            predatorDisciplineIdentity
-                ? getPowerDisciplineIdentity(power) === predatorDisciplineIdentity
-                : power.discipline === predatorDiscipline
-        )
+    const { disciplines, predatorType } = character
+    const disciplineIdentity = getPredatorDisciplineIdentity(character)
+    const predatorPower = disciplines.find(
+        (power) =>
+            getPowerIdentity(power) === predatorType.pickedPowerId &&
+            getPowerDisciplineIdentity(power) === disciplineIdentity
+    )
 
     return {
         clanPowers: predatorPower
-            ? pickedPowers.filter((power) => power !== predatorPower)
-            : pickedPowers,
+            ? disciplines.filter((power) => power !== predatorPower)
+            : disciplines,
         predatorPower
+    }
+}
+
+export const updateFreeGrimoireChoice = <T extends Ritual>(
+    entries: T[],
+    previous: FreeGrimoireChoice | undefined,
+    next?: T
+): { entries: T[]; choice: FreeGrimoireChoice | undefined } => {
+    const nextId = next && getRitualIdentity(next)
+    if (
+        nextId &&
+        nextId === previous?.identity &&
+        entries.some((entry) => getRitualIdentity(entry) === nextId)
+    ) {
+        return { entries, choice: previous }
+    }
+
+    const learned = previous?.addedByCreator
+        ? entries.filter((entry) => getRitualIdentity(entry) !== previous.identity)
+        : entries
+    if (!next || !nextId) return { entries: learned, choice: undefined }
+
+    const addedByCreator = !learned.some((entry) => getRitualIdentity(entry) === nextId)
+    return {
+        entries: addedByCreator ? [...learned, next] : learned,
+        choice: { identity: nextId, addedByCreator }
     }
 }

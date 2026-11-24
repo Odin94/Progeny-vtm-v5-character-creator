@@ -57,7 +57,7 @@ type DisciplinesPickerProps = {
     setPickedPredatorTypePower: (power: Power | undefined) => void
 }
 
-type PowerCardState = "available" | "picked" | "locked" | "elsewhere"
+type PowerCardState = "available" | "assignable" | "picked" | "locked" | "elsewhere"
 
 const accordionClassNames = {
     item: classes.tome,
@@ -248,16 +248,26 @@ const DisciplinesPicker = ({
         const isPickedAsClan =
             isForPredatorType &&
             pickedPowers.some((p) => getPowerIdentity(p) === getPowerIdentity(power))
+        // A legacy character can already know several powers of this Discipline
+        // without recording which one came from the predator type.
+        const canAssignExistingPower =
+            isPickedAsClan &&
+            !pickedPredatorTypePower &&
+            character.disciplines.some(
+                (existing) => getPowerIdentity(existing) === getPowerIdentity(power)
+            )
         const showUndo = picked && !isPickedAsPredatorType && !isPickedAsClan
         const takeButtonKey = `${isForPredatorType ? "predator" : "clan"}-${getPowerIdentity(power)}`
         const showBlockedReasons = takeDisabled && blockedPowerAttempts.has(takeButtonKey)
-        const state: PowerCardState = showUndo
-            ? "picked"
-            : picked
-              ? "elsewhere"
-              : takeDisabled
-                ? "locked"
-                : "available"
+        const state: PowerCardState = canAssignExistingPower
+            ? "assignable"
+            : showUndo
+              ? "picked"
+              : picked
+                ? "elsewhere"
+                : takeDisabled
+                  ? "locked"
+                  : "available"
         const slug = powerSlug(power.name)
 
         const takeButton = (
@@ -375,7 +385,27 @@ const DisciplinesPicker = ({
                             </Button>
                         </>
                     ) : null}
-                    {isPickedAsClan ? (
+                    {canAssignExistingPower ? (
+                        <Button
+                            size="xs"
+                            variant="light"
+                            color="red"
+                            fullWidth
+                            onClick={() => {
+                                const existing = pickedPowers.find(
+                                    (candidate) =>
+                                        getPowerIdentity(candidate) === getPowerIdentity(power)
+                                )
+                                if (!existing) return
+                                setPickedPowers(
+                                    pickedPowers.filter((candidate) => candidate !== existing)
+                                )
+                                setPickedPredatorTypePower(existing)
+                            }}
+                        >
+                            Use as predator power
+                        </Button>
+                    ) : isPickedAsClan ? (
                         <span className={classes.powerStatus}>Taken as clan power</span>
                     ) : null}
                     {isPickedAsPredatorType ? (
@@ -651,7 +681,6 @@ const DisciplinesPicker = ({
                                 disabled={confirmDisabled}
                                 disabledReason={confirmReason}
                                 onClick={() => {
-                                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
                                     const pickedDisciplineIdentities = new Set(
                                         allPickedPowers.map(getPowerDisciplineIdentity)
                                     )
@@ -718,24 +747,37 @@ const DisciplinesPicker = ({
                                         .filter(([identity]) =>
                                             pickedDisciplineIdentities.has(identity)
                                         )
+                                    const hasBloodSorcery = containsBloodSorcery(allPickedPowers)
+                                    const hasCeremonyAccess = canAccessOblivionCeremonies({
+                                        disciplineLevels,
+                                        merits: character.merits
+                                    })
                                     const updatedCharacter = {
                                         ...character,
+                                        predatorType: {
+                                            ...character.predatorType,
+                                            pickedPowerId: pickedPredatorTypePower
+                                                ? getPowerIdentity(pickedPredatorTypePower)
+                                                : undefined
+                                        },
                                         disciplines: allPickedPowers,
                                         disciplineLevels,
                                         customDisciplines: {
                                             ...Object.fromEntries(retainedCustomDisciplines),
                                             ...Object.fromEntries(pickedHomebrewDisciplines)
                                         },
-                                        rituals: containsBloodSorcery(allPickedPowers)
-                                            ? character.rituals
-                                            : [],
-                                        ceremonies: canAccessOblivionCeremonies({
-                                            disciplineLevels,
-                                            merits: character.merits
-                                        })
-                                            ? character.ceremonies
-                                            : []
+                                        rituals: hasBloodSorcery ? character.rituals : [],
+                                        freeRitual: hasBloodSorcery
+                                            ? character.freeRitual
+                                            : undefined,
+                                        ceremonies: hasCeremonyAccess ? character.ceremonies : [],
+                                        freeCeremony: hasCeremonyAccess
+                                            ? character.freeCeremony
+                                            : undefined
                                     }
+                                    updateHealthAndWillpowerAndBloodPotencyAndHumanity(
+                                        updatedCharacter
+                                    )
                                     trackEvent({
                                         action: "disciplines confirm clicked",
                                         category: "disciplines",

@@ -2,7 +2,11 @@ import { Button, Text, Tooltip } from "@mantine/core"
 import { memo, useEffect, useState } from "react"
 import posthog from "posthog-js"
 import { DisciplineName } from "~/data/NameSchemas"
-import { decreaseDisciplineLevelForPower, getDisciplineLevel } from "~/data/Character"
+import {
+    clearMissingCreatorChoices,
+    decreaseDisciplineLevelForPower,
+    getDisciplineLevel
+} from "~/data/Character"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
 import { disciplines, Power, Ritual, sanitizeCustomDisciplineLogoUrl } from "~/data/Disciplines"
 import { Rituals } from "~/data/Rituals"
@@ -346,7 +350,7 @@ const Disciplines = ({ options }: DisciplinesProps) => {
             }
 
             updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-            return updatedCharacter
+            return clearMissingCreatorChoices(updatedCharacter)
         })
         setItemToDelete(null)
     }

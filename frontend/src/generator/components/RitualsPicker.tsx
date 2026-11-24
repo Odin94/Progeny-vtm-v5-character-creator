@@ -4,6 +4,8 @@ import { trackEvent } from "../../utils/analytics"
 import { Character, containsBloodSorcery } from "../../data/Character"
 import { Ritual } from "../../data/Disciplines"
 import { Rituals } from "../../data/Rituals"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
+import { updateFreeGrimoireChoice } from "../creatorDrafts"
 import { upcase } from "../utils"
 import {
     generatorScrollableAreaStyle,
@@ -21,7 +23,7 @@ import classes from "./generatorCards.module.css"
 
 type RitualsPickerProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     nextStep: () => void
 }
 
@@ -42,11 +44,17 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
     }
 
     const phoneScreen = globals.isPhoneScreen
-    const chosenIdentities = new Set(character.rituals.map(getRitualIdentity))
 
     const handleTake = (ritual: Ritual) => {
         trackEvent({ action: "ritual clicked", category: "rituals", label: ritual.name })
-        setCharacter({ ...character, rituals: [ritual] })
+        setCharacter((current) => {
+            const { entries, choice } = updateFreeGrimoireChoice(
+                current.rituals,
+                current.freeRitual,
+                ritual
+            )
+            return { ...current, rituals: entries, freeRitual: choice }
+        })
         nextStep()
     }
 
@@ -57,7 +65,7 @@ const RitualsPicker = ({ character, setCharacter, nextStep }: RitualsPickerProps
             level={ritual.level}
             summary={upcase(ritual.summary)}
             homebrewSource={ritual.homebrewSource}
-            selected={chosenIdentities.has(getRitualIdentity(ritual))}
+            selected={character.freeRitual?.identity === getRitualIdentity(ritual)}
             facts={[
                 {
                     label: "Dice Pool",

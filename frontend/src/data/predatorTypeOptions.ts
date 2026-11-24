@@ -57,7 +57,7 @@ export const getSkillsWithoutPredatorBonuses = (character: Character) => {
     return skills
 }
 
-export const getPredatorDisciplineIdentity = (character: Character) => {
+export const getPredatorDisciplineIdentity = (character: Pick<Character, "predatorType">) => {
     const reference = character.predatorType.pickedDisciplineRef
     return reference?.type === "homebrew" && character.predatorType.homebrew
         ? `homebrew:${character.predatorType.homebrew.homebrewSource.collectionId}:${reference.itemId}`

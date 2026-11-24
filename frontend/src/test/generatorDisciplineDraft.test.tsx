@@ -38,24 +38,41 @@ describe("Generator discipline draft", () => {
         const character = getBasicTestCharacter()
         const [removedPower, remainingPower] = character.disciplines
 
-        render(
-            <Generator
-                character={{
-                    ...character,
-                    disciplines: [remainingPower]
-                }}
-                setCharacter={vi.fn()}
-                selectedStep="disciplines"
-                setSelectedStep={vi.fn()}
-            />
+        const props = {
+            setCharacter: vi.fn(),
+            selectedStep: "disciplines" as const,
+            setSelectedStep: vi.fn()
+        }
+        const { rerender } = render(<Generator character={character} {...props} />)
+        rerender(
+            <Generator character={{ ...character, disciplines: [remainingPower] }} {...props} />
         )
 
         expect(removedPower.level).toBe(1)
-        expect(renderDisciplinesPicker).toHaveBeenCalledWith(
+        expect(renderDisciplinesPicker).toHaveBeenLastCalledWith(
             expect.objectContaining({
                 pickedPowers: [remainingPower],
                 pickedPredatorTypePower: undefined
             })
+        )
+    })
+
+    it("preserves pending choices when another tab saves unrelated character data", () => {
+        const character = getBasicTestCharacter()
+        const pending = character.disciplines.slice(0, 1)
+        const props = {
+            setCharacter: vi.fn(),
+            selectedStep: "disciplines" as const,
+            setSelectedStep: vi.fn()
+        }
+        const { rerender } = render(<Generator character={character} {...props} />)
+        act(() => renderDisciplinesPicker.mock.lastCall?.[0].setPickedPowers(pending))
+
+        const fromStorage = JSON.parse(JSON.stringify({ ...character, experience: 25 }))
+        rerender(<Generator character={fromStorage} {...props} />)
+
+        expect(renderDisciplinesPicker).toHaveBeenLastCalledWith(
+            expect.objectContaining({ pickedPowers: pending })
         )
     })
 

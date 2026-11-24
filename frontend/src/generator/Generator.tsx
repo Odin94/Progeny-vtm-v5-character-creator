@@ -5,17 +5,15 @@ import ErrorBoundary from "../components/ErrorBoundary"
 import { Character, getEmptyCharacter } from "../data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
 import {
-    replacePredatorSkillBonuses,
+    getCharacterPredatorTypeKey,
+    getPredatorDisciplineIdentity,
     getSkillsWithoutPredatorBonuses,
-    getPredatorDisciplineIdentity
+    replacePredatorSkillBonuses
 } from "~/data/predatorTypeOptions"
 import { PredatorTypeName } from "../data/NameSchemas"
 import {
-    AttributeSetting,
     DistributionKey,
-    emptyAttributeSetting,
     emptySkillsSetting,
-    getAttributeSetting,
     getDisciplineDraft,
     getSkillDistribution,
     getSkillsSetting,
@@ -60,45 +58,67 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
     const [pickedPredatorType, setPickedPredatorType] = useState<PredatorTypeName>("")
     const [predatorTypeSpecialty, setPredatorTypeSpecialty] = useState("")
     const [predatorTypeDiscipline, setPredatorTypeDiscipline] = useState("")
-    const [attributeDraft, setAttributeDraft] = useState<AttributeSetting>(() =>
-        getAttributeSetting(character.attributes)
-    )
     const [skillsDraft, setSkillsDraft] = useState<SkillsSetting>(() =>
         getSkillsSetting(getSkillsWithoutPredatorBonuses(character))
     )
     const [skillsDistribution, setSkillsDistribution] = useState<DistributionKey | null>(() =>
         getSkillDistribution(getSkillsSetting(getSkillsWithoutPredatorBonuses(character)))
     )
-    const [generationDraft, setGenerationDraft] = useState<string | null>(() =>
-        character.generation ? character.generation.toString() : null
+    const confirmedDisciplineDraft = useMemo(
+        () => ({
+            source: JSON.stringify([
+                character.id,
+                character.clan,
+                character.homebrewClan?.homebrewSource,
+                getCharacterPredatorTypeKey(character),
+                getPredatorDisciplineIdentity(character),
+                character.predatorType.pickedPowerId,
+                character.disciplines
+            ]),
+            picks: getDisciplineDraft(character)
+        }),
+        [character]
     )
-    const [
-        { clanPowers: disciplineDraft, predatorPower: predatorDisciplineDraft },
-        setDisciplinesDraft
-    ] = useState(() =>
-        getDisciplineDraft(
-            character.disciplines,
-            character.predatorType.pickedDiscipline,
-            getPredatorDisciplineIdentity(character)
+    const [disciplinesDraft, setDisciplinesDraft] = useState<typeof confirmedDisciplineDraft>()
+    // A sheet edit can arrive via the storage listener while the creator is open.
+    // Reuse pending choices only while the saved powers and award still match their source.
+    const currentDisciplineDraft =
+        disciplinesDraft?.source === confirmedDisciplineDraft.source
+            ? disciplinesDraft
+            : confirmedDisciplineDraft
+    const { clanPowers: disciplineDraft, predatorPower: predatorDisciplineDraft } =
+        currentDisciplineDraft.picks
+
+    useEffect(() => {
+        setDisciplinesDraft((current) =>
+            current?.source === confirmedDisciplineDraft.source ? current : undefined
         )
-    )
+    }, [confirmedDisciplineDraft.source])
+
+    const updateDisciplineDraft = (update: Partial<typeof confirmedDisciplineDraft.picks>) => {
+        setDisciplinesDraft((current) => {
+            const base =
+                current?.source === confirmedDisciplineDraft.source
+                    ? current
+                    : confirmedDisciplineDraft
+            return { source: base.source, picks: { ...base.picks, ...update } }
+        })
+    }
+
+    const clearPredatorTypeDisciplineDraft = () => {
+        updateDisciplineDraft({ clanPowers: [], predatorPower: undefined })
+    }
 
     const clearClanDependentDrafts = () => {
-        setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
+        clearPredatorTypeDisciplineDraft()
         setPickedPredatorType("")
         setPredatorTypeSpecialty("")
         setPredatorTypeDiscipline("")
     }
 
-    const clearPredatorTypeDisciplineDraft = () => {
-        setDisciplinesDraft({ clanPowers: [], predatorPower: undefined })
-    }
-
     const clearCharacterDrafts = () => {
-        setAttributeDraft(emptyAttributeSetting)
         setSkillsDraft(emptySkillsSetting)
         setSkillsDistribution(null)
-        setGenerationDraft(null)
         clearClanDependentDrafts()
     }
 
@@ -117,7 +137,9 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
             disciplines: hadPredatorType ? [] : character.disciplines,
             disciplineLevels: hadPredatorType ? {} : character.disciplineLevels,
             rituals: hadPredatorType ? [] : character.rituals,
-            ceremonies: hadPredatorType ? [] : character.ceremonies
+            freeRitual: hadPredatorType ? undefined : character.freeRitual,
+            ceremonies: hadPredatorType ? [] : character.ceremonies,
+            freeCeremony: hadPredatorType ? undefined : character.freeCeremony
         }
 
         updateHealthAndWillpowerAndBloodPotencyAndHumanity(nextCharacter)
@@ -125,7 +147,7 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
         if (hadPredatorType) {
             clearPredatorTypeDisciplineDraft()
         } else {
-            setDisciplinesDraft((current) => ({ ...current, predatorPower: undefined }))
+            updateDisciplineDraft({ predatorPower: undefined })
         }
         setPickedPredatorType("")
         setPredatorTypeSpecialty("")
@@ -180,8 +202,6 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
-                        pickedAttributes={attributeDraft}
-                        setPickedAttributes={setAttributeDraft}
                     />
                 )
             case "skills":
@@ -202,8 +222,6 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         character={character}
                         setCharacter={setCharacter}
                         nextStep={nextStep}
-                        generation={generationDraft}
-                        setGeneration={setGenerationDraft}
                     />
                 )
             case "predator-type":
@@ -237,12 +255,10 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                         setCharacter={setCharacter}
                         nextStep={nextStep}
                         pickedPowers={disciplineDraft}
-                        setPickedPowers={(clanPowers) =>
-                            setDisciplinesDraft((current) => ({ ...current, clanPowers }))
-                        }
+                        setPickedPowers={(clanPowers) => updateDisciplineDraft({ clanPowers })}
                         pickedPredatorTypePower={predatorDisciplineDraft}
                         setPickedPredatorTypePower={(predatorPower) =>
-                            setDisciplinesDraft((current) => ({ ...current, predatorPower }))
+                            updateDisciplineDraft({ predatorPower })
                         }
                     />
                 )

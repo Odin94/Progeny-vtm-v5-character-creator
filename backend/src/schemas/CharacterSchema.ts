@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { attributesSchema } from "./Attributes.js"
+import { attributesKeySchema, attributesSchema } from "./Attributes.js"
 import {
     powerSchema,
     ritualSchema,
@@ -54,7 +54,18 @@ export type Touchstone = z.infer<typeof touchstoneSchema>
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
 
-export const schemaVersion = 13
+export const schemaVersion = 14
+
+const attributeDraftSchema = z.object({
+    strongest: attributesKeySchema.nullable(),
+    weakest: attributesKeySchema.nullable(),
+    medium: attributesKeySchema.array()
+})
+
+const freeGrimoireChoiceSchema = z.object({
+    identity: z.string(),
+    addedByCreator: z.boolean()
+})
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -93,6 +104,7 @@ export const characterSchema = z.object({
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
+        pickedPowerId: z.string().optional(),
         pickedSpecialties: specialtySchema.array(),
         pickedMeritsAndFlaws: meritFlawSchema.array(),
         homebrew: predatorTypeRulesSchema
@@ -109,6 +121,7 @@ export const characterSchema = z.object({
     desire: z.string(),
 
     attributes: attributesSchema,
+    attributeDraft: attributeDraftSchema.optional(),
     skills: skillsSchema,
     skillSpecialties: specialtySchema.array(),
     availableDisciplineNames: disciplineNameSchema.array(),
@@ -116,6 +129,8 @@ export const characterSchema = z.object({
     disciplineLevels: z.record(z.string(), z.number().int().min(0).max(5)),
     rituals: ritualSchema.array(),
     ceremonies: ceremonySchema.array().optional().default([]),
+    freeRitual: freeGrimoireChoiceSchema.optional(),
+    freeCeremony: freeGrimoireChoiceSchema.optional(),
     customDisciplines: z
         .record(disciplineNameSchema, customDisciplineSchema)
         .optional()
@@ -127,6 +142,7 @@ export const characterSchema = z.object({
     maxHealth: z.number().min(0).int(),
     willpower: z.number().min(0).int(),
     experience: z.number().min(0).int(),
+    generationBonusXp: z.number().min(0).int().optional(),
     humanity: z.number().min(0).int(),
 
     merits: meritFlawSchema.array(),

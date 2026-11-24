@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { migrate } from "drizzle-orm/better-sqlite3/migrator"
 import { db, schema } from "./db/index.js"
 import { buildApp } from "./app.js"
+import { schemaVersion } from "./schemas/CharacterSchema.js"
 
 const auth = vi.hoisted(() => ({ userId: "concurrency-owner" }))
 vi.mock("./config/workos.js", () => ({
@@ -77,6 +78,33 @@ afterAll(async () => {
 })
 
 describe("character save concurrency and socket transport", () => {
+    it("round-trips optional creator choices through character storage", async () => {
+        const data = {
+            name: "Creator choices",
+            version: schemaVersion,
+            generationBonusXp: 35,
+            attributeDraft: { strongest: "strength", weakest: null, medium: [] },
+            predatorType: {
+                name: "Consensualist",
+                pickedDiscipline: "auspex",
+                pickedPowerId: "official:auspex:Heightened Senses",
+                pickedSpecialties: [],
+                pickedMeritsAndFlaws: []
+            },
+            freeRitual: { identity: "official::Blood Walk", addedByCreator: true },
+            freeCeremony: { identity: "official:oblivion:Example", addedByCreator: false }
+        }
+        const created = await app.inject({
+            method: "POST",
+            url: "/characters",
+            headers,
+            payload: { name: data.name, version: data.version, data }
+        })
+        expect(created.statusCode).toBe(201)
+        const { id } = created.json()
+        const saved = await app.inject({ url: `/characters/${id}`, headers })
+        expect(saved.json()).toMatchObject({ version: 14, data })
+    })
     it("requires a revision and refuses a stale whole-document save", async () => {
         const save = (characterVersion: number, notes: string) =>
             app.inject({

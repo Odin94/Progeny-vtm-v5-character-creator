@@ -77,8 +77,9 @@ test("a blocked power shows its reason inline on desktop without hovering", asyn
     // Open the Animalism clan accordion.
     await page.getByTestId("discipline-animalism-accordion").click()
 
-    // Atavism is Animalism level 2. With no lower pick it is blocked — and the reason is
-    // rendered inline, visible immediately (no hover on the Take button required).
+    // Attempting the blocked level-2 pick reveals the reason inline.
+    // The control uses aria-disabled, and still accepts clicks to explain the block.
+    await page.getByTestId("take-power-atavism-button").click({ force: true })
     const atavismBlocked = page.getByTestId("take-power-atavism-blocked")
     await expect(atavismBlocked).toBeVisible()
     await expect(atavismBlocked).toContainText("Pick 1 lower-level Animalism power first")

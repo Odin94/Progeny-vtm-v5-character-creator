@@ -1,11 +1,9 @@
 import { MantineProvider } from "@mantine/core"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import {
-    getCharacterWithGeneration,
-    getGenerationBonusXp,
-    default as GenerationPicker
-} from "~/generator/components/GenerationPicker"
+import { getEmptyCharacter } from "~/data/Character"
+import { getCharacterWithGeneration } from "~/generator/generation"
+import GenerationPicker from "~/generator/components/GenerationPicker"
 import { getBasicTestCharacter } from "./testUtils"
 
 vi.mock("~/utils/analytics", () => ({
@@ -33,7 +31,7 @@ globalThis.ResizeObserver = class {
 }
 
 describe("GenerationPicker", () => {
-    it("sets Thin-bloods to generation 14 despite an earlier generation draft", () => {
+    it("sets Thin-bloods to generation 14 when an earlier generation is stored", () => {
         const character = {
             ...getBasicTestCharacter(),
             clan: "Thin-blood" as const,
@@ -46,8 +44,6 @@ describe("GenerationPicker", () => {
                     character={character}
                     setCharacter={setCharacter}
                     nextStep={vi.fn()}
-                    generation="13"
-                    setGeneration={vi.fn()}
                 />
             </MantineProvider>
         )
@@ -63,13 +59,7 @@ describe("GenerationPicker", () => {
 
         render(
             <MantineProvider>
-                <GenerationPicker
-                    character={character}
-                    setCharacter={vi.fn()}
-                    nextStep={vi.fn()}
-                    generation={null}
-                    setGeneration={vi.fn()}
-                />
+                <GenerationPicker character={character} setCharacter={vi.fn()} nextStep={vi.fn()} />
             </MantineProvider>
         )
 
@@ -88,8 +78,6 @@ describe("GenerationPicker", () => {
                     character={character}
                     setCharacter={setCharacter}
                     nextStep={vi.fn()}
-                    generation={null}
-                    setGeneration={vi.fn()}
                 />
             </MantineProvider>
         )
@@ -100,9 +88,7 @@ describe("GenerationPicker", () => {
     })
 
     it("replaces the generation budget after the Neonate XP was spent", () => {
-        const character = getBasicTestCharacter()
-        character.generation = 13
-        character.experience = getGenerationBonusXp(13)
+        const character = getCharacterWithGeneration(getEmptyCharacter(), 13)
         character.ephemeral.experienceSpent = 15
 
         const updated = getCharacterWithGeneration(character, 10)
@@ -112,14 +98,22 @@ describe("GenerationPicker", () => {
         expect(updated.ephemeral.experienceSpent).toBe(15)
     })
 
-    it("never lowers an existing XP total when generation changes", () => {
-        const character = getBasicTestCharacter()
-        character.generation = 10
-        character.experience = 35
+    it("replaces starting XP without subtracting earned or spent XP", () => {
+        const character = getCharacterWithGeneration(getEmptyCharacter(), 10)
+        character.experience += 7
+        character.ephemeral.experienceSpent = 21
 
         const updated = getCharacterWithGeneration(character, 13)
+        expect(updated).toMatchObject({ generation: 13, generationBonusXp: 15, experience: 22 })
+        expect(updated.ephemeral.experienceSpent).toBe(21)
+        expect(getCharacterWithGeneration(updated, 10).experience).toBe(42)
+        expect(getCharacterWithGeneration(updated, 13)).toBe(updated)
+    })
 
-        expect(updated.generation).toBe(13)
-        expect(updated.experience).toBe(35)
+    it("does not subtract XP with no recorded grant", () => {
+        const character = { ...getEmptyCharacter(), generation: 10, experience: 7 }
+
+        expect(getCharacterWithGeneration(character, 10).experience).toBe(7)
+        expect(getCharacterWithGeneration(character, 13).experience).toBe(22)
     })
 })

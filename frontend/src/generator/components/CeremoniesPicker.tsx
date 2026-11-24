@@ -15,6 +15,8 @@ import {
     characterHasCeremonyPrerequisite,
     getCeremonyPrerequisiteLabel
 } from "../../data/Ceremonies"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
+import { updateFreeGrimoireChoice } from "../creatorDrafts"
 import { upcase } from "../utils"
 import {
     generatorScrollableAreaStyle,
@@ -32,7 +34,7 @@ import classes from "./generatorCards.module.css"
 
 type CeremoniesPickerProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     nextStep: () => void
 }
 
@@ -58,7 +60,6 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
     const canTakeAnyCeremony = levelOneCeremonies.some((ceremony) =>
         characterHasCeremonyPrerequisite(character, ceremony)
     )
-    const chosenIdentities = new Set(character.ceremonies.map(getRitualIdentity))
 
     const handleTake = (ceremony: Ceremony) => {
         trackEvent({
@@ -66,7 +67,14 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
             category: "ceremonies",
             label: ceremony.name
         })
-        setCharacter({ ...character, ceremonies: [ceremony] })
+        setCharacter((current) => {
+            const { entries, choice } = updateFreeGrimoireChoice(
+                current.ceremonies,
+                current.freeCeremony,
+                ceremony
+            )
+            return { ...current, ceremonies: entries, freeCeremony: choice }
+        })
         nextStep()
     }
 
@@ -76,7 +84,10 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
             category: "ceremonies",
             label: "no valid prerequisite"
         })
-        setCharacter({ ...character, ceremonies: [] })
+        setCharacter((current) => {
+            const { entries } = updateFreeGrimoireChoice(current.ceremonies, current.freeCeremony)
+            return { ...current, ceremonies: entries, freeCeremony: undefined }
+        })
         nextStep()
     }
 
@@ -91,7 +102,7 @@ const CeremoniesPicker = ({ character, setCharacter, nextStep }: CeremoniesPicke
                 level={ceremony.level}
                 summary={upcase(ceremony.summary)}
                 homebrewSource={ceremony.homebrewSource}
-                selected={chosenIdentities.has(getRitualIdentity(ceremony))}
+                selected={character.freeCeremony?.identity === getRitualIdentity(ceremony)}
                 lockedReason={canTake ? undefined : `Requires the ${prerequisiteLabel} power`}
                 lockedNote={
                     canTake ? null : (

@@ -1,3 +1,4 @@
+import { getCharacterWithGeneration } from "../generation"
 import { ScrollArea, UnstyledButton } from "@mantine/core"
 import { notifications } from "@mantine/notifications"
 import { IconBook2, IconCheck } from "@tabler/icons-react"
@@ -81,9 +82,9 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                             ? character.flaws
                             : flawsWithoutThinbloodFlaws(character.flaws)
                     if (
+                        clanChanged &&
                         (notDefault(character, "disciplines") ||
-                            notDefault(character, "predatorType")) &&
-                        clan !== character.clan
+                            notDefault(character, "predatorType"))
                     ) {
                         notifications.show({
                             title: "Reset Disciplines",
@@ -91,35 +92,38 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                             autoClose: 7000,
                             color: "yellow"
                         })
+                    }
 
-                        setCharacter({
-                            ...character,
-                            clan,
-                            generation: clan === "Thin-blood" ? 14 : character.generation,
-                            bloodPotency: clan === "Thin-blood" ? 0 : character.bloodPotency,
-                            homebrewClan: undefined,
+                    const next = {
+                        ...character,
+                        clan,
+                        homebrewClan: undefined,
+                        availableDisciplineNames: clans[clan].nativeDisciplines,
+                        ...replacePredatorSkillBonuses(
+                            character,
+                            clanChanged
+                                ? { ...predatorType, pickedPowerId: undefined }
+                                : predatorType
+                        ),
+                        ...(clanChanged && {
                             disciplines: [],
                             disciplineLevels: {},
                             rituals: [],
+                            freeRitual: undefined,
                             ceremonies: [],
-                            availableDisciplineNames: clans[clan].nativeDisciplines,
-                            ...replacePredatorSkillBonuses(character, predatorType),
-                            merits: newMerits,
-                            flaws: newFlaws
-                        })
-                    } else {
-                        setCharacter({
-                            ...character,
-                            clan,
-                            generation: clan === "Thin-blood" ? 14 : character.generation,
-                            bloodPotency: clan === "Thin-blood" ? 0 : character.bloodPotency,
-                            homebrewClan: undefined,
-                            availableDisciplineNames: clans[clan].nativeDisciplines,
-                            ...replacePredatorSkillBonuses(character, predatorType),
-                            merits: newMerits,
-                            flaws: newFlaws
-                        })
+                            freeCeremony: undefined
+                        }),
+                        merits: newMerits,
+                        flaws: newFlaws
                     }
+                    setCharacter(
+                        clan === "Thin-blood"
+                            ? {
+                                  ...getCharacterWithGeneration(next, 14),
+                                  bloodPotency: 0
+                              }
+                            : next
+                    )
 
                     if (clanChanged) onClanChanged?.()
 
@@ -183,12 +187,19 @@ const ClanPicker = ({ character, setCharacter, nextStep, onClanChanged }: ClanPi
                         excludedMeritsAndFlaws: clan.excludedMeritsAndFlaws ?? [],
                         homebrewSource: source
                     },
-                    disciplines: [],
-                    disciplineLevels: {},
-                    rituals: [],
-                    ceremonies: [],
+                    ...(clanChanged && {
+                        disciplines: [],
+                        disciplineLevels: {},
+                        rituals: [],
+                        freeRitual: undefined,
+                        ceremonies: [],
+                        freeCeremony: undefined
+                    }),
                     availableDisciplineNames: clan.nativeDisciplines,
-                    ...replacePredatorSkillBonuses(character, predatorType)
+                    ...replacePredatorSkillBonuses(
+                        character,
+                        clanChanged ? { ...predatorType, pickedPowerId: undefined } : predatorType
+                    )
                 })
                 if (clanChanged) onClanChanged?.()
                 nextStep()

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Resume unfinished Attribute picks after a reload, recalculate starting XP when generation changes, and preserve learned powers, rituals, and ceremonies when revisiting creator choices.
+
 - Restore Progeny’s gothic redesign with quieter shared controls, a scannable clan catalog, a character sheet that uses the chosen clan color for key details, and a compact account roster.
 - Bring back the red ankh and clan cards, add a clan-colored glow to the sheet, flatten pip and Hunger markers, show available XP first, and move Sign Out to the right on the account page.
 - Simplify the start page actions, keep the creator dossier visible on laptops, and soften player name tags and clan accents in coteries.

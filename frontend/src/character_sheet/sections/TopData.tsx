@@ -1,3 +1,4 @@
+import { getGenerationExperience } from "~/data/Generation"
 import { changeSheetPredatorType } from "../utils/changePredatorType"
 import { getCharacterDraftIdentity } from "~/utils/characterDraft"
 import { TextInput, NumberInput, Select } from "@mantine/core"
@@ -91,7 +92,12 @@ const TopData = ({ options }: TopDataProps) => {
     const generationField = useDebouncedUncontrolledNumberField({
         character,
         setCharacter,
-        field: "generation"
+        field: "generation",
+        updateFn: (char, generation) => ({
+            ...char,
+            ...getGenerationExperience(char, generation),
+            generation
+        })
     })
     const sireField = useDebouncedUncontrolledStringField({
         character,
@@ -114,7 +120,15 @@ const TopData = ({ options }: TopDataProps) => {
     const experienceField = useDebouncedUncontrolledNumberField({
         character,
         setCharacter,
-        field: "experience"
+        field: "experience",
+        updateFn: (char, experience) => ({
+            ...char,
+            experience,
+            generationBonusXp:
+                char.generationBonusXp === undefined
+                    ? undefined
+                    : Math.min(experience, char.generationBonusXp)
+        })
     })
 
     const clanSelect = (

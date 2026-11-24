@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { attributesSchema } from "./Attributes.js"
+import { attributesKeySchema, attributesSchema } from "./Attributes.js"
 import {
     powerSchema,
     ritualSchema,
@@ -14,7 +14,13 @@ import { predatorTypeRulesSchema, predatorDisciplineSchema } from "./PredatorTyp
 import { clans } from "./Clans"
 import { getAllKnownMeritsAndFlaws } from "./MeritsAndFlaws"
 import type { Power } from "./Disciplines.js"
-import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import {
+    getPowerDisciplineIdentity,
+    getPowerIdentity,
+    getRitualIdentity
+} from "~/utils/homebrewOptions"
+import { getGenerationBonusXp } from "./Generation"
+import { getPredatorDisciplineIdentity } from "./predatorTypeOptions"
 
 export const clanBaneSchema = z.enum(["default", "variant"])
 export type ClanBane = z.infer<typeof clanBaneSchema>
@@ -58,7 +64,7 @@ export const touchstoneSchema = z.object({
 
 export type Touchstone = z.infer<typeof touchstoneSchema>
 
-export const schemaVersion = 13
+export const schemaVersion = 14
 
 export const disciplineLevelsSchema = z.record(z.string(), z.number().int().min(0).max(5))
 
@@ -67,6 +73,20 @@ export const customTextSchema = z.object({
     skillSpecialties: z.record(z.string(), z.string()).default({}),
     disciplinePowers: z.record(z.string(), z.string()).default({})
 })
+
+const attributeDraftSchema = z.object({
+    strongest: attributesKeySchema.nullable(),
+    weakest: attributesKeySchema.nullable(),
+    medium: attributesKeySchema.array()
+})
+
+const freeGrimoireChoiceSchema = z.object({
+    identity: z.string(),
+    addedByCreator: z.boolean()
+})
+
+export type AttributeSetting = z.infer<typeof attributeDraftSchema>
+export type FreeGrimoireChoice = z.infer<typeof freeGrimoireChoiceSchema>
 
 export const characterSchema = z.object({
     id: z.string().optional().default(""),
@@ -105,6 +125,7 @@ export const characterSchema = z.object({
     predatorType: z.object({
         name: predatorTypeNameSchema,
         pickedDiscipline: disciplineNameSchema,
+        pickedPowerId: z.string().optional(),
         pickedSpecialties: specialtySchema.array(),
         pickedMeritsAndFlaws: meritFlawSchema.array(),
         homebrew: predatorTypeRulesSchema
@@ -121,6 +142,7 @@ export const characterSchema = z.object({
     desire: z.string(),
 
     attributes: attributesSchema,
+    attributeDraft: attributeDraftSchema.optional(),
     skills: skillsSchema,
     skillSpecialties: specialtySchema.array(),
     availableDisciplineNames: disciplineNameSchema.array(),
@@ -128,6 +150,8 @@ export const characterSchema = z.object({
     disciplineLevels: disciplineLevelsSchema,
     rituals: ritualSchema.array(),
     ceremonies: ceremonySchema.array().optional().default([]),
+    freeRitual: freeGrimoireChoiceSchema.optional(),
+    freeCeremony: freeGrimoireChoiceSchema.optional(),
     customDisciplines: z
         .record(disciplineNameSchema, customDisciplineSchema)
         .optional()
@@ -139,6 +163,7 @@ export const characterSchema = z.object({
     maxHealth: z.number().min(0).int(),
     willpower: z.number().min(0).int(),
     experience: z.number().min(0).int(),
+    generationBonusXp: z.number().min(0).int().optional(),
     humanity: z.number().min(0).int(),
 
     merits: meritFlawSchema.array(),
@@ -430,6 +455,7 @@ export const applyCharacterCompatibilityPatches = (parsed: Record<string, unknow
     patchV10ToV11Compatibility(parsed)
     patchV11ToV12Compatibility(parsed)
     patchV12ToV13Compatibility(parsed)
+    patchV13ToV14Compatibility(parsed)
 
     parsed["version"] = schemaVersion
 }
@@ -543,4 +569,81 @@ export const patchV6ToV7Compatibility = (parsed: Record<string, unknown>): void 
 export const patchV12ToV13Compatibility = (parsed: Record<string, unknown>): void => {
     // Existing free-text Clan Curse descriptions are preserved without guessing a clan.
     if (typeof parsed["version"] !== "number" || parsed["version"] < 13) parsed["version"] = 13
+}
+
+export const patchV13ToV14Compatibility = (parsed: Record<string, unknown>): void => {
+    if (typeof parsed["version"] === "number" && parsed["version"] >= 14) return
+
+    // Older saves only record the total. Recognize the standard grant when it fits
+    // in that total and preserve every XP point, including any ambiguous surplus.
+    const generation = parsed["generation"]
+    const experience = parsed["experience"]
+    if (
+        parsed["generationBonusXp"] === undefined &&
+        typeof generation === "number" &&
+        typeof experience === "number"
+    ) {
+        const bonus = getGenerationBonusXp(generation)
+        parsed["generationBonusXp"] = experience >= bonus ? bonus : 0
+    }
+
+    const rawPredatorType = parsed["predatorType"]
+    const { predatorType, disciplines, disciplineLevels } =
+        characterSchema
+            .pick({ predatorType: true, disciplines: true, disciplineLevels: true })
+            .partial()
+            .safeParse(parsed).data ?? {}
+    if (
+        isRecord(rawPredatorType) &&
+        predatorType?.name &&
+        predatorType.pickedDiscipline &&
+        !predatorType.pickedPowerId &&
+        disciplines &&
+        disciplineLevels
+    ) {
+        const identity = getPredatorDisciplineIdentity({ predatorType })
+        const candidates = disciplines.filter(
+            (power) => getPowerDisciplineIdentity(power) === identity
+        )
+        // A sheet predator change can grant a dot without a power. In that case
+        // a lone matching power could have been purchased after the dot was granted.
+        if (
+            candidates.length === 1 &&
+            disciplineLevels[identity] === 1 &&
+            candidates[0].level === 1
+        ) {
+            parsed["predatorType"] = {
+                ...rawPredatorType,
+                pickedPowerId: getPowerIdentity(candidates[0])
+            }
+        }
+    }
+
+    // Legacy ritual and ceremony arrays do not distinguish free picks from learned entries.
+    // Leave their provenance unknown so replacing a free pick cannot erase an older entry.
+    parsed["version"] = 14
+}
+
+// Sheet edits can remove chosen entries independently of the creator. Drop their
+// markers as well, so a later purchase of the same entry is treated as learned.
+export const clearMissingCreatorChoices = (character: Character): Character => {
+    const { predatorType, disciplines, freeRitual, rituals, freeCeremony, ceremonies } = character
+    return {
+        ...character,
+        predatorType:
+            predatorType.pickedPowerId &&
+            !disciplines.some((power) => getPowerIdentity(power) === predatorType.pickedPowerId)
+                ? { ...predatorType, pickedPowerId: undefined }
+                : predatorType,
+        freeRitual:
+            freeRitual &&
+            rituals.some((ritual) => getRitualIdentity(ritual) === freeRitual.identity)
+                ? freeRitual
+                : undefined,
+        freeCeremony:
+            freeCeremony &&
+            ceremonies.some((ceremony) => getRitualIdentity(ceremony) === freeCeremony.identity)
+                ? freeCeremony
+                : undefined
+    }
 }

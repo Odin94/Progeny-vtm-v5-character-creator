@@ -610,7 +610,12 @@ const PredatorTypeModal = ({
                                 const nextCharacter = {
                                     ...character,
                                     ...adjustedPickedMeritsAndFlaws,
-                                    ...replacePredatorSkillBonuses(character, nextPredatorType),
+                                    ...replacePredatorSkillBonuses(character, {
+                                        ...nextPredatorType,
+                                        pickedPowerId: shouldResetDisciplineProgress
+                                            ? undefined
+                                            : character.predatorType.pickedPowerId
+                                    }),
                                     disciplines: shouldResetDisciplineProgress
                                         ? []
                                         : character.disciplines,
@@ -618,6 +623,12 @@ const PredatorTypeModal = ({
                                         ? {}
                                         : character.disciplineLevels,
                                     rituals: shouldResetDisciplineProgress ? [] : character.rituals,
+                                    freeRitual: shouldResetDisciplineProgress
+                                        ? undefined
+                                        : character.freeRitual,
+                                    freeCeremony: shouldResetDisciplineProgress
+                                        ? undefined
+                                        : character.freeCeremony,
                                     ceremonies: shouldResetDisciplineProgress
                                         ? []
                                         : character.ceremonies

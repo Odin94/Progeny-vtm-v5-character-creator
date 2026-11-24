@@ -3,7 +3,11 @@ import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
 import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
 import { describe, it, expect } from "vitest"
 import { getBasicTestCharacter } from "./testUtils"
-import { applyCharacterCompatibilityPatches, characterSchema } from "~/data/Character"
+import {
+    applyCharacterCompatibilityPatches,
+    characterSchema,
+    schemaVersion
+} from "~/data/Character"
 import { getClanBaneText, getClanCompulsionText, getBaneSeverity } from "~/data/VariantClanBanes"
 
 describe("Thin-blood Clan Curse", () => {
@@ -54,7 +58,7 @@ describe("Thin-blood Clan Curse", () => {
             ]
         }
         applyCharacterCompatibilityPatches(c)
-        expect(c.version).toBe(13)
+        expect(c.version).toBe(schemaVersion)
         expect(c.flaws[0].summary).toBe("Brujah curse notes")
         expect(characterSchema.parse(c).flaws[0].clanCurse).toBeUndefined()
     })

@@ -6,6 +6,7 @@ import { MantineProvider } from "@mantine/core"
 import { useState } from "react"
 import { getEmptyCharacter, type Character } from "~/data/Character"
 import { disciplines, type Power } from "~/data/Disciplines"
+import { getPowerIdentity } from "~/utils/homebrewOptions"
 import { changeSheetPredatorType } from "~/character_sheet/utils/changePredatorType"
 import TopData from "~/character_sheet/sections/TopData"
 import type { SheetOptions } from "~/character_sheet/CharacterSheet"
@@ -48,6 +49,7 @@ const hunter = (): Character => ({
     predatorType: {
         name: "Consensualist",
         pickedDiscipline: "auspex",
+        pickedPowerId: getPowerIdentity(power("auspex", "Predator bonus")),
         pickedSpecialties: [],
         pickedMeritsAndFlaws: []
     },
@@ -113,6 +115,16 @@ describe("sheet predator changes", () => {
         const result = changeSheetPredatorType(current, nextPredator)
         expect(result.disciplines.map((p) => p.name)).toEqual(["Retained"])
         expect(result.disciplineLevels["official:auspex"]).toBe(2)
+    })
+    it("removes the recorded award and keeps a later purchase in the same Discipline", () => {
+        const current = hunter()
+        current.disciplineLevels["official:auspex"] = 2
+        current.disciplines.push(power("auspex", "Purchased later"))
+
+        const updated = changeSheetPredatorType(current, nextPredator)
+        expect(updated.disciplines.map((power) => power.name)).toContain("Purchased later")
+        expect(updated.disciplines.map((power) => power.name)).not.toContain("Predator bonus")
+        expect(updated.predatorType.pickedPowerId).toBeUndefined()
     })
     it("does not remove any powers when the bonus discipline stays the same", () => {
         const current = hunter()

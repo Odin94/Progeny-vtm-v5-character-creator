@@ -5,7 +5,8 @@ import { useEffect, useMemo } from "react"
 import { Character, getEmptyCharacter } from "../../data/Character"
 import { trackEvent } from "../../utils/analytics"
 import { calculateBloodPotency } from "../../data/BloodPotency"
-import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { getGenerationBonusXp } from "~/data/Generation"
+import { getCharacterWithGeneration } from "../generation"
 import { globals } from "../../globals"
 import {
     generatorScrollableAreaStyle,
@@ -26,8 +27,6 @@ type GenerationPickerProps = {
     character: Character
     setCharacter: (character: Character) => void
     nextStep: () => void
-    generation: string | null
-    setGeneration: (generation: string | null) => void
 }
 
 type GenerationOption = {
@@ -44,27 +43,6 @@ const generationOptions: GenerationOption[] = [
     { value: "10", label: "10th Gen - Ancilla", tier: "Ancilla" }
 ]
 
-export const getGenerationBonusXp = (generation: number) => {
-    if (generation === 13 || generation === 12) return 15
-    if (generation === 11 || generation === 10) return 35
-    return 0
-}
-
-export const getCharacterWithGeneration = (character: Character, generation: number) => {
-    const updatedCharacter = {
-        ...character,
-        generation,
-        // Changing generation may grant a larger starting budget, but it must never
-        // take XP away from an existing character. This makes a 13th-generation
-        // character with 15 XP become 35 XP at 10th generation while preserving a
-        // character that already has more XP than the newly selected budget.
-        experience: Math.max(character.experience, getGenerationBonusXp(generation))
-    }
-    updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-
-    return updatedCharacter
-}
-
 const getGenerationSummary = (generation: number) => {
     const baseCharacter = { ...getEmptyCharacter(), generation }
     const bloodPotency = calculateBloodPotency(baseCharacter)
@@ -75,23 +53,11 @@ const getGenerationSummary = (generation: number) => {
     return { bloodPotency, bonusXp, additionalAdvantageDots, additionalFlawDots }
 }
 
-const GenerationPicker = ({
-    character,
-    setCharacter,
-    nextStep,
-    generation,
-    setGeneration
-}: GenerationPickerProps) => {
+const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPickerProps) => {
     const phoneScreen = globals.isPhoneScreen
 
     const isThinBlood = character.clan === "Thin-blood"
-    const defaultGeneration = isThinBlood ? "14" : "13"
-    const selectedGenerationValue = isThinBlood
-        ? "14"
-        : (generation ??
-          (character.generation !== getEmptyCharacter().generation
-              ? character.generation.toString()
-              : defaultGeneration))
+    const selectedGenerationValue = isThinBlood ? "14" : String(character.generation || 13)
 
     const availableOptions = useMemo(
         () =>
@@ -103,58 +69,36 @@ const GenerationPicker = ({
 
     const selectedGeneration =
         availableOptions.find((option) => option.value === selectedGenerationValue) ?? null
-    const generationSummary = selectedGenerationValue
-        ? getGenerationSummary(parseInt(selectedGenerationValue, 10))
-        : null
+    const selectedNumber = Number(selectedGenerationValue)
+    const generationSummary = getGenerationSummary(selectedNumber)
 
     // Generation defaults to Neonate (or Thin-blood) in the UI. Persist that displayed choice
     // immediately so sidebar navigation cannot leave a character with a shown XP bonus that was
     // never written to the sheet.
     useEffect(() => {
-        if (!selectedGenerationValue) return
-
-        const selectedGenerationNumber = parseInt(selectedGenerationValue, 10)
-        const updatedCharacter = getCharacterWithGeneration(character, selectedGenerationNumber)
-
-        if (
-            updatedCharacter.generation !== character.generation ||
-            updatedCharacter.experience !== character.experience
-        ) {
-            setCharacter(updatedCharacter)
-        }
+        const updated = getCharacterWithGeneration(character, Number(selectedGenerationValue))
+        if (updated !== character) setCharacter(updated)
     }, [character, selectedGenerationValue, setCharacter])
 
     const handleGenerationChange = (value: string | null) => {
-        if (value === null && selectedGenerationValue !== null) {
-            return
-        }
-
-        setGeneration(value)
-        if (value !== null) {
-            setCharacter(getCharacterWithGeneration(character, parseInt(value, 10)))
-        }
+        if (value !== null) setCharacter(getCharacterWithGeneration(character, Number(value)))
     }
 
     const confirmButton = (
         <GeneratorConfirmButton
             data-testid="generation-confirm-button"
-            disabledReason={
-                selectedGenerationValue === null ? "Choose a generation first" : undefined
-            }
             onClick={() => {
-                const genValue = parseInt(selectedGenerationValue ?? "0")
-                setCharacter(getCharacterWithGeneration(character, genValue))
+                setCharacter(getCharacterWithGeneration(character, selectedNumber))
                 trackEvent({
                     action: "generation submit clicked",
                     category: "generation",
-                    label: selectedGenerationValue ?? "0"
+                    label: selectedGenerationValue
                 })
                 nextStep()
             }}
         />
     )
 
-    const selectedNumber = selectedGenerationValue ? parseInt(selectedGenerationValue, 10) : null
     const ladder = [14, 13, 12, 11, 10]
 
     return (
@@ -208,7 +152,7 @@ const GenerationPicker = ({
 
                             {phoneScreen ? confirmButton : null}
 
-                            {selectedGeneration && generationSummary && selectedNumber ? (
+                            {selectedGeneration ? (
                                 <Panel
                                     tone="ornate"
                                     p={phoneScreen ? "md" : "lg"}

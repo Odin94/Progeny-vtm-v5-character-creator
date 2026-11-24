@@ -3,7 +3,8 @@ import { IconRotate2 } from "@tabler/icons-react"
 import { useRef } from "react"
 import { trackEvent } from "../../utils/analytics"
 import { AttributesKey, attributeDescriptions, attributesKeySchema } from "../../data/Attributes"
-import { Character, getEmptyCharacter } from "../../data/Character"
+import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
+import { AttributeSetting, Character, getEmptyCharacter } from "../../data/Character"
 import { globals } from "../../globals"
 import { upcase, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
 import {
@@ -13,26 +14,22 @@ import {
     GeneratorSectionDivider,
     GeneratorStepFooter
 } from "./sharedGeneratorUi"
-import { AttributeSetting, emptyAttributeSetting } from "../creatorDrafts"
+import { getAttributeSetting } from "../creatorDrafts"
 import { PickColumnHeader, PickGrid, PickTile, type PickTone } from "./PickTile"
 
 const toneForLevel: Record<number, PickTone> = { 4: "blood", 3: "gold", 1: "ash" }
 
 type AttributePickerProps = {
     character: Character
-    setCharacter: (character: Character) => void
+    setCharacter: SetCharacter
     nextStep: () => void
-    pickedAttributes: AttributeSetting
-    setPickedAttributes: (attributes: AttributeSetting) => void
 }
 
-const AttributePicker = ({
-    character,
-    setCharacter,
-    nextStep,
-    pickedAttributes,
-    setPickedAttributes
-}: AttributePickerProps) => {
+const AttributePicker = ({ character, setCharacter, nextStep }: AttributePickerProps) => {
+    const pickedAttributes = character.attributeDraft ?? getAttributeSetting(character.attributes)
+    const setPickedAttributes = (attributeDraft: AttributeSetting) => {
+        setCharacter((current) => ({ ...current, attributeDraft }))
+    }
     const phoneScreen = globals.isPhoneScreen
     const excessMediumAttributes = Math.max(0, pickedAttributes.medium.length - 3)
     const hasConfirmedAttributes = Object.values(character.attributes).some((value) => value !== 1)
@@ -63,21 +60,24 @@ const AttributePicker = ({
         attributes[selection.weakest] = 1
         selection.medium.forEach((medium) => (attributes[medium] = 3))
 
-        const updatedCharacter = { ...character, attributes }
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        setCharacter(updatedCharacter)
+        setCharacter((current) => {
+            const updated = { ...current, attributes, attributeDraft: undefined }
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updated)
+            return updated
+        })
         if (advance) nextStep()
     }
 
     const resetAttributes = () => {
-        setPickedAttributes(emptyAttributeSetting)
-
-        const updatedCharacter = {
-            ...character,
-            attributes: getEmptyCharacter().attributes
-        }
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(updatedCharacter)
-        setCharacter(updatedCharacter)
+        setCharacter((current) => {
+            const updated = {
+                ...current,
+                attributeDraft: undefined,
+                attributes: getEmptyCharacter().attributes
+            }
+            updateHealthAndWillpowerAndBloodPotencyAndHumanity(updated)
+            return updated
+        })
     }
 
     // Nothing assigned yet: this is the state the drop-off signals describe (users read the
@@ -150,9 +150,10 @@ const AttributePicker = ({
                     ...pickedAttributes,
                     medium: [...pickedAttributes.medium, attribute]
                 }
-                setPickedAttributes(finalPick)
                 if (finalPick.medium.length === 3 && !hasConfirmedAttributes) {
                     commitAttributes(finalPick, true)
+                } else {
+                    setPickedAttributes(finalPick)
                 }
             }
         } else {
