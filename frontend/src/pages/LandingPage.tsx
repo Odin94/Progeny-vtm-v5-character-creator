@@ -94,29 +94,6 @@ function Chapter({ index, id, plate, plateFocus, title, bullets, body, action }:
     )
 }
 
-/** Concentric lozenges behind the wordmark — the Progeny sigil drawn large and faint. */
-function HeroSigil() {
-    return (
-        <svg
-            className="landing__sigil"
-            viewBox="0 0 400 400"
-            fill="none"
-            aria-hidden="true"
-            focusable="false"
-        >
-            <path d="M200 6 394 200 200 394 6 200Z" stroke="currentColor" strokeOpacity="0.5" />
-            <path d="M200 40 360 200 200 360 40 200Z" stroke="currentColor" strokeOpacity="0.28" />
-            <path
-                d="M200 92 308 200 200 308 92 200Z"
-                stroke="currentColor"
-                strokeOpacity="0.18"
-                strokeDasharray="2 6"
-            />
-            <path d="M200 0V400" stroke="currentColor" strokeOpacity="0.14" />
-        </svg>
-    )
-}
-
 export default function LandingPage() {
     const shouldReduceMotion = useReducedMotion()
     const navigate = useNavigate()
@@ -310,7 +287,6 @@ export default function LandingPage() {
                         initial="hidden"
                         animate="shown"
                     >
-                        <HeroSigil />
                         <motion.h1
                             id="landing-title"
                             className="landing__title"

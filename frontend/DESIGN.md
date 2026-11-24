@@ -59,7 +59,7 @@ Self-hosted via `@fontsource/*`, imported once in `main.tsx`. No Google Fonts `@
 | `--pg-scrim`           | 74% black         | Modal overlay                                              |
 
 The app canvas uses the solid background token. The sheet can show the chosen photograph around
-its opaque sheet surface. AppShell.Main is transparent.
+its sheet surface, with a soft gradient in the selected clan or preference color. AppShell.Main is transparent.
 
 ### Ink
 
@@ -363,11 +363,11 @@ and homebrew collections (fetched only once it is opened). Open it programmatica
 
 ### Other shell pieces
 
-- `AppTopbar` (`~/components/AppTopbar`, re-exported by `~/topbar/Topbar`): sigil + wordmark,
+- `AppTopbar` (`~/components/AppTopbar`, re-exported by `~/topbar/Topbar`): original red ankh and wordmark,
   uppercase nav links with a blood underline for the active route, quick-nav trigger, burger
   for the generator's step list, impersonation band (amber stripes). Height-agnostic; place it in
   an `AppShell.Header` of `52px` (or use `PageShell`).
-- `BrandMark` (`~/components/ui`): the lozenge-and-drop sigil.
+- `BrandMark` (`~/components/ui`): the original red ankh from the favicon.
 - `Ornament` (`~/components/ui`): small lozenge rule (`align="center" | "start"`, inherits color).
 - `OrnamentalDivider` (`~/components/OrnamentalDivider`): labeled divider for homebrew previews
   (fades toward the edges; `color` prop, `size="large"`, `compact`).

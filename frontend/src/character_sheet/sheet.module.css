@@ -15,7 +15,11 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--pg-abyss) 73%, transparent);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--pg-abyss) 49%, transparent),
+        color-mix(in srgb, var(--pg-abyss) 85%, transparent)
+    );
 }
 
 .page {
@@ -30,9 +34,20 @@
     max-width: 1240px;
     margin: 0 auto;
     padding: clamp(16px, 3.4vw, 44px);
-    border: 1px solid var(--pg-border);
+    border: 1px solid color-mix(in srgb, var(--mantine-primary-color-6) 27%, var(--pg-border));
     border-radius: var(--pg-radius-xl);
-    background: var(--pg-bg);
+    background:
+        radial-gradient(
+            ellipse 70% 340px at 46% 0,
+            color-mix(in srgb, var(--mantine-primary-color-6) 26%, transparent),
+            transparent 100%
+        ),
+        radial-gradient(
+            ellipse 55% 440px at 100% 100%,
+            color-mix(in srgb, var(--pg-blood-deep) 21%, transparent),
+            transparent 100%
+        ),
+        color-mix(in srgb, var(--pg-bg) 93%, transparent);
 }
 
 .sheetContent {
@@ -336,16 +351,12 @@
     padding-block: var(--pg-space-3);
 }
 
-.field[data-wide] {
-    grid-column: span 2;
-}
-
 @media (max-width: 36em) {
     .ledger {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .field[data-wide] {
+    .field[data-wide-on-mobile] {
         grid-column: 1 / -1;
     }
 }
@@ -370,42 +381,44 @@
     gap: 6px;
 }
 
-.xp {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    font-variant-numeric: tabular-nums;
-}
-
-.xpSpent {
+.xpAvailable {
     font-family: var(--pg-font-display);
     font-size: 1.25rem;
     font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
     color: var(--mantine-primary-color-4);
 }
 
-.xpTotal {
-    font-size: 0.9375rem;
-    color: var(--pg-ink-2);
-}
-
-.xpSlash {
-    color: var(--pg-ink-4);
+.xpAvailable[data-overspent] {
+    color: var(--mantine-color-red-4);
 }
 
 .xpMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
     font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
     color: var(--pg-ink-3);
 }
 
+.xpEdit {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+}
+
 .xpInput {
-    width: 72px;
+    width: 4.5rem;
+    min-width: 0;
 }
 
 .xpInput :global(.mantine-NumberInput-input) {
-    font-weight: 700;
+    padding-inline: 4px;
     text-align: center;
-    color: var(--mantine-primary-color-4);
 }
 
 .motives {
@@ -972,7 +985,6 @@
     width: 9px;
     height: 12px;
     color: var(--pg-blood-bright);
-    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--pg-blood-bright) 50%, transparent));
 }
 
 .tag {
@@ -1399,23 +1411,11 @@
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: radial-gradient(
-        circle at 35% 30%,
-        var(--mantine-primary-color-3),
-        var(--mantine-primary-color-6) 55%,
-        var(--mantine-primary-color-9)
-    );
-    box-shadow: 0 0 6px -1px color-mix(in srgb, var(--mantine-primary-color-6) 80%, transparent);
+    background: var(--mantine-primary-color-5);
 }
 
 .levelDots[data-kind="flaw"] .levelDot {
-    background: radial-gradient(
-        circle at 35% 30%,
-        var(--pg-blood-bright),
-        var(--pg-blood) 55%,
-        var(--pg-blood-deep)
-    );
-    box-shadow: 0 0 6px -1px color-mix(in srgb, var(--pg-blood-bright) 70%, transparent);
+    background: var(--pg-blood-bright);
 }
 
 .levelZero {

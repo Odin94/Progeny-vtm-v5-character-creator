@@ -1703,6 +1703,7 @@ const MePage = ({ tab, onTabChange }: MePageProps = {}) => {
                             </SupportConversationButton>
                             <Button
                                 onClick={signOut}
+                                className={classes.signOut}
                                 variant="subtle"
                                 color="gray"
                                 leftSection={<IconLogout size={16} />}

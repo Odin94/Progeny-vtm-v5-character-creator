@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Restore Progeny’s gothic redesign with quieter shared controls, a scannable clan catalog, a character sheet that uses the chosen clan color for key details, and a compact account roster.
+- Bring back the red ankh and clan cards, add a clan-colored glow to the sheet, flatten pip and Hunger markers, show available XP first, and move Sign Out to the right on the account page.
 - Add a quick navigator (Ctrl+K / ⌘K) for jumping to pages, coteries and homebrew collections, right-click menus on characters, coteries and homebrew lists, and drag-and-drop or paste for JSON and image uploads.
 - Add a Reset to default button to the 3D dice throw settings.
 - Angle sorted dice faces slightly toward the camera so every die in the grid reads evenly, without the bright environment flare that rolled dice keep.

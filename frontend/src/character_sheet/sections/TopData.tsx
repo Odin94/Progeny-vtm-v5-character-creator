@@ -23,6 +23,7 @@ import PredatorTypeModal from "~/components/PredatorTypeModal"
 import CharacterDescription from "../components/CharacterDescription"
 import classes from "../sheet.module.css"
 import { getOrdinal } from "../utils/ordinal"
+import { getAvailableXP } from "../utils/xp"
 
 type TopDataProps = {
     options: SheetOptions
@@ -31,13 +32,13 @@ type TopDataProps = {
 const LedgerField = ({
     label,
     children,
-    wide = false
+    wideOnMobile = false
 }: {
     label: string
     children: ReactNode
-    wide?: boolean
+    wideOnMobile?: boolean
 }) => (
-    <div className={classes.field} data-wide={wide || undefined}>
+    <div className={classes.field} data-wide-on-mobile={wideOnMobile || undefined}>
         <span className={classes.label}>{label}</span>
         {children}
     </div>
@@ -225,7 +226,8 @@ const TopData = ({ options }: TopDataProps) => {
         />
     )
 
-    const availableXP = character.experience - character.ephemeral.experienceSpent
+    const spentXP = character.ephemeral.experienceSpent
+    const availableXP = getAvailableXP(character)
     const identityDetails = [
         clan?.name ?? "",
         character.generation ? `${getOrdinal(character.generation)} generation` : "",
@@ -334,43 +336,50 @@ const TopData = ({ options }: TopDataProps) => {
                             <FieldText value={character.player} />
                         )}
                     </LedgerField>
-                    <LedgerField label="Experience">
-                        <div className={classes.xp}>
-                            {isExperienceSpentEditable ? (
-                                <NumberInput
-                                    className={classes.xpInput}
-                                    aria-label="Experience spent"
-                                    value={experienceSpentField.value}
-                                    onChange={experienceSpentField.onChange}
-                                    min={0}
-                                    size="sm"
-                                    hideControls
-                                    color={primaryColor}
-                                />
-                            ) : (
-                                <span className={classes.xpSpent}>
-                                    {character.ephemeral.experienceSpent}
-                                </span>
-                            )}
-                            <span className={classes.xpSlash}>/</span>
-                            {isExperienceEditable ? (
-                                <NumberInput
-                                    className={classes.xpInput}
-                                    aria-label="Total experience"
-                                    value={experienceField.value}
-                                    onChange={experienceField.onChange}
-                                    min={0}
-                                    size="sm"
-                                    hideControls
-                                    color={primaryColor}
-                                />
-                            ) : (
-                                <span className={classes.xpTotal}>{character.experience}</span>
-                            )}
-                        </div>
-                        <span className={classes.xpMeta}>
-                            {availableXP >= 0 ? `${availableXP} available` : "Overspent"}
+                    <LedgerField label="Experience" wideOnMobile={isExperienceSpentEditable}>
+                        <span
+                            className={classes.xpAvailable}
+                            data-overspent={availableXP < 0 || undefined}
+                        >
+                            {availableXP}
                         </span>
+                        {isExperienceEditable ? (
+                            <div className={classes.xpMeta}>
+                                <span>spent</span>
+                                <div className={classes.xpEdit}>
+                                    {isExperienceSpentEditable ? (
+                                        <NumberInput
+                                            className={classes.xpInput}
+                                            aria-label="Experience spent"
+                                            value={experienceSpentField.value}
+                                            onChange={experienceSpentField.onChange}
+                                            min={0}
+                                            size="sm"
+                                            hideControls
+                                            color={primaryColor}
+                                        />
+                                    ) : (
+                                        <span>{spentXP}</span>
+                                    )}
+                                    <span>/</span>
+                                    <NumberInput
+                                        className={classes.xpInput}
+                                        aria-label="Total experience"
+                                        value={experienceField.value}
+                                        onChange={experienceField.onChange}
+                                        min={0}
+                                        size="sm"
+                                        hideControls
+                                        color={primaryColor}
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <span className={classes.xpMeta}>
+                                spent {spentXP} / {character.experience}
+                            </span>
+                        )}
+                        {availableXP < 0 ? <span className={classes.xpMeta}>Overspent</span> : null}
                     </LedgerField>
                 </div>
 

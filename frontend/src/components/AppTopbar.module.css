@@ -40,27 +40,17 @@
 
 .brandMark {
     flex: none;
-    transition:
-        transform var(--pg-dur-slow) var(--ease-out),
-        filter var(--pg-dur-slow) var(--ease-out);
 }
 
 .wordmark {
     font-family: var(--pg-font-display);
     font-weight: 600;
     font-size: 0.95rem;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     /* Optical correction: tracking adds trailing space. */
-    margin-right: -0.24em;
+    margin-right: -0.18em;
     line-height: 1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .brand:hover .brandMark {
-        transform: rotate(45deg) scale(0.92);
-        filter: drop-shadow(0 0 8px rgba(220, 52, 70, 0.55));
-    }
 }
 
 /* ---- Nav ---- */
@@ -251,8 +241,6 @@
 
     .wordmark {
         font-size: 0.85rem;
-        letter-spacing: 0.18em;
-        margin-right: -0.18em;
     }
 
     .navLink {

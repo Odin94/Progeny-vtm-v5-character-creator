@@ -27,19 +27,9 @@ export const BloodDrop = () => (
         <svg viewBox="0 0 18 23">
             <path className={classes.dropOutline} d={DROP_PATH} />
         </svg>
-        <span className={classes.dropFill}>
-            <svg viewBox="0 0 18 23">
-                <defs>
-                    <radialGradient id="pg-blood-drop" cx="35%" cy="55%" r="75%">
-                        <stop offset="0%" style={{ stopColor: "var(--pg-blood-bright)" }} />
-                        <stop offset="55%" style={{ stopColor: "var(--pg-blood)" }} />
-                        <stop offset="100%" style={{ stopColor: "var(--pg-blood-deep)" }} />
-                    </radialGradient>
-                </defs>
-                <path d={DROP_PATH} fill="url(#pg-blood-drop)" />
-                <ellipse cx="6.2" cy="13.6" rx="1.5" ry="2.6" fill="rgba(255,255,255,0.45)" />
-            </svg>
-        </span>
+        <svg className={classes.dropFill} viewBox="0 0 18 23">
+            <path d={DROP_PATH} />
+        </svg>
     </span>
 )
 

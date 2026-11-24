@@ -82,10 +82,7 @@
     height: 15px;
     border-radius: 50%;
     border: 1.5px solid var(--pip-rim);
-    background: radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
-    box-shadow:
-        inset 0 1px 2px rgba(0, 0, 0, 0.65),
-        0 1px 0 rgba(255, 238, 228, 0.05);
+    background: var(--pg-sunken);
     transition:
         transform var(--pg-dur-fast) var(--ease-out),
         border-color var(--pg-dur-fast) var(--ease-out);
@@ -95,34 +92,13 @@
     position: absolute;
     inset: -1.5px;
     border-radius: inherit;
-    background: radial-gradient(
-        circle at 34% 28%,
-        var(--pip-bright) 0%,
-        var(--pip-color) 46%,
-        var(--pip-deep) 100%
-    );
-    box-shadow:
-        0 0 9px -1px color-mix(in srgb, var(--pip-color) 75%, transparent),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.35);
+    background: var(--pip-color);
     opacity: 0;
     transform: scale(0.35);
     transition:
         transform 240ms var(--ease-out) var(--pip-delay, 0ms),
         opacity 160ms var(--ease-out) var(--pip-delay, 0ms);
     pointer-events: none;
-}
-
-/* Specular glint on a filled bead. */
-.fill::after {
-    content: "";
-    position: absolute;
-    top: 18%;
-    left: 22%;
-    width: 30%;
-    height: 22%;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.55);
-    filter: blur(0.4px);
 }
 
 .pip[data-filled] .fill {
@@ -198,8 +174,7 @@
     height: 16px;
     border-radius: 3px;
     border: 1.5px solid var(--pip-rim);
-    background: rgba(0, 0, 0, 0.42);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
+    background: var(--pg-sunken);
     overflow: hidden;
     transition:
         transform var(--pg-dur-fast) var(--ease-out),
@@ -209,13 +184,7 @@
 .boxFill {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        160deg,
-        var(--pip-bright) -20%,
-        var(--pip-color) 45%,
-        var(--pip-deep)
-    );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    background: var(--pip-color);
     opacity: 0;
     transform: scale(0.4);
     transition:
@@ -238,7 +207,6 @@
     margin: -1px 0 0 -70%;
     border-radius: 1px;
     background: var(--pip-bright);
-    box-shadow: 0 0 4px color-mix(in srgb, var(--pip-color) 80%, transparent);
     opacity: 0;
     transform: rotate(-45deg) scaleX(0);
     transition:
@@ -263,21 +231,18 @@
 .box[data-state="aggravated"] .boxFill {
     opacity: 1;
     transform: scale(1);
-    background: linear-gradient(160deg, var(--pip-color), var(--pip-deep));
+    background: var(--pip-deep);
 }
 
 .box[data-state="aggravated"] .slash {
     background: var(--pg-ink);
-    box-shadow: none;
 }
 
 /* ---- Blood drop (hunger) ---------------------------------------------------- */
 
 .pip.pip[data-shape="drop"] {
     --pip-size: 28px;
-    --pip-color: var(--pg-blood);
-    --pip-bright: var(--pg-blood-bright);
-    --pip-deep: var(--pg-blood-deep);
+    --pip-color: var(--pg-blood-bright);
     --pip-rim: color-mix(in srgb, var(--pg-blood-bright) 70%, transparent);
 }
 
@@ -318,7 +283,7 @@
     transition:
         transform 280ms var(--ease-out) var(--pip-delay, 0ms),
         opacity 160ms var(--ease-out) var(--pip-delay, 0ms);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--pg-blood-bright) 60%, transparent));
+    fill: var(--pip-color);
 }
 
 .pip[data-filled] .dropFill {

@@ -13,7 +13,7 @@
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
-    border-top: 1px solid var(--pg-border);
+    gap: var(--pg-space-3);
 }
 
 .card {
@@ -23,8 +23,10 @@
     align-content: start;
     gap: var(--pg-space-3);
     min-width: 0;
-    padding: var(--pg-space-4) var(--pg-space-2);
-    border-bottom: 1px solid var(--pg-border);
+    padding: var(--pg-space-4) var(--pg-space-3);
+    border: 1px solid color-mix(in srgb, var(--clan) 16%, var(--pg-border));
+    border-radius: var(--pg-radius-lg);
+    background: color-mix(in srgb, var(--clan) 4%, var(--pg-surface-1));
     color: var(--pg-ink);
     text-align: left;
     transition: background-color var(--pg-dur-fast) var(--ease-out);
@@ -36,7 +38,7 @@
 
 @media (hover: hover) and (pointer: fine) {
     .card:hover {
-        background: var(--pg-surface-2);
+        background: color-mix(in srgb, var(--clan) 9%, var(--pg-surface-2));
     }
 }
 

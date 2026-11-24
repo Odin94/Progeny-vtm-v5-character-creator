@@ -95,19 +95,6 @@
     text-align: center;
 }
 
-.landing__sigil {
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    z-index: -1;
-    width: min(88vw, 560px);
-    height: auto;
-    color: var(--pg-gold);
-    opacity: 0.55;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-}
-
 .landing__title {
     margin: 0;
     font-family: var(--pg-font-display);

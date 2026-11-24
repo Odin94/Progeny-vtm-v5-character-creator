@@ -5,6 +5,8 @@
 }
 
 .header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     margin-bottom: var(--pg-space-6);
 }
 
@@ -22,8 +24,13 @@
 
 .headerActions {
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
     gap: var(--pg-space-2);
+}
+
+.signOut {
+    margin-inline-start: auto;
 }
 
 /* ---- Tabs ------------------------------------------------------------------- */
