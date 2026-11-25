@@ -347,15 +347,15 @@ const MeritOrFlawCard = memo(
                 data-excluded={isExcluded || undefined}
             >
                 <div className={classes.meritHead}>
-                    <span className={classes.meritName}>{meritOrFlaw.name}</span>
-                    {meritOrFlaw.homebrewSource ? (
-                        <HomebrewBadge source={meritOrFlaw.homebrewSource} />
-                    ) : null}
                     <span
                         className={classes.meritKind}
                         role="img"
                         aria-label={type === "flaw" ? "Flaw" : "Merit"}
                     />
+                    <span className={classes.meritName}>{meritOrFlaw.name}</span>
+                    {meritOrFlaw.homebrewSource ? (
+                        <HomebrewBadge source={meritOrFlaw.homebrewSource} />
+                    ) : null}
                 </div>
 
                 <p

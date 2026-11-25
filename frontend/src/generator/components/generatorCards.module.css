@@ -1101,7 +1101,7 @@
 
 .meritKind {
     flex: none;
-    align-self: center;
+    margin-block-start: 5px;
     width: 11px;
     height: 9px;
     background: var(--tone);
