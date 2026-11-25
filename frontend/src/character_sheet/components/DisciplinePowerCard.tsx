@@ -1,5 +1,5 @@
 import { Text, Textarea, Tooltip } from "@mantine/core"
-import type { MouseEvent } from "react"
+import type { MouseEvent, ReactNode } from "react"
 import { Power } from "~/data/Disciplines"
 import { Character } from "~/data/Character"
 import { getValueForKey } from "~/generator/utils"
@@ -11,7 +11,7 @@ type DisciplinePowerCardProps = {
     primaryColor: string
     onClick?: () => void
     inModal: boolean
-    renderActions?: () => React.ReactNode
+    actions?: ReactNode
     character?: Character
     disabled?: boolean
     disabledTooltip?: string | null
@@ -96,7 +96,7 @@ const DisciplinePowerCard = ({
     power,
     onClick,
     inModal,
-    renderActions,
+    actions,
     character,
     disabled = false,
     disabledTooltip,
@@ -123,9 +123,7 @@ const DisciplinePowerCard = ({
                     {power.level}
                 </span>
                 <p className={classes.cardTitle}>{power.name}</p>
-                {renderActions ? (
-                    <div className={classes.cardActions}>{renderActions()}</div>
-                ) : null}
+                {actions ? <div className={classes.cardActions}>{actions}</div> : null}
             </div>
             {power.homebrewSource ? <HomebrewBadge source={power.homebrewSource} /> : null}
             {power.summary ? (
@@ -143,8 +141,9 @@ const DisciplinePowerCard = ({
                     size="xs"
                     autoFocus
                     onBlur={onFinishCustomTextEditing}
+                    onContextMenu={(event) => event.stopPropagation()}
                     onKeyDown={(event) => {
-                        if (event.key === "Enter") {
+                        if (event.key === "Escape" || (event.key === "Enter" && !event.shiftKey)) {
                             event.preventDefault()
                             onFinishCustomTextEditing?.()
                         }

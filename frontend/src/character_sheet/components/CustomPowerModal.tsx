@@ -15,6 +15,7 @@ import { SheetOptions } from "../CharacterSheet"
 import { getDisciplineCost } from "../utils/xp"
 import type { HomebrewSource } from "~/data/Homebrew"
 import { getPowerDisciplineIdentity } from "~/utils/homebrewOptions"
+import { getDisciplinePowerCustomTextKey } from "~/utils/customText"
 import { SheetModal, selectModalClasses as formClasses } from "./selectModalParts"
 
 type CustomPowerModalProps = {
@@ -198,6 +199,9 @@ const CustomPowerModal = ({
             let updatedCharacter
             if (editingPower) {
                 const disciplineIdentity = getPowerDisciplineIdentity(power)
+                const oldNoteKey = getDisciplinePowerCustomTextKey(editingPower)
+                const newNoteKey = getDisciplinePowerCustomTextKey(power)
+                const notes = current.customText.disciplinePowers
                 updatedCharacter = {
                     ...current,
                     disciplines: current.disciplines.map((p) => (p === editingPower ? power : p)),
@@ -207,6 +211,14 @@ const CustomPowerModal = ({
                             getDisciplineLevel(current, disciplineIdentity),
                             power.level
                         )
+                    }
+                }
+                if (oldNoteKey !== newNoteKey && notes[oldNoteKey] && !notes[newNoteKey]) {
+                    const updatedNotes = { ...notes, [newNoteKey]: notes[oldNoteKey] }
+                    delete updatedNotes[oldNoteKey]
+                    updatedCharacter.customText = {
+                        ...current.customText,
+                        disciplinePowers: updatedNotes
                     }
                 }
             } else {

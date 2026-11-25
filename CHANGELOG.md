@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restore custom notes for discipline powers, merits, and flaws in every sheet mode.
+
 - Show coterie dossiers side by side when space allows, simplify creator and homebrew controls, speed up sheet mode switches, and keep legacy dice visible in the roller.
 
 - Add character downloads and VTT exports to the quick navigator, make loresheet tiers clickable, and soften accents across the creator and sheet.

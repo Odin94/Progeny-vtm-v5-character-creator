@@ -13,6 +13,7 @@ type BaseIconButtonProps = Omit<ActionIconProps, "children"> & {
     /** Used for the tooltip AND the accessible name. Keep it a short verb phrase. */
     label: string
     onClick?: MouseEventHandler<HTMLButtonElement>
+    onMouseDown?: MouseEventHandler<HTMLButtonElement>
     /** When set, the button is disabled and the tooltip explains why. */
     disabledReason?: string
     tooltipPosition?: FloatingPosition

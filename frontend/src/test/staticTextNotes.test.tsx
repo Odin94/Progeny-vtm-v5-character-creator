@@ -2,8 +2,13 @@ import { MantineProvider } from "@mantine/core"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import Disciplines from "~/character_sheet/sections/Disciplines"
+import MeritsAndFlaws from "~/character_sheet/sections/MeritsAndFlaws"
 import Skills from "~/character_sheet/sections/Skills"
-import { getDisciplinePowerCustomTextKey, getSkillSpecialtyCustomTextKey } from "~/utils/customText"
+import {
+    getDisciplinePowerCustomTextKey,
+    getMeritFlawCustomTextKey,
+    getSkillSpecialtyCustomTextKey
+} from "~/utils/customText"
 import { getBasicTestCharacter } from "./testUtils"
 
 Object.defineProperty(window, "matchMedia", {
@@ -111,5 +116,26 @@ describe("static text notes", () => {
         expect(character.customText.disciplinePowers[getDisciplinePowerCustomTextKey(power)]).toBe(
             "Applies while enraged"
         )
+    })
+
+    it("shows saved entry notes without editing controls on a read-only sheet", () => {
+        const character = getBasicTestCharacter()
+        const power = character.disciplines[0]
+        const merit = character.merits[0]
+        character.customText.disciplinePowers[getDisciplinePowerCustomTextKey(power)] =
+            "Only once per scene"
+        character.customText.meritFlaws[getMeritFlawCustomTextKey(merit)] = "Spare key in the attic"
+        const options = { ...freeOptions(character, vi.fn()), canEdit: false }
+
+        render(
+            <MantineProvider>
+                <Disciplines options={options} />
+                <MeritsAndFlaws options={options} />
+            </MantineProvider>
+        )
+
+        expect(screen.getByText("Only once per scene")).toBeInTheDocument()
+        expect(screen.getByText("Spare key in the attic")).toBeInTheDocument()
+        expect(screen.queryAllByRole("button", { name: /custom note/i })).toHaveLength(0)
     })
 })

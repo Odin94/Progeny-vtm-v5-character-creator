@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import CustomPowerModal from "~/character_sheet/components/CustomPowerModal"
 import type { SheetOptions } from "~/character_sheet/CharacterSheet"
+import { getDisciplinePowerCustomTextKey } from "~/utils/customText"
 import { getBasicTestCharacter } from "./testUtils"
 
 Object.defineProperty(window, "matchMedia", {
@@ -70,5 +71,47 @@ describe("CustomPowerModal discipline levels", () => {
         const update = setCharacter.mock.calls[0]?.[0]
         expect(typeof update).toBe("function")
         expect(update(character).disciplineLevels).toEqual({ "official:celerity": 2 })
+    })
+
+    it("keeps an existing note when renaming a custom power", async () => {
+        const user = userEvent.setup()
+        const character = getBasicTestCharacter()
+        const power = { ...character.disciplines[0], name: "Quick Step", isCustom: true }
+        character.disciplines = [power]
+        const oldKey = getDisciplinePowerCustomTextKey(power)
+        character.customText.disciplinePowers[oldKey] = "Only in darkness"
+        const setCharacter = vi.fn<SheetOptions["setCharacter"]>()
+
+        render(
+            <MantineProvider>
+                <CustomPowerModal
+                    opened
+                    onClose={vi.fn()}
+                    options={{
+                        mode: "free",
+                        primaryColor: "grape",
+                        character,
+                        setCharacter,
+                        canEdit: true,
+                        preferences: { colorTheme: null, backgroundImage: null },
+                        onUpdatePreferences: vi.fn()
+                    }}
+                    disciplineName={power.discipline}
+                    editingPower={power}
+                />
+            </MantineProvider>
+        )
+
+        const name = screen.getByLabelText(/Power Name/)
+        await user.clear(name)
+        await user.type(name, "Shadow Step")
+        await user.click(screen.getByRole("button", { name: "Save" }))
+
+        const update = setCharacter.mock.calls[0][0]
+        const updated = typeof update === "function" ? update(character) : update
+        expect(updated.disciplines[0].name).toBe("Shadow Step")
+        expect(updated.customText.disciplinePowers).toEqual({
+            [getDisciplinePowerCustomTextKey(updated.disciplines[0])]: "Only in darkness"
+        })
     })
 })

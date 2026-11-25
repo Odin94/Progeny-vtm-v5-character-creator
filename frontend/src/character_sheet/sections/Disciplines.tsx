@@ -141,7 +141,7 @@ const XpAddButton = ({
 }
 
 const Disciplines = ({ options }: DisciplinesProps) => {
-    const { character, primaryColor, mode, setCharacter } = options
+    const { character, primaryColor, mode, setCharacter, canEdit } = options
     const { updateSelectedDicePool } = useCharacterSheetStore(
         useShallow((state) => ({
             updateSelectedDicePool: state.updateSelectedDicePool
@@ -175,8 +175,8 @@ const Disciplines = ({ options }: DisciplinesProps) => {
           }
         | null
     >(null)
-    const isEditable = mode === "xp" || mode === "free"
-    const isFreeMode = mode === "free"
+    const isEditable = canEdit && (mode === "xp" || mode === "free")
+    const isFreeMode = canEdit && mode === "free"
     const bloodSorceryLevel = getDisciplineLevel(character, "official:blood sorcery")
     const oblivionLevel = getOblivionCeremonyLevel(character)
     const canAddRituals = isEditable && bloodSorceryLevel > 0
@@ -683,7 +683,9 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                             .map((power) => {
                                                 const customTextKey =
                                                     getDisciplinePowerCustomTextKey(power)
-                                                const isStaticPower = !power.isCustom
+                                                const isEditingNote =
+                                                    canEdit &&
+                                                    editingPowerCustomText === customTextKey
                                                 const toggleNote = () =>
                                                     setEditingPowerCustomText((current) =>
                                                         current === customTextKey
@@ -699,52 +701,47 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                     setCustomPowerModalOpened(true)
                                                 }
                                                 const powerMenu: ContextMenuEntry[] = [
-                                                    rollWithEntry(disciplineName),
-                                                    ...(isFreeMode
-                                                        ? [
-                                                              ...(isStaticPower
-                                                                  ? [
-                                                                        {
-                                                                            key: "note",
-                                                                            label: "Edit note",
-                                                                            icon: (
-                                                                                <IconNote
-                                                                                    size={14}
-                                                                                />
-                                                                            ),
-                                                                            onClick: () =>
-                                                                                setEditingPowerCustomText(
-                                                                                    customTextKey
-                                                                                )
-                                                                        }
-                                                                    ]
-                                                                  : [
-                                                                        {
-                                                                            key: "edit",
-                                                                            label: "Edit power",
-                                                                            icon: (
-                                                                                <IconEdit
-                                                                                    size={14}
-                                                                                />
-                                                                            ),
-                                                                            onClick: editCustomPower
-                                                                        }
-                                                                    ]),
-                                                              {
-                                                                  type: "divider" as const,
-                                                                  key: "divider"
-                                                              },
-                                                              {
-                                                                  key: "delete",
-                                                                  label: "Delete power…",
-                                                                  color: "red",
-                                                                  icon: <IconTrash size={14} />,
-                                                                  onClick: () =>
-                                                                      handleDeletePower(power)
-                                                              }
-                                                          ]
-                                                        : [])
+                                                    rollWithEntry(disciplineName)
                                                 ]
+                                                if (canEdit) {
+                                                    powerMenu.push({
+                                                        key: "note",
+                                                        label: "Edit note",
+                                                        icon: <IconNote size={14} />,
+                                                        onClick: () =>
+                                                            setEditingPowerCustomText(customTextKey)
+                                                    })
+                                                }
+                                                if (isFreeMode && power.isCustom) {
+                                                    powerMenu.push({
+                                                        key: "edit",
+                                                        label: "Edit power",
+                                                        icon: <IconEdit size={14} />,
+                                                        onClick: editCustomPower
+                                                    })
+                                                }
+                                                if (isFreeMode) {
+                                                    powerMenu.push(
+                                                        { type: "divider", key: "divider" },
+                                                        {
+                                                            key: "delete",
+                                                            label: "Delete power…",
+                                                            color: "red",
+                                                            icon: <IconTrash size={14} />,
+                                                            onClick: () => handleDeletePower(power)
+                                                        }
+                                                    )
+                                                }
+                                                const changeNote = (value: string) =>
+                                                    setCharacter((current) => ({
+                                                        ...current,
+                                                        customText: updateCustomText(
+                                                            current,
+                                                            "disciplinePowers",
+                                                            customTextKey,
+                                                            value
+                                                        )
+                                                    }))
                                                 return (
                                                     <DisciplinePowerCard
                                                         key={getPowerIdentity(power)}
@@ -757,98 +754,63 @@ const Disciplines = ({ options }: DisciplinesProps) => {
                                                             contextMenu.open(event, powerMenu)
                                                         }}
                                                         customText={
-                                                            isStaticPower
-                                                                ? (character.customText
-                                                                      .disciplinePowers[
-                                                                      customTextKey
-                                                                  ] ?? "")
-                                                                : undefined
+                                                            character.customText.disciplinePowers[
+                                                                customTextKey
+                                                            ]
                                                         }
                                                         onCustomTextChange={
-                                                            isFreeMode && isStaticPower
-                                                                ? (value) => {
-                                                                      setCharacter((current) => ({
-                                                                          ...current,
-                                                                          customText:
-                                                                              updateCustomText(
-                                                                                  current,
-                                                                                  "disciplinePowers",
-                                                                                  customTextKey,
-                                                                                  value
-                                                                              )
-                                                                      }))
-                                                                  }
-                                                                : undefined
+                                                            canEdit ? changeNote : undefined
                                                         }
-                                                        isEditingCustomText={
-                                                            editingPowerCustomText === customTextKey
-                                                        }
+                                                        isEditingCustomText={isEditingNote}
                                                         onFinishCustomTextEditing={() =>
                                                             setEditingPowerCustomText(null)
                                                         }
-                                                        renderActions={
-                                                            isFreeMode
-                                                                ? () => (
-                                                                      <>
-                                                                          {isStaticPower ? (
-                                                                              <span
-                                                                                  className={
-                                                                                      classes.disabledWrap
-                                                                                  }
-                                                                                  onMouseDown={(
-                                                                                      event
-                                                                                  ) =>
-                                                                                      event.preventDefault()
-                                                                                  }
-                                                                              >
-                                                                                  <IconButton
-                                                                                      size="sm"
-                                                                                      label={`Edit ${power.name} custom note`}
-                                                                                      icon={
-                                                                                          <IconNote
-                                                                                              size={
-                                                                                                  15
-                                                                                              }
-                                                                                          />
-                                                                                      }
-                                                                                      onClick={(
-                                                                                          event
-                                                                                      ) => {
-                                                                                          event.stopPropagation()
-                                                                                          toggleNote()
-                                                                                      }}
-                                                                                  />
-                                                                              </span>
-                                                                          ) : (
-                                                                              <IconButton
-                                                                                  size="sm"
-                                                                                  label={`Edit ${power.name}`}
-                                                                                  icon={
-                                                                                      <IconEdit
-                                                                                          size={15}
-                                                                                      />
-                                                                                  }
-                                                                                  onClick={(
-                                                                                      event
-                                                                                  ) => {
-                                                                                      event.stopPropagation()
-                                                                                      editCustomPower()
-                                                                                  }}
-                                                                              />
-                                                                          )}
-                                                                          <DeleteIconButton
-                                                                              size="sm"
-                                                                              label={`Delete ${power.name}`}
-                                                                              onClick={(event) => {
-                                                                                  event.stopPropagation()
-                                                                                  handleDeletePower(
-                                                                                      power
-                                                                                  )
-                                                                              }}
-                                                                          />
-                                                                      </>
-                                                                  )
-                                                                : undefined
+                                                        actions={
+                                                            canEdit && (
+                                                                <>
+                                                                    <IconButton
+                                                                        size="sm"
+                                                                        label={`Edit ${power.name} custom note`}
+                                                                        icon={
+                                                                            <IconNote size={15} />
+                                                                        }
+                                                                        aria-expanded={
+                                                                            isEditingNote
+                                                                        }
+                                                                        onMouseDown={(event) => {
+                                                                            if (isEditingNote)
+                                                                                event.preventDefault()
+                                                                        }}
+                                                                        onClick={toggleNote}
+                                                                    />
+                                                                    {isFreeMode &&
+                                                                    power.isCustom ? (
+                                                                        <IconButton
+                                                                            size="sm"
+                                                                            label={`Edit ${power.name}`}
+                                                                            icon={
+                                                                                <IconEdit
+                                                                                    size={15}
+                                                                                />
+                                                                            }
+                                                                            onClick={
+                                                                                editCustomPower
+                                                                            }
+                                                                        />
+                                                                    ) : null}
+                                                                    {isFreeMode ? (
+                                                                        <DeleteIconButton
+                                                                            size="sm"
+                                                                            label={`Delete ${power.name}`}
+                                                                            onClick={() =>
+                                                                                handleDeletePower(
+                                                                                    power
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    ) : null}
+                                                                </>
+                                                            )
                                                         }
                                                     />
                                                 )

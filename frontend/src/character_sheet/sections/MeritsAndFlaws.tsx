@@ -38,7 +38,7 @@ const LevelDots = ({ level, kind }: { level: number; kind: Kind }) =>
     )
 
 const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
-    const { character, primaryColor, mode, setCharacter } = options
+    const { character, primaryColor, mode, setCharacter, canEdit } = options
     const [meritModalOpened, setMeritModalOpened] = useState(false)
     const [flawModalOpened, setFlawModalOpened] = useState(false)
     const [itemToDelete, setItemToDelete] = useState<{
@@ -47,8 +47,8 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
     } | null>(null)
     const [editingCustomText, setEditingCustomText] = useState<string | null>(null)
     const contextMenu = useContextMenu()
-    const isEditable = mode === "xp" || mode === "free"
-    const isFreeMode = mode === "free"
+    const isEditable = canEdit && (mode === "xp" || mode === "free")
+    const isFreeMode = canEdit && mode === "free"
 
     const { merits: allMerits, flaws: allFlaws } = useMemo(
         () => getSheetMeritsAndFlaws(character),
@@ -90,7 +90,7 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
         const customTextKey = getMeritFlawCustomTextKey(item)
         const customText = character.customText.meritFlaws[customTextKey] ?? ""
         const customTextEditorKey = `${kind}:${customTextKey}`
-        const isEditingCustomText = editingCustomText === customTextEditorKey
+        const isEditingCustomText = canEdit && editingCustomText === customTextEditorKey
         const badgeText = isFromLoresheet
             ? isUpgradedFromLoresheet
                 ? "Upgraded from loresheet"
@@ -103,26 +103,24 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
             setEditingCustomText((current) =>
                 current === customTextEditorKey ? null : customTextEditorKey
             )
-        const menuItems: ContextMenuEntry[] = !isFreeMode
-            ? []
-            : isFromBonus
-              ? [
-                    {
-                        key: "note",
-                        label: "Edit note",
-                        icon: <IconNote size={14} />,
-                        onClick: () => setEditingCustomText(customTextEditorKey)
-                    }
-                ]
-              : [
-                    {
-                        key: "delete",
-                        label: `Delete ${kind}…`,
-                        color: "red",
-                        icon: <IconTrash size={14} />,
-                        onClick: askDelete
-                    }
-                ]
+        const menuItems: ContextMenuEntry[] = []
+        if (canEdit) {
+            menuItems.push({
+                key: "note",
+                label: "Edit note",
+                icon: <IconNote size={14} />,
+                onClick: () => setEditingCustomText(customTextEditorKey)
+            })
+        }
+        if (isFreeMode && !isFromBonus) {
+            menuItems.push({
+                key: "delete",
+                label: `Delete ${kind}…`,
+                color: "red",
+                icon: <IconTrash size={14} />,
+                onClick: askDelete
+            })
+        }
 
         const card = (
             <div
@@ -138,27 +136,25 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                     <p className={classes.cardTitle}>{displayName}</p>
                     {item.homebrewSource ? <HomebrewBadge source={item.homebrewSource} /> : null}
                     <LevelDots level={item.level} kind={kind} />
-                    {isFreeMode ? (
+                    {canEdit ? (
                         <div className={classes.cardActions}>
-                            {isFromBonus ? (
-                                <span
-                                    className={classes.disabledWrap}
-                                    onMouseDown={(event) => event.preventDefault()}
-                                >
-                                    <IconButton
-                                        size="sm"
-                                        label={`Edit ${displayName} custom note`}
-                                        icon={<IconNote size={15} />}
-                                        onClick={toggleNote}
-                                    />
-                                </span>
-                            ) : (
+                            <IconButton
+                                size="sm"
+                                label={`Edit ${displayName} custom note`}
+                                icon={<IconNote size={15} />}
+                                aria-expanded={isEditingCustomText}
+                                onMouseDown={(event) => {
+                                    if (isEditingCustomText) event.preventDefault()
+                                }}
+                                onClick={toggleNote}
+                            />
+                            {isFreeMode && !isFromBonus ? (
                                 <DeleteIconButton
                                     size="sm"
                                     label={`Delete ${displayName}`}
                                     onClick={askDelete}
                                 />
-                            )}
+                            ) : null}
                         </div>
                     ) : null}
                 </div>
@@ -225,8 +221,12 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                         size="sm"
                         autoFocus
                         onBlur={() => setEditingCustomText(null)}
+                        onContextMenu={(event) => event.stopPropagation()}
                         onKeyDown={(event) => {
-                            if (event.key === "Enter") {
+                            if (
+                                event.key === "Escape" ||
+                                (event.key === "Enter" && !event.shiftKey)
+                            ) {
                                 event.preventDefault()
                                 setEditingCustomText(null)
                             }
