@@ -419,14 +419,6 @@ export default function LandingPage() {
                                     "Use free-edit or XP-spending mode to grow your character",
                                     "Powerful dice roller, including one-click rouse check and remorse rolls"
                                 ]}
-                                body={
-                                    <p>
-                                        The sheet is where a finished character becomes a table
-                                        companion: review stats, manage Disciplines and merits,
-                                        track play-state changes, and keep the character in front of
-                                        you during sessions.
-                                    </p>
-                                }
                             />
                             <Chapter
                                 index={2}
