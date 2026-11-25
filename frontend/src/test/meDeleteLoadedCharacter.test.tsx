@@ -196,6 +196,7 @@ it("Account sends a save-before-load 404 to the deleted-draft dialog as a warnin
 
     expect(state.report).toHaveBeenCalledWith("save-before-load", notFound, {
         severity: "warning",
+        resolution: "modal",
         characterId: "a"
     })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["deleted-draft-check"] })

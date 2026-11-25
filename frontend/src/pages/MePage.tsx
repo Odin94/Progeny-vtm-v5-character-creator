@@ -928,13 +928,15 @@ const MePage = () => {
                         setVersionConflictModalOpened(true)
                         return
                     }
+                    const notFound = isCharacterNotFound(error)
                     reportCharacterOperationFailure("save-before-load", error, {
-                        severity: isCharacterNotFound(error) ? "warning" : undefined,
+                        severity: notFound ? "warning" : undefined,
+                        resolution: notFound ? "modal" : undefined,
                         characterId: character.id
                     })
                     console.warn("Failed to save current character before loading:", error)
                     // The saved character is gone, so let the deleted-draft dialog take over.
-                    if (isCharacterNotFound(error)) {
+                    if (notFound) {
                         void recheckDeletedCharacterDraft(queryClient)
                         return
                     }
