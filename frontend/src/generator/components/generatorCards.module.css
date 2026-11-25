@@ -196,7 +196,7 @@
 
 .tome[data-has-picks] .sigil::before {
     border-color: var(--pg-border-blood);
-    box-shadow: var(--pg-glow-blood);
+    box-shadow: inset 0 0 10px rgba(176, 30, 47, 0.12);
 }
 
 .sigil img {
@@ -330,10 +330,7 @@
 
 .power[data-state="picked"] {
     border-color: var(--pg-border-blood);
-    background:
-        linear-gradient(180deg, rgba(176, 30, 47, 0.2), rgba(110, 17, 28, 0.12)),
-        var(--pg-surface-2);
-    box-shadow: var(--pg-glow-blood), var(--pg-shadow-inset-top);
+    background: color-mix(in srgb, var(--pg-blood) 10%, var(--pg-surface-2));
 }
 
 .power[data-state="elsewhere"] {
@@ -675,10 +672,8 @@
 }
 
 .touchstone {
-    position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--pg-space-5);
+    gap: var(--pg-space-3);
     padding: var(--pg-space-5);
     border: 1px solid var(--pg-border);
     border-radius: var(--pg-radius-lg);
@@ -695,59 +690,15 @@
 
 @media (max-width: 640px) {
     .touchstone {
-        grid-template-columns: minmax(0, 1fr);
-        gap: var(--pg-space-4);
         padding: var(--pg-space-4);
     }
 }
 
-.medallionColumn {
+.touchstoneHeader {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--pg-space-2);
-}
-
-@media (max-width: 640px) {
-    .medallionColumn {
-        flex-direction: row;
-        justify-content: space-between;
-    }
-}
-
-.medallion {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 72px;
-    height: 72px;
-    flex: none;
-    border-radius: 50%;
-    border: 1px solid var(--pg-border-gold);
-    background:
-        radial-gradient(circle at 50% 35%, rgba(212, 175, 100, 0.14), transparent 65%),
-        var(--pg-surface-1);
-    box-shadow:
-        inset 0 0 0 4px var(--pg-surface-2),
-        inset 0 0 0 5px rgba(212, 175, 100, 0.18),
-        var(--pg-shadow-2);
-    font-family: var(--pg-font-display);
-    font-weight: 600;
-    font-size: 1.35rem;
-    letter-spacing: 0.04em;
-    color: var(--pg-gold);
-}
-
-.medallion[data-empty] {
-    color: var(--pg-ink-4);
-}
-
-@media (max-width: 640px) {
-    .medallion {
-        width: 52px;
-        height: 52px;
-        font-size: 1rem;
-    }
+    justify-content: space-between;
+    gap: var(--pg-space-3);
 }
 
 .touchstoneOrdinal {
@@ -756,12 +707,6 @@
     letter-spacing: var(--pg-tracking-caps);
     text-transform: uppercase;
     color: var(--pg-gold-dim);
-}
-
-.touchstoneMobileHead {
-    display: flex;
-    align-items: center;
-    gap: var(--pg-space-3);
 }
 
 .touchstoneFields {
@@ -778,18 +723,6 @@
 @media (max-width: 640px) {
     .touchstoneFields {
         grid-template-columns: minmax(0, 1fr);
-    }
-}
-
-.touchstoneDelete {
-    position: absolute;
-    top: var(--pg-space-3);
-    right: var(--pg-space-3);
-}
-
-@media (max-width: 640px) {
-    .touchstoneDelete {
-        position: static;
     }
 }
 
@@ -838,10 +771,8 @@
 .addSlotIcon {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: 1px solid currentColor;
+    width: 22px;
+    height: 22px;
 }
 
 /* ---- Merits & flaws ------------------------------------------------------------------ */

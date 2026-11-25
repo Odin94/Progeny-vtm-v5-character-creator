@@ -152,10 +152,7 @@
 
 .card[data-selected] {
     border-color: var(--cat);
-    box-shadow:
-        var(--pg-shadow-inset-top),
-        0 0 0 1px var(--cat) inset,
-        0 0 30px -10px var(--cat);
+    box-shadow: var(--pg-shadow-inset-top), var(--pg-shadow-2);
 }
 
 .card[data-selected]::after {

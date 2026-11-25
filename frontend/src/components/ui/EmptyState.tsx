@@ -4,7 +4,7 @@ import classes from "./ui.module.css"
 export type EmptyStateProps = {
     title: ReactNode
     description?: ReactNode
-    /** Tabler icon (~26px). Rendered inside a gilded sigil ring. */
+    /** Tabler icon (~26px). */
     icon?: ReactNode
     /** Primary/secondary buttons that resolve the empty state. */
     actions?: ReactNode

@@ -256,30 +256,13 @@
 }
 
 .emptySigil {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 64px;
-    height: 64px;
+    display: inline-flex;
     margin-bottom: var(--pg-space-2);
     color: var(--pg-gold);
-    border-radius: 50%;
-    border: 1px solid var(--pg-border-gold);
-    background: radial-gradient(circle, rgba(120, 18, 32, 0.28), transparent 70%);
-    box-shadow: var(--pg-glow-candle);
-}
-
-.emptySigil::before {
-    content: "";
-    position: absolute;
-    inset: -7px;
-    border-radius: 50%;
-    border: 1px dashed rgba(212, 175, 100, 0.2);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, currentColor 20%, transparent));
 }
 
 .emptyState[data-compact] .emptySigil {
-    width: 44px;
-    height: 44px;
     margin-bottom: 0;
 }
 

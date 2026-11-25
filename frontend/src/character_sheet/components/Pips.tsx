@@ -353,7 +353,6 @@ const Pips = ({
                         isFilling={isFilling}
                         onClick={readOnly ? undefined : () => handlePipClick(index)}
                         groupEnd={!useColumns && (index + 1) % 5 === 0 && index < maxLevel - 1}
-                        options={options}
                         disabledReason={readOnly ? undefined : getDisabledReason(index)}
                         hardDisabled={readOnly || (!!options && !options.canEdit)}
                         xpCost={readOnly ? undefined : getXPCost(index)}

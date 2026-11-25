@@ -1667,11 +1667,6 @@ const MePage = ({ tab, onTabChange }: MePageProps = {}) => {
                 <PageHeader
                     className={classes.header}
                     title={displayName || "Account"}
-                    icon={
-                        <span className={classes.monogram} aria-hidden="true">
-                            <span>{(displayName || "P").charAt(0).toUpperCase()}</span>
-                        </span>
-                    }
                     actions={
                         <div className={classes.headerActions}>
                             <Button

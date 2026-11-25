@@ -1,6 +1,5 @@
-import { ActionIcon, Tooltip } from "@mantine/core"
-import { memo, type CSSProperties } from "react"
-import { SheetOptions } from "../CharacterSheet"
+import { Tooltip } from "@mantine/core"
+import { memo, useRef, useState, type CSSProperties } from "react"
 import classes from "./pips.module.css"
 
 type PipButtonProps = {
@@ -10,7 +9,6 @@ type PipButtonProps = {
     index?: number
     firstChangingIndex?: number | null
     isFilling?: boolean
-    options?: SheetOptions
     disabledReason?: string
     // A hard lock (e.g. viewing someone else's character) — the pip is truly disabled.
     // A soft block (mode/XP rules on your own character) stays clickable so the click can
@@ -54,41 +52,53 @@ const PipButton = ({
     groupEnd = false,
     label
 }: PipButtonProps) => {
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const [hovered, setHovered] = useState(false)
+    const [focused, setFocused] = useState(false)
     const isInteractive = !!onClick && !hardDisabled
     const { delay, changed } = getPipStagger(index, firstChangingIndex, isFilling)
-
-    const button = (
-        <ActionIcon
-            variant="transparent"
-            className={classes.pip}
-            onClick={hardDisabled ? undefined : onClick}
-            disabled={hardDisabled}
-            aria-label={label ? `${label} ${index + 1}` : undefined}
-            aria-pressed={filled}
-            data-filled={filled || undefined}
-            data-interactive={isInteractive || undefined}
-            data-just-changed={changed || undefined}
-            data-instant={instant || undefined}
-            data-group-end={groupEnd || undefined}
-            style={{ "--pip-delay": `${delay}ms`, ...style } as CSSProperties}
-        >
-            <span className={classes.bead}>
-                <span className={classes.fill} />
-            </span>
-        </ActionIcon>
-    )
-
     const tooltipLabel = disabledReason || (xpCost !== undefined ? `${xpCost} XP` : undefined)
 
-    if (tooltipLabel) {
-        return (
-            <Tooltip label={tooltipLabel} withArrow>
-                {button}
-            </Tooltip>
-        )
-    }
-
-    return button
+    return (
+        <>
+            <button
+                ref={buttonRef}
+                type="button"
+                className={classes.pip}
+                onClick={hardDisabled ? undefined : onClick}
+                onPointerEnter={(event) => {
+                    if (event.pointerType !== "touch") setHovered(true)
+                }}
+                onPointerLeave={() => setHovered(false)}
+                onFocus={(event) => setFocused(event.currentTarget.matches(":focus-visible"))}
+                onBlur={() => setFocused(false)}
+                disabled={hardDisabled}
+                aria-label={label ? `${label} ${index + 1}` : undefined}
+                aria-description={tooltipLabel}
+                aria-pressed={filled}
+                data-filled={filled || undefined}
+                data-interactive={isInteractive || undefined}
+                data-just-changed={changed || undefined}
+                data-instant={instant || undefined}
+                data-group-end={groupEnd || undefined}
+                style={{ "--pip-delay": `${delay}ms`, ...style } as CSSProperties}
+            >
+                <span className={classes.bead}>
+                    <span className={classes.fill} />
+                </span>
+            </button>
+            {/* A sheet has hundreds of pips. Create a floating tooltip only when needed. */}
+            {tooltipLabel && (hovered || focused) ? (
+                <Tooltip
+                    target={buttonRef}
+                    label={tooltipLabel}
+                    defaultOpened
+                    events={{ hover: false, focus: false, touch: false }}
+                    withArrow
+                />
+            ) : null}
+        </>
+    )
 }
 
 export default memo(PipButton)

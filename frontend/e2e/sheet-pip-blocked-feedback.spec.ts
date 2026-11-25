@@ -40,12 +40,33 @@ test("blocked pip click surfaces the reason inline without hovering", async ({ p
     await expect(page.getByText(/Insufficient XP/).first()).toBeVisible()
 })
 
-test("adding a skill specialty drops straight into naming it", async ({ page }) => {
-    // Free mode has no XP gate, so the add always succeeds.
-    await page.addInitScript(() =>
-        localStorage.setItem("characterSheetMode", JSON.stringify("free"))
-    )
+test("rating pip hints follow the sheet mode on keyboard focus and hover", async ({ page }) => {
     await page.goto("/sheet")
+
+    const strength = page
+        .locator(".mantine-Group-root")
+        .filter({ has: page.getByText("Strength", { exact: true }) })
+        .first()
+        .getByRole("button")
+        .nth(1)
+    await strength.focus()
+    await expect(page.getByRole("tooltip")).toHaveText(/Insufficient XP/)
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("tooltip")).toHaveCount(0)
+
+    const mode = page.locator(".mantine-SegmentedControl-innerLabel")
+    await mode.filter({ hasText: /^Free$/ }).click()
+    await strength.click()
+    await expect(strength).toHaveAttribute("aria-pressed", "true")
+
+    await mode.filter({ hasText: /^Play$/ }).click()
+    await strength.hover()
+    await expect(page.getByRole("tooltip")).toHaveText(/play mode/i)
+})
+
+test("adding a skill specialty drops straight into naming it", async ({ page }) => {
+    await page.goto("/sheet")
+    await page.locator(".mantine-SegmentedControl-innerLabel", { hasText: /^Free$/ }).click()
 
     const athleticsRow = page
         .locator(".mantine-Group-root")
@@ -53,8 +74,7 @@ test("adding a skill specialty drops straight into naming it", async ({ page }) 
         .first()
     await expect(athleticsRow).toBeVisible()
 
-    // Click the "+" badge to add a specialty.
-    await athleticsRow.getByText("+", { exact: true }).click()
+    await athleticsRow.getByRole("button", { name: "Add Athletics specialty" }).click()
 
     // A focused text input appears immediately — no empty "New Specialty" badge to click twice.
     const input = athleticsRow.locator("input")

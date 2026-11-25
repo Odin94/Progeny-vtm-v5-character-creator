@@ -124,13 +124,11 @@
 .hb-kind__glyph {
     display: inline-grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     flex: none;
     color: var(--pg-gold);
-    border: 1px solid var(--pg-border-gold);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(120, 18, 32, 0.32), transparent 72%);
+    filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 18%, transparent));
 }
 
 .hb-kind__title {

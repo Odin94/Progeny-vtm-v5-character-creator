@@ -1,13 +1,16 @@
 /* Coterie dossiers. Tokens: src/index.css. Docs: frontend/DESIGN.md */
 
-.grid {
+.dossiers {
     container: dossiers / inline-size;
+}
+
+.grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--pg-space-5);
 }
 
-@container dossiers (min-width: 1240px) {
+@container dossiers (min-width: 54rem) {
     .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }

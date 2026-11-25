@@ -8,8 +8,11 @@
 }
 
 .hb-editor-modal__header {
+    flex: none;
+    align-items: center;
+    min-height: 64px;
+    padding-block: var(--pg-space-4);
     border-bottom: 1px solid var(--pg-border-faint);
-    padding-bottom: var(--pg-space-4);
 }
 
 .hb-editor-modal__body {
@@ -27,22 +30,18 @@
 }
 
 .hb-editor__title {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--pg-space-3);
+    gap: var(--pg-space-2);
+    line-height: 1.25;
 }
 
 .hb-editor__title-glyph {
     display: inline-grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
     flex: none;
     color: var(--pg-gold);
-    border: 1px solid var(--pg-border-gold);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(120, 18, 32, 0.32), transparent 72%);
+    filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 18%, transparent));
 }
 
 .hb-editor {

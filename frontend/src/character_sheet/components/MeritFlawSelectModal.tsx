@@ -572,7 +572,6 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                 key={level}
                                 filled={selectedLevel >= level}
                                 onClick={() => setSelectedLevel(level)}
-                                options={options}
                                 disabledReason={disabledReason}
                                 xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
                             />
@@ -878,7 +877,6 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                                         key={level}
                                         filled={customLevel >= level}
                                         onClick={() => setCustomLevel(level)}
-                                        options={options}
                                         disabledReason={disabledReason}
                                         xpCost={type === "flaw" || mode !== "xp" ? undefined : cost}
                                     />

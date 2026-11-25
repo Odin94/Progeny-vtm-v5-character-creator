@@ -58,7 +58,7 @@ const HomebrewEditorFrame = ({
             title={
                 <span className="hb-editor__title">
                     <span className="hb-editor__title-glyph" aria-hidden="true">
-                        <HomebrewKindIcon kind={kind} size={15} />
+                        <HomebrewKindIcon kind={kind} size={20} />
                     </span>
                     {isNew ? "New" : "Edit"} {homebrewKindLabel(kind)}
                 </span>

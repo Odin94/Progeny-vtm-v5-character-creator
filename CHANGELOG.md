@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Show coterie dossiers side by side when space allows, simplify creator and homebrew controls, speed up sheet mode switches, and keep legacy dice visible in the roller.
+
 - Add character downloads and VTT exports to the quick navigator, make loresheet tiers clickable, and soften accents across the creator and sheet.
 
 - Resume unfinished Attribute picks after a reload, recalculate starting XP when generation changes, and preserve learned powers, rituals, and ceremonies when revisiting creator choices.

@@ -1,6 +1,6 @@
 import { ScrollArea, TextInput, Textarea } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
-import { IconPlus, IconUserHeart } from "@tabler/icons-react"
+import { IconPlus } from "@tabler/icons-react"
 import { useState } from "react"
 import { Character, Touchstone } from "../../data/Character"
 import type { SetCharacter } from "~/hooks/useCharacterLocalStorage"
@@ -80,14 +80,6 @@ const toRoman = (value: number): string => {
     }
     return result
 }
-const getInitials = (name: string) =>
-    name
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? "")
-        .join("")
 const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePickerProps) => {
     const phoneScreen = globals.isPhoneScreen
     const smallScreen = globals.isSmallScreen
@@ -170,10 +162,8 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                         <GeneratorSectionDivider label="Touchstones" lineHeight={1} marginY="xs" />
                         {touchstones.map((touchstone, i) => {
                             const ordinal = `Touchstone ${toRoman(i + 1)}`
-                            const initials = getInitials(touchstone.name)
                             const deleteButton = (
                                 <DeleteIconButton
-                                    className={phoneScreen ? undefined : classes.touchstoneDelete}
                                     label={
                                         touchstone.name.trim()
                                             ? `Remove ${touchstone.name.trim()}`
@@ -195,30 +185,9 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                     className={`${classes.touchstone} ${classes.enter}`}
                                     aria-label={ordinal}
                                 >
-                                    <div className={classes.medallionColumn}>
-                                        <div className={classes.touchstoneMobileHead}>
-                                            <span
-                                                className={classes.medallion}
-                                                data-empty={initials ? undefined : true}
-                                                aria-hidden="true"
-                                            >
-                                                {initials || (
-                                                    <IconUserHeart size={26} stroke={1.4} />
-                                                )}
-                                            </span>
-                                            {phoneScreen ? (
-                                                <span className={classes.touchstoneOrdinal}>
-                                                    {ordinal}
-                                                </span>
-                                            ) : null}
-                                        </div>
-                                        {phoneScreen ? (
-                                            deleteButton
-                                        ) : (
-                                            <span className={classes.touchstoneOrdinal}>
-                                                {toRoman(i + 1)}
-                                            </span>
-                                        )}
+                                    <div className={classes.touchstoneHeader}>
+                                        <span className={classes.touchstoneOrdinal}>{ordinal}</span>
+                                        {deleteButton}
                                     </div>
                                     <div className={classes.touchstoneFields}>
                                         <TextInput
@@ -270,7 +239,6 @@ const TouchstonePicker = ({ character, setCharacter, nextStep }: TouchstonePicke
                                             styles={touchstoneFieldStyles}
                                         />
                                     </div>
-                                    {phoneScreen ? null : deleteButton}
                                 </section>
                             )
                         })}

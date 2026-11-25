@@ -39,6 +39,9 @@
     --pip-deep: var(--mantine-primary-color-9);
     --pip-rim: color-mix(in srgb, var(--mantine-primary-color-4) 62%, transparent);
     position: relative;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
     width: var(--pip-size);
     height: var(--pip-size);
     min-width: var(--pip-size);
@@ -61,6 +64,11 @@
 
 .pip.pip[data-interactive] {
     cursor: pointer;
+}
+
+.pip.pip:focus-visible {
+    outline: 2px solid var(--pg-focus-ring);
+    outline-offset: 1px;
 }
 
 .pip.pip[data-group-end] {

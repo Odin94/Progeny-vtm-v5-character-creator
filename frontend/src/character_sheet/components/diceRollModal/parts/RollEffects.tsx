@@ -21,36 +21,8 @@ const Splash = () => (
     </svg>
 )
 
-/** Three raking claw marks for a bestial failure. */
-const Claws = ({ faint = false }: { faint?: boolean }) => (
-    <svg
-        className={`${classes.effect} ${classes.claws}`}
-        data-faint={faint || undefined}
-        viewBox="0 0 400 200"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-    >
-        <g fill="currentColor" transform="translate(-70 0)">
-            <path
-                className={classes.claw}
-                d="M150 8c40 30 120 110 190 176-4 2-8 2-11 0C262 128 190 60 150 8Z"
-            />
-            <path
-                className={classes.claw}
-                d="M185 4c40 30 118 106 196 172-4 2-8 2-11 0C302 118 226 56 185 4Z"
-            />
-            <path
-                className={classes.claw}
-                d="M222 6c38 28 106 92 170 150-3 2-7 2-10 0C326 106 260 52 222 6Z"
-            />
-        </g>
-    </svg>
-)
-
 export const RollEffect = ({ kind }: { kind: RollOutcomeKind }) => {
     if (kind === "messy") return <Splash />
-    if (kind === "bestial") return <Claws />
-    if (kind === "bestial-risk") return <Claws faint />
     if (kind === "critical") return <div className={`${classes.effect} ${classes.candle}`} />
     return null
 }

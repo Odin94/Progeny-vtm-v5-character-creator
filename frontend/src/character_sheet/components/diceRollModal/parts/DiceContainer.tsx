@@ -1,4 +1,5 @@
 import { Group } from "@mantine/core"
+import { useMediaQuery } from "@mantine/hooks"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { memo, useEffect, useRef, useState } from "react"
 import Die from "./Die"
@@ -30,6 +31,8 @@ const DiceContainer = ({
     isMobile = false
 }: DiceContainerProps) => {
     const shouldReduceMotion = useReducedMotion()
+    const narrowBoard = useMediaQuery("(max-width: 540px)")
+    const mediumBoard = useMediaQuery("(max-width: 660px)")
     const [isDiceBoardScrolling, setIsDiceBoardScrolling] = useState(false)
     const scrollIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     const { dice, activeTab } = useDiceRollModalStore(
@@ -83,7 +86,7 @@ const DiceContainer = ({
 
     const dieSize = 100
     const diceGap = 10
-    const maxDicePerRow = 4
+    const maxDicePerRow = narrowBoard ? 2 : mediumBoard ? 3 : 4
     // The 3D faces extend past the Die component's 100px layout box. Reserve room so
     // the top and bottom faces are entirely inside the scrollable board.
     const boardInset = 60
@@ -95,6 +98,12 @@ const DiceContainer = ({
     // This must grow with the number of rows. Previously the dice were centered in a
     // fixed-height absolute-positioning board, which put the first row above scrollTop 0.
     const boardHeight = Math.max(250, diceGridHeight + boardInset * 2)
+    const selectedPool = activeTab === "selected"
+    const visibleBoardHeight = dice.length
+        ? Math.min(boardHeight, selectedPool ? 380 : 480)
+        : selectedPool
+          ? 80
+          : 270
 
     return (
         <Group
@@ -104,9 +113,9 @@ const DiceContainer = ({
             justify="center"
             gap="md"
             style={{
-                flex: activeTab === "selected" ? "1 1 380px" : "1 1 480px",
-                maxHeight: activeTab === "selected" ? "380px" : "480px",
-                minHeight: activeTab === "selected" ? "80px" : "270px",
+                // Keep a row of dice fully visible. On short viewports, the roller scrolls.
+                flex: "0 0 auto",
+                height: visibleBoardHeight,
                 flexWrap: "wrap",
                 position: "relative",
                 // Dice are positioned absolutely for their entrance animation, so a large

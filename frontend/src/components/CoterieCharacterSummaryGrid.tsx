@@ -655,18 +655,20 @@ const CoterieCharacterSummaryGrid = ({
     }
 
     return (
-        <div className={classes.grid}>
-            {parsedMembers.map(({ member, character }) => (
-                <Dossier
-                    key={member.characterId}
-                    member={member}
-                    character={character}
-                    vitals={vitalsByCharacterId[member.characterId]}
-                    actions={renderMemberActions?.(member, character)}
-                    highlighted={highlightedCharacterId === member.characterId}
-                    onContextMenu={onMemberContextMenu}
-                />
-            ))}
+        <div className={classes.dossiers}>
+            <div className={classes.grid}>
+                {parsedMembers.map(({ member, character }) => (
+                    <Dossier
+                        key={member.characterId}
+                        member={member}
+                        character={character}
+                        vitals={vitalsByCharacterId[member.characterId]}
+                        actions={renderMemberActions?.(member, character)}
+                        highlighted={highlightedCharacterId === member.characterId}
+                        onContextMenu={onMemberContextMenu}
+                    />
+                ))}
+            </div>
         </div>
     )
 }

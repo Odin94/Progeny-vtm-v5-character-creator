@@ -1,11 +1,20 @@
 /* Generator stepper ("the rite"): vertical list in the right aside, compact strip on small screens. */
 
 .root {
+    --step-node-size: 30px;
+    --step-gap: 8px;
+    --step-padding-start: 6px;
+
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
     gap: var(--pg-space-4);
+}
+
+.compact {
+    --step-node-size: 26px;
+    --step-gap: 4px;
 }
 
 /* ---- Header + progress ------------------------------------------------------ */
@@ -57,6 +66,7 @@
 /* ---- Step list -------------------------------------------------------------- */
 
 .list {
+    gap: var(--step-gap);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -68,25 +78,30 @@
     position: relative;
 }
 
-/* Connector between nodes. Gold once the step above it is behind you. */
+/* Start and end each connector just outside its node, even when a step label wraps. */
+.item:not(:first-child)::before,
 .item:not(:last-child)::after {
     content: "";
     position: absolute;
-    left: 21px;
-    top: 38px;
-    bottom: -8px;
+    left: calc(var(--step-padding-start) + var(--step-node-size) / 2 + 0.5px);
     width: 1px;
     background: var(--pg-border);
     pointer-events: none;
 }
 
-.item[data-state="complete"]:not(:last-child)::after {
-    background: linear-gradient(180deg, var(--pg-gold-dim), rgba(212, 175, 100, 0.25));
+.item:not(:first-child)::before {
+    top: 0;
+    bottom: calc(50% + var(--step-node-size) / 2 + 3px);
 }
 
-.compact .item:not(:last-child)::after {
-    top: 32px;
-    bottom: -6px;
+.item:not(:last-child)::after {
+    top: calc(50% + var(--step-node-size) / 2 + 3px);
+    bottom: calc(-1 * var(--step-gap));
+}
+
+.item[data-state="complete"]:not(:last-child)::after,
+.item[data-state="complete"] + .item::before {
+    background: var(--pg-gold-dim);
 }
 
 .stepTooltipTarget {
@@ -100,8 +115,7 @@
     align-items: center;
     gap: 12px;
     min-height: 46px;
-    margin-block: 4px;
-    padding: 6px 10px 6px 6px;
+    padding: 6px 10px 6px var(--step-padding-start);
     border-radius: var(--pg-radius-md);
     border: 1px solid transparent;
     color: var(--pg-ink-3);
@@ -116,7 +130,6 @@
 
 .compact .step {
     min-height: 38px;
-    margin-block: 2px;
     padding-block: 3px;
 }
 
@@ -159,8 +172,8 @@
     flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: var(--step-node-size);
+    height: var(--step-node-size);
     border-radius: 50%;
     border: 1px solid var(--pg-border);
     background: var(--pg-surface-1);
@@ -171,13 +184,7 @@
     color: inherit;
     transition:
         border-color var(--pg-dur-fast) var(--ease-out),
-        background-color var(--pg-dur-fast) var(--ease-out),
-        box-shadow var(--pg-dur-fast) var(--ease-out);
-}
-
-.compact .node {
-    width: 26px;
-    height: 26px;
+        background-color var(--pg-dur-fast) var(--ease-out);
 }
 
 .step[data-state="complete"] .node {
@@ -200,9 +207,7 @@
     transform: rotate(45deg);
     border-radius: 3px;
     background: linear-gradient(135deg, var(--pg-blood-bright), var(--pg-blood-deep));
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.22),
-        0 0 16px -2px rgba(220, 52, 70, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .nodeContent {
@@ -350,7 +355,6 @@
 
 .segment[data-state="current"] {
     background: var(--pg-blood-bright);
-    box-shadow: 0 0 8px rgba(220, 52, 70, 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {
