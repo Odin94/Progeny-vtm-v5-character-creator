@@ -1062,19 +1062,6 @@
     --tone: var(--pg-blood-bright);
 }
 
-/* A slim tone bar marks merits vs flaws without shouting. */
-.merit::before {
-    content: "";
-    position: absolute;
-    left: -1px;
-    top: 10px;
-    bottom: 10px;
-    width: 2px;
-    border-radius: 2px;
-    background: color-mix(in srgb, var(--tone) 55%, transparent);
-    transition: background-color var(--pg-dur-base) var(--ease-out);
-}
-
 @media (hover: hover) and (pointer: fine) {
     .merit:not([data-excluded]):hover {
         border-color: var(--pg-border);
@@ -1083,14 +1070,7 @@
 
 .merit[data-picked] {
     border-color: color-mix(in srgb, var(--tone) 45%, transparent);
-    background:
-        linear-gradient(90deg, color-mix(in srgb, var(--tone) 14%, transparent), transparent 80%),
-        color-mix(in srgb, var(--pg-surface-2) 90%, transparent);
-}
-
-.merit[data-picked]::before {
-    background: var(--tone);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--tone) 70%, transparent);
+    background: color-mix(in srgb, var(--tone) 8%, var(--pg-surface-2));
 }
 
 .merit[data-excluded] {
@@ -1121,12 +1101,36 @@
 
 .meritKind {
     flex: none;
-    margin-top: 3px;
-    font-size: 0.5625rem;
-    font-weight: 700;
-    letter-spacing: var(--pg-tracking-caps);
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--tone) 75%, var(--pg-ink-3));
+    align-self: center;
+    width: 11px;
+    height: 9px;
+    background: var(--tone);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.merit[data-type="flaw"] .meritKind {
+    transform: rotate(180deg);
+}
+
+/* Extend the existing tier action across its card while keeping a single keyboard target. */
+.merit [data-card-target] {
+    position: static;
+}
+
+.merit [data-card-target]:active {
+    transform: none;
+}
+
+.merit [data-card-target]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--pg-radius-md);
+}
+
+.merit:has([data-card-target]:focus-visible) {
+    outline: 1px solid var(--tone);
+    outline-offset: 2px;
 }
 
 .meritSummary {
@@ -1167,9 +1171,8 @@
 
 .levelButton.levelButton[data-active] {
     border-color: var(--tone);
-    background: color-mix(in srgb, var(--tone) 78%, black);
+    background: color-mix(in srgb, var(--tone) 30%, var(--pg-surface-2));
     color: var(--pg-ink);
-    box-shadow: 0 0 14px -4px var(--tone);
     opacity: 1;
 }
 
@@ -1194,13 +1197,6 @@
     height: 6px;
     border-radius: 50%;
     background: currentColor;
-}
-
-.costCaption {
-    margin: 0;
-    font-size: 0.6875rem;
-    letter-spacing: 0.04em;
-    color: var(--pg-ink-3);
 }
 
 .empty {

@@ -132,23 +132,12 @@
 
 .sheet-menu__action--featured {
     border-color: color-mix(in srgb, var(--mantine-primary-color-4) 45%, transparent);
-    background: linear-gradient(
-        135deg,
-        var(--mantine-primary-color-7),
-        var(--mantine-primary-color-9)
-    );
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.12),
-        var(--pg-glow-accent);
+    background: color-mix(in srgb, var(--mantine-primary-color-8) 26%, var(--pg-surface-3));
 }
 
 @media (hover: hover) and (pointer: fine) {
     .sheet-menu__action--featured:hover {
-        background: linear-gradient(
-            135deg,
-            var(--mantine-primary-color-6),
-            var(--mantine-primary-color-8)
-        );
+        background: color-mix(in srgb, var(--mantine-primary-color-8) 34%, var(--pg-surface-3));
     }
 }
 

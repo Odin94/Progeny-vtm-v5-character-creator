@@ -222,7 +222,6 @@
     height: 7px;
     border-radius: 50%;
     background: var(--pg-success);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pg-success) 60%, transparent);
     animation: live-pulse 2.4s var(--ease-out) infinite;
 }
 
@@ -242,7 +241,7 @@
         opacity: 1;
     }
     30% {
-        opacity: 0.35;
+        opacity: 0.72;
     }
 }
 

@@ -1,3 +1,4 @@
+import { notifications } from "@mantine/notifications"
 import {
     createSpotlight,
     Spotlight,
@@ -9,6 +10,10 @@ import {
     IconBook2,
     IconBooks,
     IconCookie,
+    IconDownload,
+    IconFileTypePdf,
+    IconDeviceGamepad2,
+    IconBrandDiscord,
     IconDroplet,
     IconHome,
     IconInfoCircle,
@@ -24,6 +29,9 @@ import { useMemo } from "react"
 import { useAuth } from "~/hooks/useAuth"
 import { useCoteries } from "~/hooks/useCoteries"
 import { useHomebrewCollections } from "~/hooks/useHomebrew"
+import { getEmptyCharacter, isCharacterEmpty } from "~/data/Character"
+import { characterIntake } from "~/modules/characterIntake"
+import type { VttDownloadFormat } from "~/generator/vttDownloads"
 import { openCookiePreferences } from "~/utils/cookiePreferences"
 import classes from "./QuickNavigator.module.css"
 
@@ -39,6 +47,88 @@ const FEATURE_GUIDES = [
     { slug: "coteries", label: "Coteries & playing together" },
     { slug: "credits-and-contact", label: "Credits & contact" }
 ] as const
+
+const EXPORT_ACTIONS = [
+    {
+        format: "pdf",
+        label: "Download PDF",
+        keywords: ["export", "print", "character sheet", "blank sheet"],
+        icon: IconFileTypePdf
+    },
+    {
+        format: "progeny-json",
+        label: "Download character JSON",
+        keywords: ["save file", "backup", "export json", "native json", "json download"],
+        icon: IconDownload
+    },
+    {
+        format: "foundry-json",
+        label: "Export Foundry VTT JSON",
+        keywords: ["download", "file", "foundry json", "vtt export"],
+        icon: IconDeviceGamepad2
+    },
+    {
+        format: "inconnu-json",
+        label: "Export Inconnu JSON",
+        keywords: ["download", "discord", "file", "inconnu export"],
+        icon: IconBrandDiscord
+    },
+    {
+        format: "inconnu-commands",
+        label: "Download Inconnu Discord commands",
+        keywords: ["export", "bot", "discord text", "command export"],
+        icon: IconBrandDiscord
+    }
+] as const
+
+const exportCharacter = async (format: VttDownloadFormat | "pdf" | "progeny-json") => {
+    try {
+        // Resolve the active draft at click time so account switches and sheet edits
+        // are reflected even when the quick navigator is already open.
+        const stored = localStorage.getItem("character")
+        const result = stored ? characterIntake.read(stored, "local-storage") : null
+        if (result && !result.success) {
+            notifications.show({
+                title: "Could not export character",
+                message: "Open the character creator to recover this draft.",
+                color: "red"
+            })
+            return
+        }
+        const character = result?.character ?? getEmptyCharacter()
+        if (
+            format !== "pdf" &&
+            !character.name.trim() &&
+            !character.id &&
+            isCharacterEmpty(character)
+        ) {
+            notifications.show({
+                title: "No character to export",
+                message: "Create or load a character first."
+            })
+            return
+        }
+        const source = "quick-navigator"
+
+        if (format === "pdf") {
+            const { downloadCharacterSheet } = await import("~/generator/pdfCreator")
+            await downloadCharacterSheet(character, source)
+        } else if (format === "progeny-json") {
+            const { downloadJson } = await import("~/generator/utils")
+            await downloadJson(character, undefined, source)
+        } else {
+            const { downloadVttCharacter } = await import("~/generator/vttDownloads")
+            await downloadVttCharacter(character, format, source)
+        }
+    } catch (error) {
+        console.error(error)
+        notifications.show({
+            title: "Could not export character",
+            message: "Try the download again.",
+            color: "red"
+        })
+    }
+}
 
 /**
  * Global quick navigator (Mantine Spotlight) mounted once in `__root.tsx`.
@@ -134,7 +224,19 @@ export const QuickNavigator = () => {
             }
         ]
 
-        const groups: SpotlightActionGroupData[] = [{ group: "Pages", actions: pages }]
+        const groups: SpotlightActionGroupData[] = [
+            { group: "Pages", actions: pages },
+            {
+                group: "Character exports",
+                actions: EXPORT_ACTIONS.map(({ format, label, keywords, icon: ExportIcon }) => ({
+                    id: `download-${format}`,
+                    label,
+                    keywords: [...keywords],
+                    leftSection: <ExportIcon {...ICON} />,
+                    onClick: () => void exportCharacter(format)
+                }))
+            }
+        ]
 
         if (coteries?.length) {
             groups.push({
@@ -182,7 +284,7 @@ export const QuickNavigator = () => {
             store={quickNavigatorStore}
             actions={actions}
             shortcut={["mod + K"]}
-            nothingFound="No matching pages"
+            nothingFound="No matches"
             highlightQuery
             limit={40}
             scrollable
@@ -202,8 +304,8 @@ export const QuickNavigator = () => {
             }}
             searchProps={{
                 leftSection: <IconSearch size={18} stroke={1.6} />,
-                placeholder: "Go to…",
-                "aria-label": "Search pages"
+                placeholder: "Jump to a page or export…",
+                "aria-label": "Search pages and exports"
             }}
         />
     )

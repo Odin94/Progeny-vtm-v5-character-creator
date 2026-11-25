@@ -459,6 +459,7 @@ const PredatorTypeModal = ({
                     <div>
                         <SectionDivider label="Skill Specialty" />
                         <SegmentedControl
+                            classNames={{ label: classes.choiceLabel }}
                             size={phoneScreen ? "sm" : "md"}
                             color={cat.mantineColor}
                             fullWidth
@@ -507,6 +508,7 @@ const PredatorTypeModal = ({
                         events={globals.tooltipTriggerEvents}
                     >
                         <SegmentedControl
+                            classNames={{ label: classes.choiceLabel }}
                             size={phoneScreen ? "sm" : "md"}
                             color={cat.mantineColor}
                             fullWidth

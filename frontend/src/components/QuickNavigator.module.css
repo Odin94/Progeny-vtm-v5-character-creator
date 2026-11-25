@@ -56,7 +56,6 @@
 .action:where([data-selected]) {
     background-color: var(--pg-accent-soft);
     color: var(--pg-ink);
-    box-shadow: inset 2px 0 0 var(--pg-accent);
 }
 
 @media (hover: hover) and (pointer: fine) {

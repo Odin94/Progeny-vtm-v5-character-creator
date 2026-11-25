@@ -42,7 +42,6 @@ const CustomDicePoolControls = ({ primaryColor }: CustomDicePoolControlsProps) =
             </Tooltip>
             <div className={classes.stepperValue} aria-live="polite">
                 <span className={classes.stepperNumber}>{diceCount}</span>
-                <span className={classes.stepperUnit}>{diceCount === 1 ? "Die" : "Dice"}</span>
             </div>
             <Tooltip label="Add a die" zIndex={2100}>
                 <ActionIcon

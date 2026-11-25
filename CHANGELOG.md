@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add character downloads and VTT exports to the quick navigator, make loresheet tiers clickable, and soften accents across the creator and sheet.
+
 - Resume unfinished Attribute picks after a reload, recalculate starting XP when generation changes, and preserve learned powers, rituals, and ceremonies when revisiting creator choices.
 
 - Restore Progeny’s gothic redesign with quieter shared controls, a scannable clan catalog, a character sheet that uses the chosen clan color for key details, and a compact account roster.

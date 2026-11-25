@@ -281,10 +281,12 @@
 .tag {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    min-width: 24px;
     height: 20px;
     padding: 0 6px;
     font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
     font-weight: 600;
     letter-spacing: 0.06em;
     white-space: nowrap;

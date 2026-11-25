@@ -1,5 +1,4 @@
-import { downloadFile } from "~/utils/fileDownload"
-import { notifications } from "@mantine/notifications"
+import { downloadVttCharacter, type VttDownloadFormat } from "../vttDownloads"
 import { useDisclosure } from "@mantine/hooks"
 import {
     IconAlertCircle,
@@ -31,11 +30,8 @@ import {
     openSupportConversation,
     showSupportUnavailableNotification
 } from "../../utils/supportConversations"
-import { createWoD5EVttJson } from "../foundryWoDJsonCreator"
-import { createInconnuCommandExport } from "../inconnuCommandCreator"
-import { createInconnuJson } from "../inconnuJsonCreator"
 import { GeneratorStepId } from "../steps"
-import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "../utils"
+import { downloadJson } from "../utils"
 import { openCookiePreferences } from "~/utils/cookiePreferences"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import { useAnalyticsConsent } from "~/hooks/useAnalyticsConsent"
@@ -62,9 +58,6 @@ type PdfStage = "idle" | "loading" | "filling" | "done"
 type ExportKey = "foundry" | "inconnu" | "inconnu-commands"
 
 const DONE_FLASH_MS = 2600
-const MAX_LISTED_TRAITS = 6
-
-const titleCase = (value: string) => value.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase())
 
 const ordinal = (value: number) => {
     const mod100 = value % 100
@@ -140,7 +133,6 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
     }
 
     const handleDownloadJSON = () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         downloadJson(character, undefined, "generator")
             .then(() => {
                 setJsonDone(true)
@@ -221,13 +213,7 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
                             </p>
                         </motion.header>
 
-                        <motion.div {...reveal(0.06)}>
-                            <Panel tone="ornate" p="xl">
-                                <Dossier character={character} />
-                            </Panel>
-                        </motion.div>
-
-                        <motion.div className={classes.groups} {...reveal(0.12)}>
+                        <motion.div className={classes.groups} {...reveal(0.06)}>
                             <section className={classes.group}>
                                 <SectionHeader title="Take it to the table" />
                                 <ActionCard
@@ -418,114 +404,6 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
     )
 }
 
-function Dossier({ character }: { character: Character }) {
-    const disciplineCounts = character.disciplines.reduce((counts, power) => {
-        counts.set(power.discipline, (counts.get(power.discipline) ?? 0) + 1)
-        return counts
-    }, new Map<string, number>())
-    const traits = [
-        ...character.merits.map((item) => ({ ...item, type: "merit" as const })),
-        ...character.flaws.map((item) => ({ ...item, type: "flaw" as const }))
-    ]
-    const vitals = [
-        { label: "Health", value: character.maxHealth, total: Math.max(character.maxHealth, 5) },
-        { label: "Willpower", value: character.willpower, total: Math.max(character.willpower, 5) },
-        { label: "Humanity", value: character.humanity, total: 10 },
-        { label: "Blood Potency", value: character.bloodPotency, total: 5 }
-    ]
-    const extraPowers = [
-        ...character.rituals.map((ritual) => ({ ...ritual, kind: "Ritual" })),
-        ...character.ceremonies.map((ceremony) => ({ ...ceremony, kind: "Ceremony" }))
-    ]
-
-    return (
-        <div className={classes.dossier}>
-            <div className={classes.dossierBlock}>
-                <p className={classes.dossierTitle}>Disciplines</p>
-                {disciplineCounts.size === 0 ? (
-                    <p className={classes.muted}>Gained through blood resonance</p>
-                ) : (
-                    [...disciplineCounts.entries()].map(([name, count]) => (
-                        <span key={name} className={classes.trait}>
-                            <span className={classes.traitName}>{titleCase(name)}</span>
-                            <Dots filled={count} />
-                        </span>
-                    ))
-                )}
-                {extraPowers.map((power) => (
-                    <span key={`${power.kind}-${power.name}`} className={classes.trait}>
-                        <span className={classes.traitName}>
-                            {power.name}
-                            <small>{power.kind}</small>
-                        </span>
-                        <Dots filled={power.level} />
-                    </span>
-                ))}
-            </div>
-
-            <div className={classes.dossierBlock}>
-                <p className={classes.dossierTitle}>Vitals</p>
-                {vitals.map((vital) => (
-                    <span key={vital.label} className={classes.trait}>
-                        <span className={classes.traitName}>
-                            {vital.label} <small>{vital.value}</small>
-                        </span>
-                        <Dots filled={vital.value} total={vital.total} />
-                    </span>
-                ))}
-            </div>
-
-            <div className={classes.dossierBlock}>
-                <p className={classes.dossierTitle}>Touchstones & Convictions</p>
-                {character.touchstones.length === 0 ? (
-                    <p className={classes.muted}>None yet</p>
-                ) : (
-                    character.touchstones.map((touchstone, index) => (
-                        <span key={index} className={classes.touchstone}>
-                            <span className={classes.touchstoneName}>
-                                {touchstone.name || "Unnamed touchstone"}
-                            </span>
-                            {touchstone.conviction ? (
-                                <span className={classes.conviction}>
-                                    “{touchstone.conviction}”
-                                </span>
-                            ) : null}
-                        </span>
-                    ))
-                )}
-            </div>
-
-            <div className={classes.dossierBlock}>
-                <p className={classes.dossierTitle}>Merits & Flaws</p>
-                {traits.length === 0 ? (
-                    <p className={classes.muted}>None taken</p>
-                ) : (
-                    <>
-                        {traits.slice(0, MAX_LISTED_TRAITS).map((trait) => (
-                            <span
-                                key={`${trait.type}-${trait.name}`}
-                                className={classes.trait}
-                                data-tone={trait.type}
-                            >
-                                <span className={classes.traitName}>
-                                    {trait.name}
-                                    {trait.type === "flaw" ? <small>Flaw</small> : null}
-                                </span>
-                                <Dots filled={trait.level} />
-                            </span>
-                        ))}
-                        {traits.length > MAX_LISTED_TRAITS ? (
-                            <span className={classes.more}>
-                                +{traits.length - MAX_LISTED_TRAITS} more on your sheet
-                            </span>
-                        ) : null}
-                    </>
-                )}
-            </div>
-        </div>
-    )
-}
-
 function ActionCard({
     icon,
     label,
@@ -598,72 +476,8 @@ function ExportList({
         }
     }
 
-    const exportFoundry = () =>
-        run("foundry", async () => {
-            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-            let validationErrors: string[] = []
-            await downloadFile(
-                {
-                    filename: `foundry_wod5e_${character.name}.json`,
-                    format: "foundry-json",
-                    source: "generator"
-                },
-                () => {
-                    const result = createWoD5EVttJson(character)
-                    validationErrors = result.validationErrors
-                    return new Blob([JSON.stringify(result.json, null, 2)], {
-                        type: "application/json"
-                    })
-                }
-            )
-
-            if (validationErrors.length > 0) {
-                const errorCount = validationErrors.length
-                const firstError = validationErrors[0]
-                const message =
-                    errorCount === 1
-                        ? `Validation error: ${firstError}`
-                        : `${errorCount} validation errors found. First error: ${firstError}`
-                notifications.show({
-                    title: "Validation Warning",
-                    message: `The exported JSON may not be fully compatible with Foundry VTT. ${message}`,
-                    color: "orange",
-                    autoClose: 10000
-                })
-            }
-        })
-
-    const exportInconnu = () =>
-        run("inconnu", async () => {
-            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-            await downloadFile(
-                {
-                    filename: `inconnu_${character.name}.json`,
-                    format: "inconnu-json",
-                    source: "generator"
-                },
-                () =>
-                    new Blob([JSON.stringify(createInconnuJson(character), null, 2)], {
-                        type: "application/json"
-                    })
-            )
-        })
-
-    const exportInconnuCommands = () =>
-        run("inconnu-commands", async () => {
-            updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-            await downloadFile(
-                {
-                    filename: `inconnu_${character.name}_discord_commands_progeny.txt`,
-                    format: "inconnu-commands",
-                    source: "generator"
-                },
-                () =>
-                    new Blob([createInconnuCommandExport(createInconnuJson(character))], {
-                        type: "text/plain"
-                    })
-            )
-        })
+    const exportVtt = (key: ExportKey, format: VttDownloadFormat) =>
+        run(key, () => downloadVttCharacter(character, format, "generator"))
 
     const downloadButton = (key: ExportKey, name: string, onClick: () => void) => (
         <Button
@@ -716,7 +530,9 @@ function ExportList({
                         JSON file for the WoD5E Foundry module
                     </span>
                 </div>
-                {downloadButton("foundry", "Foundry VTT JSON", exportFoundry)}
+                {downloadButton("foundry", "Foundry VTT JSON", () =>
+                    exportVtt("foundry", "foundry-json")
+                )}
             </div>
 
             <div className={classes.exportRow}>
@@ -734,7 +550,9 @@ function ExportList({
                         For the Inconnu Discord character manager
                     </span>
                 </div>
-                {downloadButton("inconnu", "Inconnu JSON", exportInconnu)}
+                {downloadButton("inconnu", "Inconnu JSON", () =>
+                    exportVtt("inconnu", "inconnu-json")
+                )}
             </div>
 
             <div className={classes.exportRow}>
@@ -744,10 +562,8 @@ function ExportList({
                         Setup commands to run after /character wizard
                     </span>
                 </div>
-                {downloadButton(
-                    "inconnu-commands",
-                    "Inconnu Discord commands",
-                    exportInconnuCommands
+                {downloadButton("inconnu-commands", "Inconnu Discord commands", () =>
+                    exportVtt("inconnu-commands", "inconnu-commands")
                 )}
             </div>
         </div>

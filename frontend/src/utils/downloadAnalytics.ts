@@ -11,6 +11,7 @@ export type DownloadFormat =
 export type DownloadSource =
     | "generator"
     | "sheet"
+    | "quick-navigator"
     | "account"
     | "conflict-backup"
     | "broken-save"

@@ -13,12 +13,14 @@ import classes from "./generatorCards.module.css"
 export const Dots = ({
     filled,
     total = filled,
-    size = "md"
+    size = "md",
+    glow = true
 }: {
     filled: number
     total?: number
     size?: "md" | "lg"
-}) => <DotTrack filled={filled} total={total} size={size} glow />
+    glow?: boolean
+}) => <DotTrack filled={filled} total={total} size={size} glow={glow} />
 
 export type GrimoireFact = { label: string; value: string; icon?: ReactNode }
 

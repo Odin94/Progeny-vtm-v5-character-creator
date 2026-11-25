@@ -261,7 +261,6 @@ const MeritsAndFlaws = ({ options }: MeritsAndFlawsProps) => {
                 data-tone={kind === "flaw" ? "blood" : undefined}
             >
                 {kind === "merit" ? "Merits" : "Flaws"}
-                <span className={classes.subsectionCount}>{entries.length}</span>
             </h3>
             <div className={classes.meritList}>
                 {entries.map((entry, index) => renderItem(kind, entry, index))}

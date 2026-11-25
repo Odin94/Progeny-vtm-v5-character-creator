@@ -532,10 +532,7 @@ const MeritFlawSelectModal = ({ opened, onClose, options, type }: MeritFlawSelec
                             {existingLevel > 0 ? (
                                 <Tag tone="success">Has {existingLevel}</Tag>
                             ) : null}
-                            <Tag tone={tone}>
-                                {item.cost.join(" / ")}
-                                <span className={selectModalClasses.dot} aria-hidden="true" />
-                            </Tag>
+                            <Tag tone={tone}>{item.cost.join(" / ")}</Tag>
                         </>
                     }
                 />

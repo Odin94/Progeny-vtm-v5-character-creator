@@ -142,18 +142,6 @@
     cursor: default;
 }
 
-.step[data-state="current"]::before {
-    content: "";
-    position: absolute;
-    left: -1px;
-    top: 9px;
-    bottom: 9px;
-    width: 2px;
-    border-radius: 2px;
-    background: var(--pg-blood-bright);
-    box-shadow: var(--pg-glow-blood);
-}
-
 .step[data-state="complete"] {
     color: var(--pg-ink-2);
 }

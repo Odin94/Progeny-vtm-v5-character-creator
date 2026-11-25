@@ -1,5 +1,5 @@
+import { downloadVttCharacter, type VttDownloadFormat } from "~/generator/vttDownloads"
 import { useFileSavePromptOpen } from "~/utils/fileSavePromptStore"
-import { downloadFile } from "~/utils/fileDownload"
 import { createRecoveredCharacterCopy, readRecoveredCharacterDrafts } from "~/utils/characterDraft"
 import { ActionIcon, Button, FileButton, Modal, Stack, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
@@ -35,10 +35,7 @@ import { useAuth } from "~/hooks/useAuth"
 import { api } from "~/utils/api"
 import { loadCharacterFromFile } from "~/components/LoadModal"
 import { characterPersistence } from "~/modules/characterPersistence"
-import { createWoD5EVttJson } from "~/generator/foundryWoDJsonCreator"
-import { createInconnuCommandExport } from "~/generator/inconnuCommandCreator"
-import { createInconnuJson } from "~/generator/inconnuJsonCreator"
-import { downloadJson, updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "~/generator/utils"
+import { downloadJson } from "~/generator/utils"
 import { trackFeatureGuideOpened } from "~/utils/analytics"
 import { SheetOptions } from "../CharacterSheet"
 import PreferencesContent from "./PreferencesModal"
@@ -112,7 +109,6 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
     }
 
     const handleDownloadJSON = () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
         downloadJson(character, undefined, "sheet").catch((e) => {
             console.error(e)
             setDownloadError(e as Error)
@@ -120,82 +116,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
         handleMenuClose()
     }
 
-    const handleExportToFoundry = async () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
+    const handleVttDownload = async (format: VttDownloadFormat) => {
         try {
-            let validationErrors: string[] = []
-            await downloadFile(
-                {
-                    filename: `foundry_wod5e_${character.name}.json`,
-                    format: "foundry-json",
-                    source: "sheet"
-                },
-                () => {
-                    const result = createWoD5EVttJson(character)
-                    validationErrors = result.validationErrors
-                    return new Blob([JSON.stringify(result.json, null, 2)], {
-                        type: "application/json"
-                    })
-                }
-            )
-
-            if (validationErrors.length > 0) {
-                const errorCount = validationErrors.length
-                const firstError = validationErrors[0]
-                const message =
-                    errorCount === 1
-                        ? `Validation error: ${firstError}`
-                        : `${errorCount} validation errors found. First error: ${firstError}`
-
-                notifications.show({
-                    title: "Validation Warning",
-                    message: `The exported JSON may not be fully compatible with Foundry VTT. ${message}`,
-                    color: "orange",
-                    autoClose: 10000
-                })
-            }
-            handleMenuClose()
-        } catch (e) {
-            console.error(e)
-            setDownloadError(e as Error)
-        }
-    }
-
-    const handleExportToInconnu = async () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        try {
-            await downloadFile(
-                {
-                    filename: `inconnu_${character.name}.json`,
-                    format: "inconnu-json",
-                    source: "sheet"
-                },
-                () =>
-                    new Blob([JSON.stringify(createInconnuJson(character), null, 2)], {
-                        type: "application/json"
-                    })
-            )
-            handleMenuClose()
-        } catch (e) {
-            console.error(e)
-            setDownloadError(e as Error)
-        }
-    }
-
-    const handleExportInconnuCommands = async () => {
-        updateHealthAndWillpowerAndBloodPotencyAndHumanity(character)
-        try {
-            await downloadFile(
-                {
-                    filename: `inconnu_${character.name}_discord_commands_progeny.txt`,
-                    format: "inconnu-commands",
-                    source: "sheet"
-                },
-                () =>
-                    new Blob([createInconnuCommandExport(createInconnuJson(character))], {
-                        type: "text/plain"
-                    })
-            )
+            await downloadVttCharacter(character, format, "sheet")
             handleMenuClose()
         } catch (e) {
             console.error(e)
@@ -561,7 +484,9 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                 </div>
                                                 <Button
                                                     leftSection={<IconDownload size={17} />}
-                                                    onClick={handleExportToFoundry}
+                                                    onClick={() =>
+                                                        handleVttDownload("foundry-json")
+                                                    }
                                                 >
                                                     Export JSON
                                                 </Button>
@@ -612,13 +537,17 @@ const CharacterSheetMenu = ({ options }: CharacterSheetMenuProps) => {
                                                 <div className="sheet-menu__export-actions">
                                                     <Button
                                                         leftSection={<IconDownload size={17} />}
-                                                        onClick={handleExportToInconnu}
+                                                        onClick={() =>
+                                                            handleVttDownload("inconnu-json")
+                                                        }
                                                     >
                                                         Export JSON
                                                     </Button>
                                                     <Button
                                                         leftSection={<IconBrandDiscord size={17} />}
-                                                        onClick={handleExportInconnuCommands}
+                                                        onClick={() =>
+                                                            handleVttDownload("inconnu-commands")
+                                                        }
                                                     >
                                                         Discord commands
                                                     </Button>

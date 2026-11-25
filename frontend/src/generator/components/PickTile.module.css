@@ -130,10 +130,10 @@
     border-radius: inherit;
     pointer-events: none;
     box-shadow:
-        0 0 0 1px rgba(212, 175, 100, 0.4) inset,
-        0 0 16px -2px rgba(212, 175, 100, 0.4);
+        0 0 0 1px rgba(212, 175, 100, 0.22) inset,
+        0 0 8px -3px rgba(212, 175, 100, 0.2);
     opacity: 0;
-    animation: pgTileNudge 2.4s var(--ease-in-out) infinite;
+    animation: pgTileNudge 3.2s var(--ease-in-out) infinite;
 }
 
 @keyframes pgTileNudge {

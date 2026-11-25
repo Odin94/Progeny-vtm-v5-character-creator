@@ -441,7 +441,7 @@ export default function LandingPage() {
                                 ]}
                                 body={
                                     <p>
-                                        The account hub saves your characters, arranges them into
+                                        Your account saves your characters, arranges them into
                                         coteries and shares read-only versions with your friends.
                                         Account features, like all of Progeny, are completely free.
                                     </p>

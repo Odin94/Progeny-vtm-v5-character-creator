@@ -140,6 +140,7 @@ const CategoryHeading = ({ title }: { title: string }) => {
 type MeritOrFlawCardProps = {
     meritOrFlaw: MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string }
     type: "flaw" | "merit"
+    wholeCard?: boolean
     pickedByIdentity: Map<string, MeritFlaw>
     exclusionMap: Map<string, string[]>
     predatorTypeMeritsByName: Map<string, MeritFlaw>
@@ -157,6 +158,7 @@ const MeritOrFlawCard = memo(
     ({
         meritOrFlaw,
         type,
+        wholeCard,
         pickedByIdentity,
         exclusionMap,
         predatorTypeMeritsByName,
@@ -185,11 +187,8 @@ const MeritOrFlawCard = memo(
             : predatorTypeMeritsByName.get(meritOrFlaw.name)
         const meritInPredatorTypeLevel = meritInPredatorType?.level ?? 0
         const isPicked = Boolean(alreadyPickedItem ?? meritInPredatorType)
+        const isSingleTier = wholeCard && meritOrFlaw.cost.length === 1
 
-        // Persistent per-card cost/budget indicator, so the affordability rule is
-        // visible on the page instead of hidden behind a hover tooltip. `cost` is the
-        // points already reserved by the current pick and is refunded when re-picking,
-        // so it is added back into the budget the buttons are checked against.
         const isFlaw = type === "flaw"
         const isTbMerit = isThinbloodMerit(meritOrFlaw.name)
         const isTbFlaw = isThinbloodFlaw(meritOrFlaw.name)
@@ -198,19 +197,44 @@ const MeritOrFlawCard = memo(
             : isFlaw
               ? "flaw points"
               : "advantage points"
+        const cost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
+        const unpick = () => {
+            setAttemptedUnaffordableLevel(null)
+            setPickedMeritsAndFlaws((prev) =>
+                prev.filter((item) => getMeritFlawIdentity(item, item.type) !== meritFlawIdentity)
+            )
+            if (isTbFlaw) {
+                setRemainingThinbloodMeritPoints((prev) => prev - 1)
+            } else if (isTbMerit) {
+                setRemainingThinbloodMeritPoints((prev) => prev + 1)
+            } else if (isFlaw) {
+                setRemainingFlaws((prev) => prev + cost)
+            } else {
+                setRemainingMerits((prev) => prev + cost)
+            }
+            trackEvent({
+                action: "merits unpick clicked",
+                category: "merits",
+                label: `${meritOrFlaw.name}: ${wasPickedLevel} (${type})`,
+                value: wasPickedLevel
+            })
+        }
+
         const createButton = (level: number) => {
             const nextCost = Math.max(0, level - meritInPredatorTypeLevel)
-            const previousCost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
+            const previousCost = cost
             const availablePoints = isThinbloodMerit(meritOrFlaw.name)
                 ? remainingThinbloodMeritPoints + previousCost
                 : type === "flaw"
                   ? remainingFlaws + previousCost
                   : remainingMerits + previousCost
-            const hasEnoughPoints = isThinbloodFlaw(meritOrFlaw.name) || availablePoints >= nextCost
+            const canUnpick = isSingleTier && Boolean(alreadyPickedItem)
+            const hasEnoughPoints = canUnpick || isTbFlaw || availablePoints >= nextCost
             const isUnavailable =
-                isExcluded ||
-                (meritInPredatorType && meritInPredatorType.level >= level) ||
-                wasPickedLevel === level
+                !canUnpick &&
+                (isExcluded ||
+                    (meritInPredatorType && meritInPredatorType.level >= level) ||
+                    wasPickedLevel === level)
 
             const isActiveLevel =
                 alreadyPickedItem?.level === level || meritInPredatorType?.level === level
@@ -219,9 +243,20 @@ const MeritOrFlawCard = memo(
                     key={meritOrFlaw.name + level}
                     disabled={isUnavailable}
                     aria-disabled={!hasEnoughPoints || undefined}
+                    aria-label={
+                        isSingleTier
+                            ? `${meritOrFlaw.name}, ${level} ${level === 1 ? "dot" : "dots"}`
+                            : undefined
+                    }
+                    aria-pressed={isSingleTier ? Boolean(alreadyPickedItem) : undefined}
                     data-active={isActiveLevel || undefined}
+                    data-card-target={(isSingleTier && !isUnavailable) || undefined}
                     className={classes.levelButton}
                     onClick={() => {
+                        if (canUnpick) {
+                            unpick()
+                            return
+                        }
                         if (!hasEnoughPoints) {
                             setAttemptedUnaffordableLevel(level)
                             return
@@ -286,7 +321,6 @@ const MeritOrFlawCard = memo(
             return button
         }
 
-        const cost = Math.max(0, wasPickedLevel - meritInPredatorTypeLevel)
         const summaryText = meritInPredatorType
             ? "Already picked in Predator Type"
             : isExcluded
@@ -298,26 +332,12 @@ const MeritOrFlawCard = memo(
             : isFlaw
               ? remainingFlaws + cost
               : remainingMerits + cost
-        const levelCosts = meritOrFlaw.cost.map((l) => Math.max(0, l - meritInPredatorTypeLevel))
-        const minLevelCost = Math.min(...levelCosts)
-        const maxLevelCost = Math.max(...levelCosts)
-        const costLabel =
-            minLevelCost === maxLevelCost
-                ? `${minLevelCost} pt${minLevelCost === 1 ? "" : "s"}`
-                : `${minLevelCost}–${maxLevelCost} pts`
         const attemptedCost =
             attemptedUnaffordableLevel === null
                 ? null
                 : Math.max(0, attemptedUnaffordableLevel - meritInPredatorTypeLevel)
         const showAffordabilityWarning =
             attemptedCost !== null && !isTbFlaw && availableForCard < attemptedCost
-        // Thin-blood flaws grant points rather than cost them, and fully
-        // predator-covered / excluded items have nothing to spend, so skip the caption.
-        const showCostCaption =
-            !isTbFlaw &&
-            !isExcluded &&
-            !(meritInPredatorType && meritInPredatorType.level >= maxLevelCost)
-
         const textContent = (
             <div
                 key={lineKey}
@@ -331,7 +351,11 @@ const MeritOrFlawCard = memo(
                     {meritOrFlaw.homebrewSource ? (
                         <HomebrewBadge source={meritOrFlaw.homebrewSource} />
                     ) : null}
-                    <span className={classes.meritKind}>{type}</span>
+                    <span
+                        className={classes.meritKind}
+                        role="img"
+                        aria-label={type === "flaw" ? "Flaw" : "Merit"}
+                    />
                 </div>
 
                 <p
@@ -356,32 +380,9 @@ const MeritOrFlawCard = memo(
                 ) : null}
                 <div className={classes.meritActions}>
                     {meritOrFlaw.cost.map((i) => createButton(i))}
-                    {alreadyPickedItem ? (
+                    {alreadyPickedItem && !isSingleTier ? (
                         <Button
-                            onClick={() => {
-                                setPickedMeritsAndFlaws((prev) =>
-                                    prev.filter(
-                                        (item) =>
-                                            getMeritFlawIdentity(item, item.type) !==
-                                            meritFlawIdentity
-                                    )
-                                )
-                                if (isThinbloodFlaw(meritOrFlaw.name)) {
-                                    setRemainingThinbloodMeritPoints((prev) => prev - 1)
-                                } else if (isThinbloodMerit(meritOrFlaw.name)) {
-                                    setRemainingThinbloodMeritPoints((prev) => prev + 1)
-                                } else if (type === "flaw") {
-                                    setRemainingFlaws((prev) => prev + cost)
-                                } else {
-                                    setRemainingMerits((prev) => prev + cost)
-                                }
-                                trackEvent({
-                                    action: "merits unpick clicked",
-                                    category: "merits",
-                                    label: `${meritOrFlaw.name}: ${wasPickedLevel} (${type})`,
-                                    value: wasPickedLevel
-                                })
-                            }}
+                            onClick={unpick}
                             size="compact-xs"
                             variant="subtle"
                             color="gray"
@@ -392,11 +393,6 @@ const MeritOrFlawCard = memo(
                     ) : null}
                 </div>
 
-                {showCostCaption ? (
-                    <p className={classes.costCaption}>
-                        {`Costs ${costLabel} · ${availableForCard} ${pointTypeLabel} left`}
-                    </p>
-                ) : null}
                 {showAffordabilityWarning ? (
                     <p className={classes.reason}>
                         {`Not enough points — costs ${attemptedCost} pt${attemptedCost === 1 ? "" : "s"}, you have ${availableForCard} ${pointTypeLabel} left`}
@@ -622,12 +618,14 @@ const MeritsAndFlawsPicker = ({ character, setCharacter, nextStep }: MeritsAndFl
 
     const getMeritOrFlawLine = (
         meritOrFlaw: MeritOrFlaw & { homebrewSource?: HomebrewSource; text?: string },
-        type: "flaw" | "merit"
+        type: "flaw" | "merit",
+        wholeCard = false
     ): React.JSX.Element => (
         <MeritOrFlawCard
             key={getMeritFlawIdentity(meritOrFlaw, type)}
             meritOrFlaw={meritOrFlaw}
             type={type}
+            wholeCard={wholeCard}
             {...cardProps}
         />
     )
@@ -962,7 +960,7 @@ const Budget = ({
                     {total === undefined ? remaining : `${remaining}/${total}`}
                 </span>
                 {total !== undefined ? (
-                    <Dots filled={Math.max(0, remaining)} total={total} size="lg" />
+                    <Dots filled={Math.max(0, remaining)} total={total} size="lg" glow={false} />
                 ) : null}
             </span>
         </div>

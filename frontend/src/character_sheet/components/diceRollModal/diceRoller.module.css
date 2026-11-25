@@ -257,10 +257,14 @@
 
 .stepper {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: var(--pg-space-3);
-    padding: var(--pg-space-2) var(--pg-space-2);
+    padding: var(--pg-space-2);
+
+    > :last-child {
+        justify-self: end;
+    }
     border-radius: var(--pg-radius-md);
     background: var(--pg-sunken);
     border: 1px solid var(--pg-border);
@@ -268,10 +272,9 @@
 
 .stepperValue {
     display: flex;
-    align-items: baseline;
+    place-items: center;
     justify-content: center;
-    gap: 8px;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
 }
 
 .stepperNumber {
@@ -280,14 +283,6 @@
     font-size: 2rem;
     line-height: 1;
     color: var(--pg-ink);
-}
-
-.stepperUnit {
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: var(--pg-tracking-caps);
-    text-transform: uppercase;
-    color: var(--pg-ink-3);
 }
 
 .poolPreview {

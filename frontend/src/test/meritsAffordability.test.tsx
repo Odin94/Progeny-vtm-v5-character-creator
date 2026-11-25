@@ -146,11 +146,11 @@ describe("Merits & Flaws affordability", () => {
         expect(screen.queryByText("Beautiful", { exact: true })).not.toBeInTheDocument()
     })
 
-    it("shows a persistent per-item cost + remaining budget for each merit", () => {
+    it("keeps the affordable level selectable without a repeated cost caption", () => {
         renderPicker()
         expect(
-            within(cardFor("Beautiful")).getByText("Costs 2 pts · 7 advantage points left")
-        ).toBeInTheDocument()
+            within(cardFor("Beautiful")).queryByText("Costs 2 pts · 7 advantage points left")
+        ).not.toBeInTheDocument()
         // The level button is clickable while affordable.
         expect(within(cardFor("Beautiful")).getByRole("button", { name: "2" })).toBeEnabled()
     })

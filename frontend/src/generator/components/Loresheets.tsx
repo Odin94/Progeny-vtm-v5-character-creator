@@ -1,6 +1,6 @@
 import { Button, CloseButton, TextInput } from "@mantine/core"
 import { IconChevronLeft, IconChevronRight, IconCircleCheck, IconSearch } from "@tabler/icons-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState, type Ref } from "react"
 import { essentialLoresheets, Loresheet, MeritOrFlaw } from "../../data/MeritsAndFlaws"
 import { Character, MeritFlaw } from "../../data/Character"
 import { intersection } from "../utils"
@@ -19,7 +19,11 @@ type DisplayLoresheet = Omit<Loresheet, "merits"> & { merits: DisplayMerit[] }
 
 type LoresheetProps = {
     character: Character
-    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => React.JSX.Element
+    getMeritOrFlawLine: (
+        meritOrFlaw: DisplayMerit,
+        type: "flaw" | "merit",
+        wholeCard?: boolean
+    ) => React.JSX.Element
     pickedMeritsAndFlaws: MeritFlaw[]
     homebrewCollections: HomebrewCollection[]
 }
@@ -33,6 +37,9 @@ export const Loresheets = ({
     const [openLoresheetTitle, setOpenLoresheetTitle] = useState("")
     const [loresheetQuery, setLoresheetQuery] = useState("")
     const rootRef = useRef<HTMLDivElement>(null)
+    const detailHeadingRef = useRef<HTMLHeadingElement>(null)
+    const lastOpenerId = useRef<string | null>(null)
+    const idPrefix = useId()
     const shouldReduceMotion = useReducedMotion()
     const availableLoresheets: DisplayLoresheet[] = [
         ...essentialLoresheets,
@@ -92,10 +99,21 @@ export const Loresheets = ({
             hasMounted.current = true
             return
         }
-        rootRef.current?.scrollIntoView({
-            block: "start",
-            behavior: shouldReduceMotion ? "auto" : "smooth"
-        })
+        if (openLoresheetTitle) {
+            rootRef.current?.scrollIntoView({
+                block: "start",
+                behavior: shouldReduceMotion ? "auto" : "smooth"
+            })
+            detailHeadingRef.current?.focus({ preventScroll: true })
+            return
+        }
+
+        const opener = lastOpenerId.current && document.getElementById(lastOpenerId.current)
+        if (opener) {
+            opener.focus({ preventScroll: true })
+            opener.scrollIntoView({ block: "nearest", behavior: "instant" })
+        }
+        lastOpenerId.current = null
     }, [openLoresheetTitle, shouldReduceMotion])
 
     const renderLoresheetCard = (loresheet: DisplayLoresheet) => {
@@ -109,9 +127,13 @@ export const Loresheets = ({
             <button
                 type="button"
                 key={loresheet.title}
+                id={`${idPrefix}-${encodeURIComponent(loresheet.title)}`}
                 className={`${classes.loreCard} ${classes.enter}`}
                 data-picked={sheetPicked || undefined}
-                onClick={() => setOpenLoresheetTitle(loresheet.title)}
+                onClick={(event) => {
+                    lastOpenerId.current = event.currentTarget.id
+                    setOpenLoresheetTitle(loresheet.title)
+                }}
             >
                 <span className={classes.loreSource}>
                     <span>{loresheet.source}</span>
@@ -144,6 +166,7 @@ export const Loresheets = ({
             {openLoresheet ? (
                 <OpenedLoresheet
                     loresheet={openLoresheet}
+                    headingRef={detailHeadingRef}
                     getMeritOrFlawLine={getMeritOrFlawLine}
                     setOpenLoresheetTitle={setOpenLoresheetTitle}
                 />
@@ -217,11 +240,17 @@ export const Loresheets = ({
 
 const OpenedLoresheet = ({
     loresheet,
+    headingRef,
     getMeritOrFlawLine,
     setOpenLoresheetTitle
 }: {
     loresheet: DisplayLoresheet
-    getMeritOrFlawLine: (meritOrFlaw: DisplayMerit, type: "flaw" | "merit") => React.JSX.Element
+    headingRef: Ref<HTMLHeadingElement>
+    getMeritOrFlawLine: (
+        meritOrFlaw: DisplayMerit,
+        type: "flaw" | "merit",
+        wholeCard?: boolean
+    ) => React.JSX.Element
     setOpenLoresheetTitle: (t: string) => void
 }) => (
     <article className={`${classes.loreDetail} ${classes.enter}`}>
@@ -235,13 +264,15 @@ const OpenedLoresheet = ({
                 onClick={() => setOpenLoresheetTitle("")}
             />
             {loresheet.source ? <span className="pg-eyebrow">{loresheet.source}</span> : null}
-            <h3 className={classes.loreDetailTitle}>{loresheet.title}</h3>
+            <h3 className={classes.loreDetailTitle} ref={headingRef} tabIndex={-1}>
+                {loresheet.title}
+            </h3>
             <p className={classes.loreDetailSummary}>{loresheet.summary}</p>
         </header>
 
         <GeneratorSectionDivider label="Tiers" lineHeight={1} marginY="xs" />
         <div className={classes.loreTiers}>
-            {loresheet.merits.map((merit) => getMeritOrFlawLine(merit, "merit"))}
+            {loresheet.merits.map((merit) => getMeritOrFlawLine(merit, "merit", true))}
         </div>
 
         <div className={classes.loreDetailFooter}>

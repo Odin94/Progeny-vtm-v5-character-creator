@@ -66,7 +66,6 @@
 .features__chapters > li[data-current] > .features__chapter-link {
     color: var(--pg-ink);
     background-color: rgba(220, 52, 70, 0.08);
-    box-shadow: inset 2px 0 0 var(--pg-blood-bright);
 }
 
 .features__chapters > li[data-current] .features__chapter-number {

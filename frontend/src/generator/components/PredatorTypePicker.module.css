@@ -113,20 +113,6 @@
         transform var(--pg-dur-base) var(--ease-out);
 }
 
-/* Category spine on the leading edge. */
-.card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 12px;
-    bottom: 12px;
-    width: 2px;
-    border-radius: 2px;
-    background: var(--cat);
-    opacity: 0.55;
-    transition: opacity var(--pg-dur-fast) var(--ease-out);
-}
-
 .card::after {
     content: "";
     position: absolute;
@@ -155,7 +141,6 @@
             0 0 26px -10px var(--cat);
     }
 
-    .card:hover:not([aria-disabled="true"])::before,
     .card:hover:not([aria-disabled="true"])::after {
         opacity: 1;
     }
@@ -173,7 +158,6 @@
         0 0 30px -10px var(--cat);
 }
 
-.card[data-selected]::before,
 .card[data-selected]::after {
     opacity: 1;
 }

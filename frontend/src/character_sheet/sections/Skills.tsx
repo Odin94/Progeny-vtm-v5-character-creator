@@ -1,3 +1,4 @@
+import { IconPlus } from "@tabler/icons-react"
 import { Group, TextInput, Textarea, Tooltip } from "@mantine/core"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import posthog from "posthog-js"
@@ -200,7 +201,7 @@ const SkillRow = ({
                     data-blocked={addSpecialtyDisabledReason ? true : undefined}
                     onClick={handleAddSpecialtyClick}
                 >
-                    <span aria-hidden="true">+</span>
+                    <IconPlus aria-hidden size={12} stroke={2} />
                 </button>
             </Tooltip>
         )
