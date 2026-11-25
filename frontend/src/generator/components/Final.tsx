@@ -82,14 +82,12 @@ const Final = ({ character, setCharacter, setSelectedStep, onCharacterReset }: F
     const displayTitle = charName || "Your Kindred Awaits"
 
     const handleCharacterSheet = () => {
-        window.history.pushState({}, "", "/sheet")
-        window.location.reload()
+        window.location.assign("/sheet")
     }
 
     const handleOpenFeatures = () => {
         trackFeatureGuideOpened("character-creation-complete")
-        window.history.pushState({}, "", "/features")
-        window.location.reload()
+        window.location.assign("/features")
     }
 
     const handleDownloadPDF = async () => {

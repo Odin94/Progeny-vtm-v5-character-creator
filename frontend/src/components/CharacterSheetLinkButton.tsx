@@ -7,8 +7,7 @@ const CharacterSheetLinkButton = () => {
     const shouldReduceMotion = useReducedMotion()
 
     const handleClick = () => {
-        window.history.pushState({}, "", "/sheet")
-        window.location.reload()
+        window.location.assign("/sheet")
     }
 
     return (

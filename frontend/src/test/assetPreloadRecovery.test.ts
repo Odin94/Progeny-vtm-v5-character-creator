@@ -114,6 +114,52 @@ describe("handleAssetPreloadError", () => {
         expect(getAssetReloadState()).toBe("reload-requested")
         expect(reload).toHaveBeenCalledOnce()
     })
+
+    describe("while the page navigates away", () => {
+        afterEach(() => {
+            window.dispatchEvent(new Event("pageshow"))
+        })
+
+        // A navigation stops in-flight loads, and Firefox and Safari reject the
+        // pending import(). That is not a stale asset, so the next page must not
+        // report a recovery for it.
+        it.each(["beforeunload", "pagehide"])(
+            "ignores a preload failure after %s",
+            (unloadEvent) => {
+                installAssetPreloadRecovery()
+                window.dispatchEvent(new Event(unloadEvent))
+                const error = new Error("error loading dynamically imported module")
+
+                expect(() => dispatchVitePreloadError(error)).toThrow(error)
+
+                expect(reload).not.toHaveBeenCalled()
+                expect(window.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBeNull()
+                reportAssetPreloadRecovery()
+                expect(posthog.capture).not.toHaveBeenCalled()
+            }
+        )
+
+        it("still reloads when another listener cancels the unload", () => {
+            installAssetPreloadRecovery()
+            const beforeUnload = new Event("beforeunload", { cancelable: true })
+            beforeUnload.preventDefault()
+            window.dispatchEvent(beforeUnload)
+
+            handleAssetPreloadError()
+
+            expect(reload).toHaveBeenCalledOnce()
+        })
+
+        it("reloads again after the page returns from the back/forward cache", () => {
+            installAssetPreloadRecovery()
+            window.dispatchEvent(new Event("pagehide"))
+            window.dispatchEvent(new Event("pageshow"))
+
+            handleAssetPreloadError()
+
+            expect(reload).toHaveBeenCalledOnce()
+        })
+    })
 })
 
 describe("reportAssetPreloadRecovery", () => {
