@@ -110,24 +110,22 @@ export default function ThreeDice(props: Props) {
     useEffect(() => {
         renderer.current?.select(props.selectedDiceIds, props.canSelect)
     }, [props.selectedDiceIds, props.canSelect, props.dice])
-    return (
+    // The fixed menu anchor must live outside the transformed, scrolling roller.
+    return createPortal(
         <>
-            {createPortal(
-                <div
-                    ref={host}
-                    data-testid="vampire-dice-arena"
-                    style={{
-                        position: "fixed",
-                        left: 8,
-                        top: 8,
-                        right: 8,
-                        bottom: 8,
-                        zIndex: 1998,
-                        pointerEvents: "none"
-                    }}
-                />,
-                document.body
-            )}
+            <div
+                ref={host}
+                data-testid="vampire-dice-arena"
+                style={{
+                    position: "fixed",
+                    left: 8,
+                    top: 8,
+                    right: 8,
+                    bottom: 8,
+                    zIndex: 1998,
+                    pointerEvents: "none"
+                }}
+            />
             <Menu
                 opened={!!context}
                 onChange={(opened) => {
@@ -139,6 +137,7 @@ export default function ThreeDice(props: Props) {
             >
                 <Menu.Target>
                     <Box
+                        data-testid="vampire-dice-menu-anchor"
                         aria-hidden="true"
                         style={{
                             position: "fixed",
@@ -170,7 +169,7 @@ export default function ThreeDice(props: Props) {
                             setContext(null)
                         }}
                     >
-                        Remove all dice
+                        Remove dice
                     </Menu.Item>
                     <Menu.Item
                         leftSection={<IconRefresh size={14} />}
@@ -188,6 +187,7 @@ export default function ThreeDice(props: Props) {
                     </Menu.Item>
                 </Menu.Dropdown>
             </Menu>
-        </>
+        </>,
+        document.body
     )
 }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make dice modifier rows clickable across their full width, fix the 3D dice context menu, and move Sort dice and Remove dice next to the roll controls.
+
 - Restore custom notes for discipline powers, merits, and flaws in every sheet mode.
 
 - Show coterie dossiers side by side when space allows, simplify creator and homebrew controls, speed up sheet mode switches, and keep legacy dice visible in the roller.

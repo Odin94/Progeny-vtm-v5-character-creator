@@ -1118,6 +1118,32 @@ const DiceRollModal = ({
                 ) : null}
             </div>
 
+            <div className={classes.diceActions}>
+                {useThreeDice ? (
+                    <Button
+                        data-analytics-autocapture="sort-dice"
+                        variant="default"
+                        color="gray"
+                        size="xs"
+                        leftSection={<IconSortDescending size={14} />}
+                        disabled={!dice.length}
+                        onClick={() => setSortRequest((previous) => previous + 1)}
+                    >
+                        Sort dice
+                    </Button>
+                ) : null}
+                <Button
+                    variant="default"
+                    color="gray"
+                    size="xs"
+                    leftSection={<IconTrash size={14} />}
+                    disabled={!dice.length || isRolling}
+                    onClick={removeDice}
+                >
+                    Remove dice
+                </Button>
+            </div>
+
             {useThreeDice ? (
                 <>
                     {!isMobile ? (
@@ -1203,32 +1229,6 @@ const DiceRollModal = ({
             <RollHistory currentRollId={hasSettledDice ? currentRollIdRef.current : null} />
 
             <div className={classes.footer}>
-                <div className={classes.footerActions}>
-                    {useThreeDice ? (
-                        <Button
-                            data-analytics-autocapture="sort-dice"
-                            variant="subtle"
-                            color="gray"
-                            size="xs"
-                            leftSection={<IconSortDescending size={14} />}
-                            disabled={!dice.length}
-                            onClick={() => setSortRequest((previous) => previous + 1)}
-                        >
-                            Sort dice
-                        </Button>
-                    ) : null}
-                    <Button
-                        variant="subtle"
-                        color="gray"
-                        size="xs"
-                        leftSection={<IconTrash size={14} />}
-                        disabled={!dice.length || isRolling}
-                        style={{ marginLeft: "auto" }}
-                        onClick={() => removeDice()}
-                    >
-                        Remove dice
-                    </Button>
-                </div>
                 {useThreeDice ? (
                     <ThrowControls
                         allowCrystalDice={allowCrystalDice}

@@ -46,7 +46,7 @@
     color: var(--pg-ink-3);
 }
 
-/* Descent ladder: 14th (left) to 10th (right), current rung lit. */
+/* Generation ladder: 10th (left) to 14th (right), current rung lit. */
 .ladder {
     display: flex;
     align-items: center;

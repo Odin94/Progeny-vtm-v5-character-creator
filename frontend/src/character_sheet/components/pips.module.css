@@ -242,10 +242,6 @@
     background: var(--pip-deep);
 }
 
-.box[data-state="aggravated"] .slash {
-    background: var(--pg-ink);
-}
-
 /* ---- Blood drop (hunger) ---------------------------------------------------- */
 
 .pip.pip[data-shape="drop"] {

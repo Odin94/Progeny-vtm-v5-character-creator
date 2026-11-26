@@ -99,7 +99,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
         />
     )
 
-    const ladder = [14, 13, 12, 11, 10]
+    const ladder = [10, 11, 12, 13, 14]
 
     return (
         <div style={generatorScrollableShellStyle}>
@@ -176,7 +176,7 @@ const GenerationPicker = ({ character, setCharacter, nextStep }: GenerationPicke
                                                     <span
                                                         className={classes.rung}
                                                         data-reached={
-                                                            rung >= selectedNumber || undefined
+                                                            rung <= selectedNumber || undefined
                                                         }
                                                         data-current={
                                                             rung === selectedNumber || undefined

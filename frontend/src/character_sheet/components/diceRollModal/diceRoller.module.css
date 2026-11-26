@@ -421,6 +421,7 @@
 
 /* Checkbox skinned as a toggle tile; the whole tile is the hit area. */
 .toggle {
+    position: relative;
     flex: 1 1 auto;
     min-width: min(100%, 150px);
     border-radius: var(--pg-radius-sm);
@@ -428,17 +429,12 @@
     background: rgba(255, 255, 255, 0.02);
     transition:
         background-color var(--pg-dur-fast) var(--ease-out),
-        border-color var(--pg-dur-fast) var(--ease-out),
-        transform var(--pg-dur-press) var(--ease-out);
+        border-color var(--pg-dur-fast) var(--ease-out);
 }
 
 .toggle:has(input:checked) {
     border-color: var(--pg-border-accent);
     background: var(--pg-accent-soft);
-}
-
-.toggle:active {
-    transform: scale(0.98);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -457,6 +453,15 @@
 
 .toggleLabel {
     font-size: 0.82rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Extend the native checkbox label to include the tile padding and trailing space. */
+.toggleLabel::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
     cursor: pointer;
 }
 
@@ -1064,10 +1069,11 @@
     border-top: 1px solid var(--pg-border-faint);
 }
 
-.footerActions {
+.diceActions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: var(--pg-space-2);
 }
 
@@ -1172,7 +1178,6 @@
         display: none;
     }
 
-    .toggle:active,
     .disclosure:active {
         transform: none;
     }
