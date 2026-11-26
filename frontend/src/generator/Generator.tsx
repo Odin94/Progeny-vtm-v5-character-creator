@@ -32,12 +32,8 @@ import PredatorTypePicker from "./components/PredatorTypePicker"
 import RitualsPicker from "./components/RitualsPicker"
 import SkillsPicker from "./components/SkillsPicker"
 import TouchstonePicker from "./components/TouchstonePicker"
-import { GeneratorStepId, getNextGeneratorStepId, getVisibleGeneratorSteps } from "./steps"
-import {
-    GeneratorStepContext,
-    generatorUiClasses,
-    type GeneratorStepInfo
-} from "./components/sharedGeneratorUi"
+import { GeneratorStepId, getNextGeneratorStepId } from "./steps"
+import { generatorUiClasses } from "./components/sharedGeneratorUi"
 import { feedbackSurveyEvents } from "~/utils/feedbackSurveys"
 import { adjustPickedMeritsAndFlawsForPredatorTypeChange } from "~/data/meritsAndFlawsResolution"
 import { updateHealthAndWillpowerAndBloodPotencyAndHumanity } from "./utils"
@@ -308,17 +304,6 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
         }
     }
 
-    const visibleSteps = getVisibleGeneratorSteps(character)
-    const stepIndex = visibleSteps.findIndex((step) => step.id === selectedStep)
-    const stepLabel = visibleSteps[stepIndex]?.label ?? ""
-    const stepInfo = useMemo<GeneratorStepInfo | null>(
-        () =>
-            stepIndex === -1
-                ? null
-                : { index: stepIndex, total: visibleSteps.length, label: stepLabel },
-        [stepIndex, visibleSteps.length, stepLabel]
-    )
-
     return (
         // position: relative is the anchor for ShellStyle-based steps that use position: absolute.
         // The padding reserves the space occupied by the desktop sidebars, which are overlaid by
@@ -350,23 +335,21 @@ const Generator = ({ character, setCharacter, selectedStep, setSelectedStep }: G
                     minHeight: 0
                 }}
             >
-                <GeneratorStepContext.Provider value={stepInfo}>
-                    {/* Opacity-only fade: a transform here would re-anchor the absolute scroll shells. */}
-                    <div
-                        key={selectedStep}
-                        className={generatorUiClasses.stepEnter}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            minHeight: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}
-                    >
-                        <ErrorBoundary key={selectedStep}>{getStepComponent()}</ErrorBoundary>
-                    </div>
-                </GeneratorStepContext.Provider>
+                {/* Opacity-only fade: a transform here would re-anchor the absolute scroll shells. */}
+                <div
+                    key={selectedStep}
+                    className={generatorUiClasses.stepEnter}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        minHeight: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    <ErrorBoundary key={selectedStep}>{getStepComponent()}</ErrorBoundary>
+                </div>
             </div>
         </div>
     )

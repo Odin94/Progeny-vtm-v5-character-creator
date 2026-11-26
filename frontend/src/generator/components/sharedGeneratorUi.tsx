@@ -1,40 +1,12 @@
 import { Box, Button, Stack, Text, VisuallyHidden, type ButtonProps } from "@mantine/core"
 import { IconArrowRight } from "@tabler/icons-react"
 import { motion, useReducedMotion } from "framer-motion"
-import { createContext, useContext, type MouseEventHandler, type ReactNode } from "react"
+import type { MouseEventHandler, ReactNode } from "react"
 import { DisabledReason } from "~/components/ui"
 import { motion as motionTokens } from "~/theme/tokens"
 import classes from "./sharedGeneratorUi.module.css"
 
 export { classes as generatorUiClasses }
-
-// ---------------------------------------------------------------------------
-// Step context: lets any step render "Step 3 of 10" without prop drilling.
-// Provided by Generator.tsx; absent in isolated renders (tests), where the eyebrow hides.
-// ---------------------------------------------------------------------------
-
-export type GeneratorStepInfo = {
-    /** Zero-based position in the visible step list. */
-    index: number
-    total: number
-    label: string
-}
-
-export const GeneratorStepContext = createContext<GeneratorStepInfo | null>(null)
-
-export const useGeneratorStepInfo = () => useContext(GeneratorStepContext)
-
-/** Small gold "Step 3 of 10" label. Renders nothing outside the generator. */
-export const GeneratorStepEyebrow = ({ children }: { children?: ReactNode }) => {
-    const step = useGeneratorStepInfo()
-    if (!children && !step) return null
-
-    return (
-        <span className={classes.eyebrow}>
-            {children ?? `Step ${step!.index + 1} of ${step!.total}`}
-        </span>
-    )
-}
 
 type GeneratorStepHeroProps = {
     leadText: string
@@ -184,7 +156,6 @@ export const GeneratorPhasePrompt = ({
         // Edge) rewrites text nodes out from under React, so those re-renders would otherwise
         // crash the reconciler with a DOMException (insertBefore/removeChild NotFoundError).
         <Stack gap={4} align="center" mb={marginBottom} className="notranslate" translate="no">
-            <GeneratorStepEyebrow />
             {caption ? <Text className={classes.promptCaption}>{caption}</Text> : null}
             {lines.map((line) => {
                 const isActive = activeKey === line.key
